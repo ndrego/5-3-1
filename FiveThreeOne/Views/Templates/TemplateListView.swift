@@ -10,6 +10,7 @@ struct TemplateListView: View {
     @State private var selectedWeek: Int = 1
     @State private var showingNewTemplate = false
     @State private var selectedTemplate: WorkoutTemplate?
+    @State private var editingTemplate: WorkoutTemplate?
 
     private var currentCycle: Cycle? {
         cycles.first(where: { !$0.isComplete }) ?? cycles.first
@@ -39,10 +40,35 @@ struct TemplateListView: View {
                                 templateCardContent(template)
                             }
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                            .contextMenu {
+                                Button {
+                                    selectedTemplate = template
+                                } label: {
+                                    Label("Start Workout", systemImage: "play.fill")
+                                }
+                                Button {
+                                    editingTemplate = template
+                                } label: {
+                                    Label("Edit Template", systemImage: "pencil")
+                                }
+                                Button(role: .destructive) {
+                                    modelContext.delete(template)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                             .swipeActions(edge: .trailing) {
                                 Button("Delete", role: .destructive) {
                                     modelContext.delete(template)
                                 }
+                            }
+                            .swipeActions(edge: .leading) {
+                                Button {
+                                    editingTemplate = template
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                .tint(.orange)
                             }
                         }
                     }
@@ -69,6 +95,11 @@ struct TemplateListView: View {
             .sheet(isPresented: $showingNewTemplate) {
                 NavigationStack {
                     TemplateEditView(template: nil)
+                }
+            }
+            .sheet(item: $editingTemplate) { template in
+                NavigationStack {
+                    TemplateEditView(template: template)
                 }
             }
             .onAppear {

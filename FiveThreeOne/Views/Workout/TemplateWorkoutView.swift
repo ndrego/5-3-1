@@ -337,14 +337,32 @@ struct TemplateWorkoutView: View {
                 accessoryRows(for: exerciseState)
             }
 
-            // Superset link button
-            Button {
-                supersetSourceIndex = index
-                showingSupersetPicker = true
-            } label: {
-                Label("Superset with...", systemImage: "link")
-                    .font(.caption)
-                    .foregroundStyle(.purple)
+            HStack {
+                // Superset link button
+                Button {
+                    supersetSourceIndex = index
+                    showingSupersetPicker = true
+                } label: {
+                    Label("Superset with...", systemImage: "link")
+                        .font(.caption)
+                        .foregroundStyle(.purple)
+                }
+
+                Spacer()
+
+                // Remove exercise button (not for main lifts)
+                if !state.isMainLift {
+                    Button(role: .destructive) {
+                        let idx = index
+                        withAnimation {
+                            _ = exerciseStates.remove(at: idx)
+                        }
+                    } label: {
+                        Label("Remove", systemImage: "trash")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
             }
         } header: {
             exerciseSectionHeader(for: $exerciseStates[index])
@@ -727,6 +745,15 @@ struct TemplateWorkoutView: View {
             .onChange(of: exerciseState.sets[index].wrappedValue.actualReps) { oldVal, newVal in
                 if oldVal == 0 && newVal > 0 {
                     startRest(setRestSeconds: exerciseState.sets[index].wrappedValue.restSeconds, setType: .accessory)
+                }
+            }
+            .swipeActions(edge: .trailing) {
+                if state.sets.count > 1 {
+                    Button(role: .destructive) {
+                        exerciseState.wrappedValue.sets.remove(at: index)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
             }
         }
