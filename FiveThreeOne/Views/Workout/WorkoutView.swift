@@ -78,36 +78,42 @@ struct WorkoutView: View {
 
     // MARK: - Main Sets
 
+    @ViewBuilder
     private var mainSetsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Main Sets")
-                .font(.headline)
+        if completedSets.count == plannedMain.count {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Main Sets")
+                    .font(.headline)
 
-            ForEach(Array(plannedMain.enumerated()), id: \.element.id) { index, planned in
-                SetRowView(
-                    planned: planned,
-                    completed: $completedSets[index],
-                    barWeight: barWeight,
-                    availablePlates: plates
-                )
+                ForEach(Array(plannedMain.enumerated()), id: \.element.id) { index, planned in
+                    SetRowView(
+                        planned: planned,
+                        completed: $completedSets[index],
+                        barWeight: barWeight,
+                        availablePlates: plates
+                    )
+                }
             }
         }
     }
 
     // MARK: - Supplemental Sets
 
+    @ViewBuilder
     private var supplementalSetsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Supplemental (\(cycle.programVariant.displayName))")
-                .font(.headline)
+        if supplementalCompletedSets.count == plannedSupplemental.count {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Supplemental (\(cycle.programVariant.displayName))")
+                    .font(.headline)
 
-            ForEach(Array(plannedSupplemental.enumerated()), id: \.element.id) { index, planned in
-                SetRowView(
-                    planned: planned,
-                    completed: $supplementalCompletedSets[index],
-                    barWeight: barWeight,
-                    availablePlates: plates
-                )
+                ForEach(Array(plannedSupplemental.enumerated()), id: \.element.id) { index, planned in
+                    SetRowView(
+                        planned: planned,
+                        completed: $supplementalCompletedSets[index],
+                        barWeight: barWeight,
+                        availablePlates: plates
+                    )
+                }
             }
         }
     }
@@ -136,7 +142,7 @@ struct WorkoutView: View {
     }
 
     private var allMainSetsComplete: Bool {
-        completedSets.allSatisfy { $0.isComplete }
+        !completedSets.isEmpty && completedSets.allSatisfy { $0.isComplete }
     }
 
     // MARK: - Actions
