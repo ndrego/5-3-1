@@ -56,6 +56,22 @@ targets:
       - target: FiveThreeOneWatch
         embed: true
 
+  ScreenshotTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - ScreenshotTests
+    dependencies:
+      - target: FiveThreeOne
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ndrego.FiveThreeOne.ScreenshotTests
+        INFOPLIST_FILE: ScreenshotTests/Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        TEST_HOST: ""
+        TEST_TARGET_NAME: FiveThreeOne
+        SWIFT_VERSION: "6.0"
+
   FiveThreeOneWatch:
     type: application
     platform: watchOS

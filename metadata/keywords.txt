@@ -1,0 +1,1 @@
+weightlifting,strength,531,wendler,barbell,powerlifting,workout,gym,tracker,training,BBB,AMRAP

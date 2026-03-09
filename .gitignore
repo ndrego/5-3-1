@@ -18,6 +18,9 @@ Package.resolved
 # CocoaPods
 Pods/
 
+# Screenshots (temp build artifacts)
+.derived-data-screenshots/
+
 # macOS
 .DS_Store
 .AppleDouble

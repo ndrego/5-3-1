@@ -1,0 +1,54 @@
+531 Strength is a focused, no-nonsense workout tracker built specifically for the Wendler 5/3/1 program. Set up your training maxes and get right to work — the app handles the math so you can focus on lifting.
+
+🏋️ PROGRAM VARIANTS
+All six popular 5/3/1 templates in one app:
+- Standard 5/3/1
+- Boring But Big (BBB)
+- First Set Last (FSL)
+- 5s PRO
+- BBB Beefcake
+- Second Set Last (SSL)
+
+Switch variants between cycles as your training evolves.
+
+🔢 AUTO-CALCULATED WEIGHTS
+Enter your training maxes once. The app computes every working set — percentages, weights, and reps — for each week and each lift. Per-lift TM percentages let you fine-tune individual lifts. Auto-progression adds +5 lbs (upper) and +10 lbs (lower) between cycles, fully configurable.
+
+🟥 PLATE CALCULATOR
+Tap any barbell set to see a color-coded plate diagram showing exactly which plates to load on each side. No mental math between sets.
+
+AMRAP & ESTIMATED 1RM
+Log your plus-set reps and see your estimated one-rep max calculated via the Epley formula. Track your strength progress over time.
+
+⌚ APPLE WATCH COMPANION
+Live workout tracking from your wrist — see current exercise, set, weight, and reps at a glance. Complete sets, control rest timers, and stream heart rate without touching your phone. Auto rep counting lets you keep your hands on the bar.
+
+❤️ HEART RATE & RECOVERY
+Stream heart rate from Apple Watch during workouts. Rest timers include optional HR-based recovery tracking so you know when you're ready for the next set. Calorie estimation uses published research equations (Keytel et al.) with your age, weight, and sex for accurate results.
+
+RPE TRACKING
+Rate perceived exertion on each set to monitor fatigue across your session and over time.
+
+📊 WORKOUT HISTORY
+Review past workouts with charts and personal records. Track training volume per exercise and per session, with proper handling of unilateral exercises. See your progression across cycles at a glance.
+
+WORKOUT TEMPLATES
+Build custom workout templates with main lifts and accessories. Organize accessory exercises by push, pull, and legs/core categories. Group exercises into supersets for efficient training.
+
+CONFIGURABLE WARMUPS & REST TIMERS
+Add or remove warmup sets with custom percentages and reps. Set per-type rest timers for main lifts, supplemental work, and accessories independently.
+
+IMPORT FROM STRONG
+Switching from Strong? Import your full workout history from Strong's CSV export — all exercises, not just main lifts. Your training data comes with you.
+
+BACKUP & RESTORE
+Export all your data to JSON and save to iCloud Drive or Files. Restore anytime. Your data is always yours.
+
+HEALTHKIT INTEGRATION
+Completed workouts sync to Apple Health with heart rate data, duration, and estimated calories. Works alongside your other health and fitness apps.
+
+BUILT FOR THE GYM
+Large tap targets designed for one-handed use. Screen stays on during active workouts. Dark mode by default. No distractions.
+
+🔒 PRIVACY FIRST
+No analytics. No tracking. No accounts. No data leaves your device except optional HealthKit sync. No subscriptions, no ads — just the app.

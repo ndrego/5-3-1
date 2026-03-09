@@ -1,0 +1,16 @@
+Initial release of 531 Strength.
+
+- All 6 program variants: Standard, BBB, FSL, 5s PRO, BBB Beefcake, SSL
+- Auto-calculated weights from your training maxes with per-lift TM percentages
+- Tap-to-toggle plate calculator on every barbell set
+- AMRAP tracking with estimated 1RM (Epley formula)
+- Apple Watch companion with live workout display, set completion, and heart rate streaming
+- Auto rep counting and RPE tracking
+- Rest timers with optional HR-based recovery
+- Workout history with charts and personal records
+- Customizable workout templates with superset grouping
+- Configurable warmup sets, rest timers, and progression increments
+- Import full workout history from Strong CSV export
+- Backup and restore to iCloud Drive or Files
+- HealthKit integration for workouts, heart rate, and calories
+- No subscriptions, no ads, no tracking

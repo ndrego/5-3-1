@@ -1,0 +1,92 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "E5085E31-3983-48BE-8257-644DB8525355",
+        "deviceName" : "iPhone 17 Pro Max",
+        "exportedFileName" : "4DFE608E-C4FD-48C1-9398-DEABDC5DCBB8.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "01_WorkoutTemplates_0_0C58F0FD-6552-405A-9B67-2F5C2B9A9E68.png",
+        "timestamp" : 1773090303.914
+      }
+    ],
+    "testIdentifier" : "ScreenshotTests/testScreenshot01_WorkoutTemplates()",
+    "testIdentifierURL" : "test://com.apple.xcode/FiveThreeOne/ScreenshotTests/ScreenshotTests/testScreenshot01_WorkoutTemplates"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "E5085E31-3983-48BE-8257-644DB8525355",
+        "deviceName" : "iPhone 17 Pro Max",
+        "exportedFileName" : "2DF6F43F-4583-4C53-9B83-1946609D0337.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "02_Dashboard_0_3E240AB8-76F8-464D-94F6-EE729D2EE361.png",
+        "timestamp" : 1773090314.85
+      }
+    ],
+    "testIdentifier" : "ScreenshotTests/testScreenshot02_Dashboard()",
+    "testIdentifierURL" : "test://com.apple.xcode/FiveThreeOne/ScreenshotTests/ScreenshotTests/testScreenshot02_Dashboard"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "E5085E31-3983-48BE-8257-644DB8525355",
+        "deviceName" : "iPhone 17 Pro Max",
+        "exportedFileName" : "EF5F1707-B59B-474F-8D7D-B392AF4D6C62.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "03_History_0_42FB46DD-CAA7-4F88-90EF-1F61DE55D064.png",
+        "timestamp" : 1773090325.571
+      }
+    ],
+    "testIdentifier" : "ScreenshotTests/testScreenshot03_History()",
+    "testIdentifierURL" : "test://com.apple.xcode/FiveThreeOne/ScreenshotTests/ScreenshotTests/testScreenshot03_History"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "E5085E31-3983-48BE-8257-644DB8525355",
+        "deviceName" : "iPhone 17 Pro Max",
+        "exportedFileName" : "FF9BC791-36AD-46E4-96A5-91C810F5FF71.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "04_Settings_0_B3F64F55-D8F4-4918-A452-373D64574D8B.png",
+        "timestamp" : 1773090336.519
+      }
+    ],
+    "testIdentifier" : "ScreenshotTests/testScreenshot04_Settings()",
+    "testIdentifierURL" : "test://com.apple.xcode/FiveThreeOne/ScreenshotTests/ScreenshotTests/testScreenshot04_Settings"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "E5085E31-3983-48BE-8257-644DB8525355",
+        "deviceName" : "iPhone 17 Pro Max",
+        "exportedFileName" : "E54E7411-BEFE-4F0A-9BBB-4699372C8F2F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "05_ActiveWorkout_0_24EE0E7E-476F-4B64-95A0-C03BDC1A2CDE.png",
+        "timestamp" : 1773090350.44
+      }
+    ],
+    "testIdentifier" : "ScreenshotTests/testScreenshot05_ActiveWorkout()",
+    "testIdentifierURL" : "test://com.apple.xcode/FiveThreeOne/ScreenshotTests/ScreenshotTests/testScreenshot05_ActiveWorkout"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "E5085E31-3983-48BE-8257-644DB8525355",
+        "deviceName" : "iPhone 17 Pro Max",
+        "exportedFileName" : "0FD6A1A4-D830-48CE-B9CC-51448C1E4A9B.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "06_WorkoutDetail_0_A8CAD8EB-93F2-468B-8232-6C4D74DA2C22.png",
+        "timestamp" : 1773090364.639
+      }
+    ],
+    "testIdentifier" : "ScreenshotTests/testScreenshot06_WorkoutDetail()",
+    "testIdentifierURL" : "test://com.apple.xcode/FiveThreeOne/ScreenshotTests/ScreenshotTests/testScreenshot06_WorkoutDetail"
+  }
+]

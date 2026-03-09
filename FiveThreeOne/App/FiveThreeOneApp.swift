@@ -11,10 +11,17 @@ struct FiveThreeOneApp: App {
             Exercise.self,
             WorkoutTemplate.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let isUITest = ProcessInfo.processInfo.arguments.contains("-UITests")
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: isUITest
+        )
 
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            if isUITest {
+                DemoDataSeeder.seed(in: container.mainContext)
+            }
             return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
