@@ -9,8 +9,12 @@ final class RepCountingManager {
     var isActive: Bool = false
     var onRepCounted: ((Int) -> Void)?
 
+    // User-tunable overrides (sent from phone)
+    var sensitivityOverrides: [String: Double] = [:]  // profile key -> multiplier (1.0 = default)
+    var tempoOverrides: [String: Double] = [:]        // profile key -> min seconds between reps
+
     private let motionManager = CMMotionManager()
-    private var profile: LiftMotionProfile = .generic
+    private var profile: LiftMotionProfile = .other
     private var lastPeakTime: TimeInterval = 0
     private var smoothedValue: Double = 0
     private var state: DetectionState = .idle
@@ -65,16 +69,27 @@ final class RepCountingManager {
         repCount = 0
     }
 
+    // MARK: - Effective Tuning Values
+
+    private var effectiveThreshold: Double {
+        let base = profile.accelerationThreshold
+        let multiplier = sensitivityOverrides[profile.key] ?? 1.0
+        return base * multiplier
+    }
+
+    private var effectiveMinInterval: TimeInterval {
+        tempoOverrides[profile.key] ?? profile.minPeakInterval
+    }
+
     // MARK: - Peak Detection
 
     private func processMotion(accel: CMAcceleration, timestamp: TimeInterval) {
-        // Use magnitude of acceleration vector for orientation-independence
         let magnitude = sqrt(accel.x * accel.x + accel.y * accel.y + accel.z * accel.z)
 
         // Exponential moving average
         smoothedValue = smoothingAlpha * magnitude + (1 - smoothingAlpha) * smoothedValue
 
-        let threshold = profile.accelerationThreshold
+        let threshold = effectiveThreshold
         let lowThreshold = threshold * 0.5
 
         switch state {
@@ -84,9 +99,8 @@ final class RepCountingManager {
             }
         case .rising:
             if smoothedValue < lowThreshold {
-                // Crossed above threshold and back down — that's one rep
                 let timeSinceLastPeak = timestamp - lastPeakTime
-                if lastPeakTime == 0 || timeSinceLastPeak >= profile.minPeakInterval {
+                if lastPeakTime == 0 || timeSinceLastPeak >= effectiveMinInterval {
                     lastPeakTime = timestamp
                     repCount += 1
                     WKInterfaceDevice.current().play(.click)
@@ -95,7 +109,6 @@ final class RepCountingManager {
                 state = .idle
             }
         case .falling:
-            // Not used in current algorithm but reserved
             state = .idle
         }
     }
@@ -118,8 +131,47 @@ final class RepCountingManager {
 
 // MARK: - Lift Motion Profiles
 
-enum LiftMotionProfile {
-    case squat, bench, deadlift, overheadPress, generic
+enum LiftMotionProfile: CaseIterable {
+    // Main barbell lifts
+    case squat, bench, deadlift, overheadPress
+    // Accessory movement patterns
+    case row, curl, pullUp, extension_, raiseFly, lunge, core
+    // Catch-all
+    case other
+
+    var key: String {
+        switch self {
+        case .squat: return "squat"
+        case .bench: return "bench"
+        case .deadlift: return "deadlift"
+        case .overheadPress: return "ohp"
+        case .row: return "row"
+        case .curl: return "curl"
+        case .pullUp: return "pullup"
+        case .extension_: return "extension"
+        case .raiseFly: return "raise"
+        case .lunge: return "lunge"
+        case .core: return "core"
+        case .other: return "other"
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .squat: return "Squat"
+        case .bench: return "Bench"
+        case .deadlift: return "Deadlift"
+        case .overheadPress: return "OHP"
+        case .row: return "Row"
+        case .curl: return "Curl"
+        case .pullUp: return "Pull-up / Pulldown"
+        case .extension_: return "Extension / Pushdown"
+        case .raiseFly: return "Raise / Fly"
+        case .lunge: return "Lunge / Split Squat"
+        case .core: return "Core"
+        case .other: return "Other"
+        }
+    }
 
     var minPeakInterval: TimeInterval {
         switch self {
@@ -127,7 +179,14 @@ enum LiftMotionProfile {
         case .bench: return 1.2
         case .deadlift: return 2.0
         case .overheadPress: return 1.5
-        case .generic: return 1.0
+        case .row: return 1.2
+        case .curl: return 1.0
+        case .pullUp: return 1.5
+        case .extension_: return 0.8
+        case .raiseFly: return 1.0
+        case .lunge: return 1.5
+        case .core: return 0.8
+        case .other: return 1.0
         }
     }
 
@@ -137,21 +196,65 @@ enum LiftMotionProfile {
         case .bench: return 0.3
         case .deadlift: return 0.5
         case .overheadPress: return 0.4
-        case .generic: return 0.3
+        case .row: return 0.35
+        case .curl: return 0.2
+        case .pullUp: return 0.4
+        case .extension_: return 0.2
+        case .raiseFly: return 0.2
+        case .lunge: return 0.4
+        case .core: return 0.25
+        case .other: return 0.3
         }
     }
 
     static func from(exerciseName: String) -> LiftMotionProfile {
         let lower = exerciseName.lowercased()
-        if lower.contains("squat") { return .squat }
-        if lower.contains("bench") { return .bench }
+
+        // Main lifts
+        if lower.contains("squat") && !lower.contains("split") { return .squat }
+        if lower.contains("bench") && lower.contains("press") { return .bench }
         if lower.contains("deadlift") { return .deadlift }
-        if lower.contains("overhead") || lower.contains("ohp") {
+        if lower.contains("overhead") || lower.contains("ohp") { return .overheadPress }
+        if lower.contains("press") && !lower.contains("leg") && !lower.contains("push") {
             return .overheadPress
         }
-        if lower.contains("press") && !lower.contains("bench") && !lower.contains("leg") {
-            return .overheadPress
+
+        // Rows
+        if lower.contains("row") { return .row }
+
+        // Curls
+        if lower.contains("curl") { return .curl }
+
+        // Pull-ups / Pulldowns
+        if lower.contains("pull-up") || lower.contains("pull up") || lower.contains("pullup") ||
+           lower.contains("chin-up") || lower.contains("chin up") || lower.contains("chinup") ||
+           lower.contains("pulldown") || lower.contains("lat pull") { return .pullUp }
+
+        // Extensions / Pushdowns
+        if lower.contains("pushdown") || lower.contains("push down") ||
+           lower.contains("skull") || lower.contains("tricep") ||
+           lower.contains("extension") { return .extension_ }
+
+        // Raises / Flys
+        if lower.contains("raise") || lower.contains("fly") || lower.contains("lateral") ||
+           lower.contains("reverse fly") || lower.contains("face pull") { return .raiseFly }
+
+        // Lunges / Split squats
+        if lower.contains("lunge") || lower.contains("split squat") ||
+           lower.contains("step-up") || lower.contains("step up") ||
+           lower.contains("bulgarian") { return .lunge }
+
+        // Core
+        if lower.contains("crunch") || lower.contains("sit up") || lower.contains("sit-up") ||
+           lower.contains("plank") || lower.contains("ab ") || lower.contains("ab wheel") ||
+           lower.contains("leg raise") || lower.contains("knee raise") ||
+           lower.contains("side bend") || lower.contains("back extension") { return .core }
+
+        // Remaining presses (close-grip bench, dips)
+        if lower.contains("dip") || lower.contains("push-up") || lower.contains("push up") {
+            return .bench
         }
-        return .generic
+
+        return .other
     }
 }

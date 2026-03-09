@@ -39,6 +39,7 @@
 		ACE6C40306B66AC18980B72C /* StrongImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8FE052FB06BDAED95A37379 /* StrongImporter.swift */; };
 		AF77BCED810D2D390F60CFCD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEAC4BA8FB0B58A0D6A0BCC3 /* ContentView.swift */; };
 		B515AC7C0CD0C80222830CBC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A355D24994B7E9A96EDE7096 /* Assets.xcassets */; };
+		BBA38C7EE05EC8664FF47217 /* RepCountingTuningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF015D31FA895B8919C7274 /* RepCountingTuningView.swift */; };
 		CDA494DD690C481E8A4B6DBD /* ProgramVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F5B0A48B730B51F34F609 /* ProgramVariant.swift */; };
 		D0E5048E00A903C81B8F2832 /* CompletedSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFA3CACFC1833116B49A3DE /* CompletedSet.swift */; };
 		D27D2A53670319676C0BDA70 /* TemplateEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452048773705C2BF75CC773C /* TemplateEditView.swift */; };
@@ -101,6 +102,7 @@
 		4F86E2103F18680D17C60A28 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
 		627679734B52F316E9A55257 /* WatchWorkoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutManager.swift; sourceTree = "<group>"; };
 		62ED226F8A02894A6E4C1835 /* FiveThreeOne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FiveThreeOne.entitlements; sourceTree = "<group>"; };
+		6DF015D31FA895B8919C7274 /* RepCountingTuningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCountingTuningView.swift; sourceTree = "<group>"; };
 		7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiveThreeOneWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B9F5B0A48B730B51F34F609 /* ProgramVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramVariant.swift; sourceTree = "<group>"; };
 		7EF430C5547890FEBB16A3B4 /* ProgramEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramEngine.swift; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 			isa = PBXGroup;
 			children = (
 				A1CC7B6053AFB7ECE8CF22EA /* AccessorySetRowView.swift */,
+				6DF015D31FA895B8919C7274 /* RepCountingTuningView.swift */,
 				B94AF72042394A17E3FC3361 /* RestTimerView.swift */,
 				342892DF7BB145BC5C61A846 /* SetRowView.swift */,
 				84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */,
@@ -450,6 +453,7 @@
 				5BC12CDBFFD67BDA353D9E2E /* PreviousPerformanceLookup.swift in Sources */,
 				F22696A242FF8A8A99432EF3 /* ProgramEngine.swift in Sources */,
 				CDA494DD690C481E8A4B6DBD /* ProgramVariant.swift in Sources */,
+				BBA38C7EE05EC8664FF47217 /* RepCountingTuningView.swift in Sources */,
 				8DCF4F72CDB53A0A6CCD429C /* RestTimerState.swift in Sources */,
 				83BB9CDE8E9F150D3B8F6CA5 /* RestTimerView.swift in Sources */,
 				052886316DE040C84A086EF3 /* SetRowView.swift in Sources */,

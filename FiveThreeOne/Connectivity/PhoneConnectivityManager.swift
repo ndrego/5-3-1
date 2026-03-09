@@ -41,6 +41,10 @@ final class PhoneConnectivityManager: NSObject {
         send(["type": "repCountingEnabled", "enabled": enabled])
     }
 
+    func sendRepTuning(sensitivity: [String: Double], tempo: [String: Double]) {
+        send(["type": "repTuning", "sensitivity": sensitivity, "tempo": tempo])
+    }
+
     func sendWorkoutFinished() {
         send(["type": "workoutFinish"])
     }

@@ -67,6 +67,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
         let isAMRAP = message["isAMRAP"] as? Bool
         let setType = message["setType"] as? String
         let enabled = message["enabled"] as? Bool
+        let sensitivity = message["sensitivity"] as? [String: Double]
+        let tempo = message["tempo"] as? [String: Double]
 
         Task { @MainActor in
             self.handleMessage(
@@ -81,7 +83,9 @@ extension WatchConnectivityManager: WCSessionDelegate {
                 reps: reps,
                 isAMRAP: isAMRAP,
                 setType: setType,
-                enabled: enabled
+                enabled: enabled,
+                sensitivity: sensitivity,
+                tempo: tempo
             )
         }
     }
@@ -99,7 +103,9 @@ extension WatchConnectivityManager: WCSessionDelegate {
         reps: Int?,
         isAMRAP: Bool?,
         setType: String?,
-        enabled: Bool?
+        enabled: Bool?,
+        sensitivity: [String: Double]?,
+        tempo: [String: Double]?
     ) {
         guard let type else { return }
 
@@ -153,6 +159,14 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
         case "repCountingEnabled":
             repCountingEnabled = enabled ?? false
+
+        case "repTuning":
+            if let sensitivity {
+                repCountingManager?.sensitivityOverrides = sensitivity
+            }
+            if let tempo {
+                repCountingManager?.tempoOverrides = tempo
+            }
 
         default:
             break

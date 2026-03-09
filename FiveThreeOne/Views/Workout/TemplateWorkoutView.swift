@@ -25,6 +25,7 @@ struct TemplateWorkoutView: View {
     @State private var heartRateManager = HeartRateManager()
     @State private var phoneConnectivity = PhoneConnectivityManager()
     @State private var showPlatesForSet: Set<UUID> = []
+    @State private var showRepTuning = false
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -71,7 +72,14 @@ struct TemplateWorkoutView: View {
                             workoutStarted = true
                             UIApplication.shared.isIdleTimerDisabled = true
                             phoneConnectivity.sendWorkoutStarted()
-                            phoneConnectivity.sendRepCountingEnabled(userSettings?.repCountingEnabled ?? false)
+                            let repEnabled = userSettings?.repCountingEnabled ?? false
+                            phoneConnectivity.sendRepCountingEnabled(repEnabled)
+                            if repEnabled {
+                                phoneConnectivity.sendRepTuning(
+                                    sensitivity: userSettings?.repSensitivity ?? [:],
+                                    tempo: userSettings?.repTempo ?? [:]
+                                )
+                            }
                             sendWatchContext()
                         } label: {
                             Label("Start Workout", systemImage: "play.fill")
@@ -133,9 +141,18 @@ struct TemplateWorkoutView: View {
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button(isReordering ? "Done" : "Reorder") {
-                    withAnimation {
-                        isReordering.toggle()
+                HStack(spacing: 12) {
+                    if workoutStarted && (userSettings?.repCountingEnabled ?? false) {
+                        Button {
+                            showRepTuning = true
+                        } label: {
+                            Image(systemName: "waveform.badge.magnifyingglass")
+                        }
+                    }
+                    Button(isReordering ? "Done" : "Reorder") {
+                        withAnimation {
+                            isReordering.toggle()
+                        }
                     }
                 }
             }
@@ -182,6 +199,11 @@ struct TemplateWorkoutView: View {
         .onDisappear {
             heartRateManager.stopMonitoring()
             UIApplication.shared.isIdleTimerDisabled = false
+        }
+        .sheet(isPresented: $showRepTuning) {
+            RepCountingTuningView { sensitivity, tempo in
+                phoneConnectivity.sendRepTuning(sensitivity: sensitivity, tempo: tempo)
+            }
         }
         .sheet(isPresented: $showingSupersetPicker) {
             supersetPickerSheet
