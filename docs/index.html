@@ -2,10 +2,235 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=privacy-policy.html">
-    <title>531 Strength</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>531 Strength — 5/3/1 Workout Tracker for iOS</title>
+    <meta name="description" content="A focused workout tracker for the Wendler 5/3/1 program. All 6 variants, auto-calculated weights, Apple Watch companion, and zero subscriptions.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: #000;
+            color: #f5f5f7;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: #2997ff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .hero {
+            text-align: center;
+            padding: 80px 20px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .hero h1 {
+            font-size: 3em;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+        .hero .subtitle {
+            font-size: 1.4em;
+            color: #86868b;
+            margin-bottom: 24px;
+        }
+        .hero .tagline {
+            font-size: 1.1em;
+            color: #a1a1a6;
+            max-width: 550px;
+            margin: 0 auto 32px;
+        }
+        .badge {
+            display: inline-block;
+            background: #1d1d1f;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            color: #86868b;
+            margin-bottom: 40px;
+        }
+
+        .screenshots {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 0 20px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .screenshots img {
+            height: 500px;
+            width: auto;
+            border-radius: 20px;
+            flex-shrink: 0;
+            scroll-snap-align: center;
+            border: 1px solid #222;
+        }
+
+        .features {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+        .features h2 {
+            font-size: 2em;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+        .feature {
+            padding: 24px;
+            background: #1d1d1f;
+            border-radius: 16px;
+        }
+        .feature h3 {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .feature p {
+            font-size: 0.95em;
+            color: #86868b;
+            line-height: 1.5;
+        }
+
+        .variants {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+            text-align: center;
+        }
+        .variants h2 {
+            font-size: 1.6em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .variant-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .variant-list span {
+            background: #1d1d1f;
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.9em;
+            color: #a1a1a6;
+        }
+
+        .privacy-section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .privacy-section h2 {
+            font-size: 1.6em;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .privacy-section p {
+            color: #86868b;
+            font-size: 1em;
+            margin-bottom: 16px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px 60px;
+            color: #86868b;
+            font-size: 0.85em;
+            border-top: 1px solid #1d1d1f;
+            max-width: 800px;
+            margin: 40px auto 0;
+        }
+        footer a { color: #2997ff; }
+
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2.2em; }
+            .hero .subtitle { font-size: 1.1em; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .screenshots img { height: 400px; }
+        }
+    </style>
 </head>
 <body>
-    <p>Redirecting to <a href="privacy-policy.html">Privacy Policy</a>...</p>
+    <div class="hero">
+        <h1>531 Strength</h1>
+        <p class="subtitle">5/3/1 Workout Tracker</p>
+        <p class="tagline">A focused, no-nonsense tracker for the Wendler 5/3/1 program. Set up your training maxes and get to work — the app handles the math.</p>
+        <div class="badge">Coming soon to the App Store</div>
+    </div>
+
+    <div class="screenshots">
+        <img src="screenshots/05_ActiveWorkout.png" alt="Active workout view with sets, weights, and plate calculator">
+        <img src="screenshots/01_WorkoutTemplates.png" alt="Workout templates with exercise tags">
+        <img src="screenshots/02_Dashboard.png" alt="Dashboard showing cycle progress and training maxes">
+        <img src="screenshots/03_History.png" alt="Workout history with top sets and volume">
+        <img src="screenshots/04_Settings.png" alt="Settings for equipment, timers, and body stats">
+    </div>
+
+    <div class="features">
+        <h2>Built for the Gym</h2>
+        <div class="feature-grid">
+            <div class="feature">
+                <h3>Auto-Calculated Weights</h3>
+                <p>Enter your training maxes once. Every set — warmups, working sets, supplemental — computed automatically. Per-lift TM percentages and configurable progression.</p>
+            </div>
+            <div class="feature">
+                <h3>Plate Calculator</h3>
+                <p>Tap any barbell set to see a color-coded plate diagram. No mental math between sets.</p>
+            </div>
+            <div class="feature">
+                <h3>Apple Watch Companion</h3>
+                <p>Live workout display, set completion, rest timers, and heart rate streaming from your wrist. Auto rep counting keeps your hands on the bar.</p>
+            </div>
+            <div class="feature">
+                <h3>Heart Rate &amp; RPE</h3>
+                <p>Stream HR from Apple Watch. Per-set RPE estimation. Rest timers with optional HR-based recovery tracking. Calorie estimation from published research.</p>
+            </div>
+            <div class="feature">
+                <h3>History &amp; Records</h3>
+                <p>Charts for weight, volume, estimated 1RM, and heart rate. Personal records by rep count. Track progression across cycles.</p>
+            </div>
+            <div class="feature">
+                <h3>Your Data, Your Device</h3>
+                <p>No accounts, no analytics, no tracking. Backup to iCloud Drive. Import from Strong. HealthKit sync. No subscriptions, no ads.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="variants">
+        <h2>All 6 Program Variants</h2>
+        <div class="variant-list">
+            <span>Standard 5/3/1</span>
+            <span>Boring But Big</span>
+            <span>First Set Last</span>
+            <span>5s PRO</span>
+            <span>BBB Beefcake</span>
+            <span>Second Set Last</span>
+        </div>
+    </div>
+
+    <div class="privacy-section">
+        <h2>Privacy First</h2>
+        <p>No data leaves your device except optional HealthKit sync. No analytics. No tracking. No accounts.</p>
+        <a href="privacy-policy.html">Read the full Privacy Policy</a>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 531 Strength. All rights reserved.</p>
+        <p><a href="privacy-policy.html">Privacy Policy</a> &middot; <a href="https://github.com/ndrego/5-3-1/issues">Support</a></p>
+    </footer>
 </body>
 </html>
