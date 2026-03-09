@@ -24,6 +24,7 @@ struct TemplateWorkoutView: View {
     @State private var supersetSourceIndex: Int?
     @State private var heartRateManager = HeartRateManager()
     @State private var phoneConnectivity = PhoneConnectivityManager()
+    @State private var showPlatesForSet: Set<UUID> = []
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -535,11 +536,26 @@ struct TemplateWorkoutView: View {
                 mainRepInput(for: set)
             }
 
-            // Plate visual
+            // Plate visual — tap to toggle
             if !plateResult.plates.isEmpty {
-                PlateVisualView(plateResult: plateResult)
+                if showPlatesForSet.contains(set.wrappedValue.id) {
+                    PlateVisualView(plateResult: plateResult)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 4)
+                        .onTapGesture { showPlatesForSet.remove(set.wrappedValue.id) }
+                } else {
+                    HStack(spacing: 4) {
+                        Image(systemName: "circle.grid.2x1")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                        Text(plateResult.description)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 4)
+                    .onTapGesture { showPlatesForSet.insert(set.wrappedValue.id) }
+                }
             }
         }
         .listRowBackground(
@@ -673,7 +689,7 @@ struct TemplateWorkoutView: View {
                 .frame(width: 44, height: 44)
             }
 
-            // Plate breakdown for barbell accessories
+            // Plate breakdown for barbell accessories — tap to toggle
             if isBarbell && set.wrappedValue.weight > 0 {
                 let plateResult = PlateCalculator.calculate(
                     totalWeight: set.wrappedValue.weight,
@@ -681,9 +697,24 @@ struct TemplateWorkoutView: View {
                     availablePlates: plates
                 )
                 if !plateResult.plates.isEmpty {
-                    PlateVisualView(plateResult: plateResult)
+                    if showPlatesForSet.contains(set.wrappedValue.id) {
+                        PlateVisualView(plateResult: plateResult)
+                            .padding(.leading, 32)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .onTapGesture { showPlatesForSet.remove(set.wrappedValue.id) }
+                    } else {
+                        HStack(spacing: 4) {
+                            Image(systemName: "circle.grid.2x1")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                            Text(plateResult.description)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
                         .padding(.leading, 32)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .onTapGesture { showPlatesForSet.insert(set.wrappedValue.id) }
+                    }
                 }
             }
         }
