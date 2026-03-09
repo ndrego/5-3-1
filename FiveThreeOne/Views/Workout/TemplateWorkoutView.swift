@@ -15,6 +15,9 @@ struct TemplateWorkoutView: View {
     @State private var notes = ""
     @State private var restTimer = RestTimerState()
     @State private var initialized = false
+    @State private var isReordering = false
+    @State private var showingSaveTemplateSheet = false
+    @State private var templateChanges = TemplateChanges()
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -23,56 +26,103 @@ struct TemplateWorkoutView: View {
 
     var body: some View {
         List {
-            // Header
-            Section {
-                header
-                    .frame(maxWidth: .infinity)
-            }
-            .listRowBackground(Color.clear)
-
-            // Rest timer
-            if restTimer.isRunning {
+            if isReordering {
+                // Reorder mode: compact rows with drag handles
+                Section("Drag to Reorder") {
+                    ForEach($exerciseStates) { $state in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(state.exerciseName)
+                                    .font(.body)
+                                    .fontWeight(.medium)
+                                if state.isMainLift {
+                                    Text("5/3/1")
+                                        .font(.caption2)
+                                        .foregroundStyle(.blue)
+                                }
+                            }
+                            Spacer()
+                        }
+                    }
+                    .onMove { from, to in
+                        exerciseStates.move(fromOffsets: from, toOffset: to)
+                    }
+                }
+            } else {
+                // Header
                 Section {
-                    RestTimerView(timer: restTimer)
-                }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-            }
-
-            // Exercise sections
-            ForEach($exerciseStates) { $exerciseState in
-                exerciseSection(for: $exerciseState)
-            }
-
-            // Notes
-            Section("Notes") {
-                TextField("Workout notes...", text: $notes, axis: .vertical)
-                    .lineLimit(3...6)
-            }
-
-            // Finish
-            Section {
-                Button {
-                    saveWorkout()
-                } label: {
-                    Text("Finish Workout")
-                        .font(.headline)
+                    header
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
                 }
-                .buttonStyle(.borderedProminent)
                 .listRowBackground(Color.clear)
+
+                // Rest timer
+                if restTimer.isRunning {
+                    Section {
+                        RestTimerView(timer: restTimer)
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                }
+
+                // Exercise sections
+                ForEach(Array(exerciseStates.indices), id: \.self) { index in
+                    exerciseSection(for: $exerciseStates[index])
+                }
+
+                // Notes
+                Section("Notes") {
+                    TextField("Workout notes...", text: $notes, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+
+                // Finish
+                Section {
+                    Button {
+                        saveWorkout()
+                    } label: {
+                        Text("Finish Workout")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .listRowBackground(Color.clear)
+                }
             }
         }
         .listStyle(.insetGrouped)
+        .environment(\.editMode, isReordering ? .constant(.active) : .constant(.inactive))
         .navigationTitle(template.name)
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(isReordering ? "Done" : "Reorder") {
+                    withAnimation {
+                        isReordering.toggle()
+                    }
+                }
+            }
+        }
         .onAppear {
             guard !initialized else { return }
             initialized = true
             workoutStartTime = .now
             initializeExercises()
+        }
+        .sheet(isPresented: $showingSaveTemplateSheet) {
+            SaveTemplateChangesView(
+                changes: templateChanges,
+                onSave: { selections in
+                    applyTemplateChanges(selections)
+                    dismiss()
+                },
+                onSkip: {
+                    dismiss()
+                }
+            )
+            .presentationDetents([.medium])
         }
     }
 
@@ -434,7 +484,98 @@ struct TemplateWorkoutView: View {
         )
         modelContext.insert(workout)
         restTimer.stop()
-        dismiss()
+
+        // Detect changes to the template
+        templateChanges = detectTemplateChanges()
+        if templateChanges.hasChanges {
+            showingSaveTemplateSheet = true
+        } else {
+            dismiss()
+        }
+    }
+
+    // MARK: - Template Change Detection
+
+    private func detectTemplateChanges() -> TemplateChanges {
+        var changes = TemplateChanges()
+        let originalEntries = template.exerciseEntries.sorted(by: { $0.sortOrder < $1.sortOrder })
+        let originalNames = originalEntries.map { $0.exerciseName }
+        let currentNames = exerciseStates.map { $0.exerciseName }
+
+        // Check reordering
+        if originalNames != currentNames {
+            // Could be reorder, additions, or both
+            let originalSet = Set(originalNames)
+            let currentSet = Set(currentNames)
+
+            // New exercises added during workout
+            let added = currentSet.subtracting(originalSet)
+            if !added.isEmpty {
+                changes.newExercises = exerciseStates.filter { added.contains($0.exerciseName) }
+                    .map { $0.exerciseName }
+            }
+
+            // Check if order changed (comparing only exercises that exist in both)
+            let commonOriginal = originalNames.filter { currentSet.contains($0) }
+            let commonCurrent = currentNames.filter { originalSet.contains($0) }
+            if commonOriginal != commonCurrent {
+                changes.orderChanged = true
+            }
+        }
+
+        // Check accessory weight/rep changes
+        for state in exerciseStates where !state.isMainLift {
+            if let originalEntry = originalEntries.first(where: { $0.exerciseName == state.exerciseName }) {
+                // Compare completed sets against previous sets
+                let completedSets = state.sets.filter { $0.isComplete }
+                if !completedSets.isEmpty {
+                    changes.exercisesWithNewValues.append(state.exerciseName)
+                }
+            }
+        }
+
+        // Check set count changes for accessories
+        for state in exerciseStates where !state.isMainLift {
+            let originalPrev = state.previousSets.count
+            let current = state.sets.count
+            if current != originalPrev && current != 3 { // 3 is the default
+                changes.setCountChanged = true
+            }
+        }
+
+        return changes
+    }
+
+    private func applyTemplateChanges(_ selections: TemplateChangeSelections) {
+        var updatedEntries = template.exerciseEntries
+
+        if selections.saveOrder {
+            updatedEntries = exerciseStates.enumerated().map { index, state in
+                if var existing = updatedEntries.first(where: { $0.id == state.id }) {
+                    existing.sortOrder = index
+                    return existing
+                }
+                return TemplateExerciseEntry(
+                    exerciseName: state.exerciseName,
+                    mainLift: state.mainLift,
+                    sortOrder: index
+                )
+            }
+        }
+
+        if selections.saveNewExercises {
+            let existingNames = Set(updatedEntries.map { $0.exerciseName })
+            let maxOrder = (updatedEntries.map { $0.sortOrder }.max() ?? -1) + 1
+            for (offset, state) in exerciseStates.enumerated() where !existingNames.contains(state.exerciseName) {
+                updatedEntries.append(TemplateExerciseEntry(
+                    exerciseName: state.exerciseName,
+                    mainLift: state.mainLift,
+                    sortOrder: selections.saveOrder ? offset : maxOrder + offset
+                ))
+            }
+        }
+
+        template.exerciseEntries = updatedEntries
     }
 }
 
@@ -451,4 +592,86 @@ struct ExerciseState: Identifiable {
 
     var isMainLift: Bool { mainLift != nil }
     var lift: Lift? { mainLift.flatMap { Lift(rawValue: $0) } }
+}
+
+// MARK: - Template Changes
+
+struct TemplateChanges {
+    var orderChanged = false
+    var newExercises: [String] = []
+    var exercisesWithNewValues: [String] = []
+    var setCountChanged = false
+
+    var hasChanges: Bool {
+        orderChanged || !newExercises.isEmpty
+    }
+}
+
+struct TemplateChangeSelections {
+    var saveOrder = true
+    var saveNewExercises = true
+}
+
+// MARK: - Save Template Changes Sheet
+
+struct SaveTemplateChangesView: View {
+    let changes: TemplateChanges
+    let onSave: (TemplateChangeSelections) -> Void
+    let onSkip: () -> Void
+
+    @State private var selections = TemplateChangeSelections()
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text("Your workout had changes from the template. Save them for next time?")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .listRowBackground(Color.clear)
+
+                Section("Changes Detected") {
+                    if changes.orderChanged {
+                        Toggle(isOn: $selections.saveOrder) {
+                            VStack(alignment: .leading) {
+                                Text("Exercise order")
+                                    .font(.body)
+                                Text("Update the exercise order in the template")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+
+                    if !changes.newExercises.isEmpty {
+                        Toggle(isOn: $selections.saveNewExercises) {
+                            VStack(alignment: .leading) {
+                                Text("New exercises")
+                                    .font(.body)
+                                Text(changes.newExercises.joined(separator: ", "))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .listStyle(.insetGrouped)
+            .navigationTitle("Update Template?")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(selections)
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") {
+                        onSkip()
+                    }
+                }
+            }
+        }
+    }
 }

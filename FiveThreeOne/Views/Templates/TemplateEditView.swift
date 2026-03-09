@@ -15,35 +15,71 @@ struct TemplateEditView: View {
     private var isNew: Bool { template == nil }
 
     var body: some View {
-        Form {
+        List {
             Section("Template Name") {
                 TextField("e.g. Deadlift + Bench", text: $name)
             }
 
             Section("Exercises") {
-                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(entry.exerciseName)
-                                .font(.body)
-                            if entry.isMainLift {
-                                Text("5/3/1 Main Lift")
-                                    .font(.caption)
-                                    .foregroundStyle(.blue)
+                if entries.isEmpty {
+                    Text("No exercises added")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(Array(entries.indices), id: \.self) { index in
+                        HStack(spacing: 12) {
+                            // Move buttons
+                            VStack(spacing: 0) {
+                                Button {
+                                    guard index > 0 else { return }
+                                    entries.swapAt(index, index - 1)
+                                    reindex()
+                                } label: {
+                                    Image(systemName: "chevron.up")
+                                        .font(.caption)
+                                        .foregroundStyle(index > 0 ? .primary : .quaternary)
+                                }
+                                .disabled(index == 0)
+
+                                Button {
+                                    guard index < entries.count - 1 else { return }
+                                    entries.swapAt(index, index + 1)
+                                    reindex()
+                                } label: {
+                                    Image(systemName: "chevron.down")
+                                        .font(.caption)
+                                        .foregroundStyle(index < entries.count - 1 ? .primary : .quaternary)
+                                }
+                                .disabled(index == entries.count - 1)
                             }
+                            .buttonStyle(.plain)
+
+                            VStack(alignment: .leading) {
+                                Text(entries[index].exerciseName)
+                                    .font(.body)
+                                if entries[index].isMainLift {
+                                    Text("5/3/1 Main Lift")
+                                        .font(.caption)
+                                        .foregroundStyle(.blue)
+                                }
+                            }
+
+                            Spacer()
+
+                            Button {
+                                entries.remove(at: index)
+                                reindex()
+                            } label: {
+                                Image(systemName: "trash")
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        Spacer()
                     }
                 }
-                .onDelete { indexSet in
-                    entries.remove(atOffsets: indexSet)
-                    reindex()
-                }
-                .onMove { from, to in
-                    entries.move(fromOffsets: from, toOffset: to)
-                    reindex()
-                }
+            }
 
+            Section {
                 Button {
                     showingExercisePicker = true
                 } label: {
@@ -51,6 +87,7 @@ struct TemplateEditView: View {
                 }
             }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle(isNew ? "New Template" : "Edit Template")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -113,7 +150,6 @@ struct ExercisePickerView: View {
 
     var body: some View {
         List {
-            // Main lifts section
             Section("Main Lifts (5/3/1)") {
                 ForEach(Lift.allCases) { lift in
                     let alreadyAdded = entries.contains(where: { $0.mainLift == lift.rawValue })
@@ -139,7 +175,6 @@ struct ExercisePickerView: View {
                 }
             }
 
-            // Accessories section
             Section("Accessories") {
                 ForEach(filteredExercises) { exercise in
                     let alreadyAdded = entries.contains(where: { $0.exerciseName == exercise.name })
