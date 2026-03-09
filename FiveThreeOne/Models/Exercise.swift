@@ -76,7 +76,7 @@ extension Exercise {
         ("Hammer Curl", .pull, "dumbbell", true),
 
         // Single Leg / Core
-        ("Bulgarian Split Squat", .singleLegCore, "dumbbell", true),
+        ("Bulgarian Split Squat", .singleLegCore, "barbell", true),
         ("Lunges", .singleLegCore, "dumbbell", true),
         ("Romanian Deadlift", .singleLegCore, "barbell", false),
         ("Overhead Squat", .singleLegCore, "barbell", false),

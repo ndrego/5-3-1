@@ -488,8 +488,13 @@ struct TemplateWorkoutView: View {
 
     private func mainSetRow(for set: Binding<CompletedSet>, setIndex: Int, state: ExerciseState) -> some View {
         let planned = setIndex < state.plannedSets.count ? state.plannedSets[setIndex] : nil
-        return HStack {
-            VStack(alignment: .leading, spacing: 2) {
+        let plateResult = PlateCalculator.calculate(
+            totalWeight: set.wrappedValue.weight,
+            barWeight: barWeight,
+            availablePlates: plates
+        )
+        return VStack(spacing: 4) {
+            HStack {
                 HStack(spacing: 4) {
                     WeightField(value: set.weight, font: .title3)
                     Text("lbs")
@@ -502,31 +507,40 @@ struct TemplateWorkoutView: View {
                 .padding(.vertical, 4)
                 .background(Color(.tertiarySystemFill))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
+
                 if let p = planned {
-                    Text("\(Int(p.percentage * 100))% × \(p.reps)\(p.isAMRAP ? "+" : "")\(p.setType == .main ? "" : " — \(p.setType.displayName)")")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Text("\(Int(p.percentage * 100))% × \(p.reps)\(p.isAMRAP ? "+" : "")\(p.setType == .supplemental ? " \(p.setType.displayName)" : "")")
+                            .font(.caption)
+                            .foregroundStyle(p.setType == .warmup ? .tertiary : .secondary)
+                        if p.setType == .warmup {
+                            Text("W")
+                                .font(.system(size: 9))
+                                .fontWeight(.bold)
+                                .foregroundStyle(.white)
+                                .frame(width: 16, height: 16)
+                                .background(.gray)
+                                .clipShape(Circle())
+                        }
+                    }
+                    .fixedSize()
                 }
+
+                Spacer()
+
+                // Per-set rest picker
+                setRestPicker(for: set, setType: state.sets.first?.setType ?? .main)
+
+                // Rep input
+                mainRepInput(for: set)
             }
 
-            Spacer()
-
-            // Plate info
-            if planned != nil {
-                Text(PlateCalculator.calculate(
-                    totalWeight: set.wrappedValue.weight,
-                    barWeight: barWeight,
-                    availablePlates: plates
-                ).description)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+            // Plate visual
+            if !plateResult.plates.isEmpty {
+                PlateVisualView(plateResult: plateResult)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 4)
             }
-
-            // Per-set rest picker
-            setRestPicker(for: set, setType: state.sets.first?.setType ?? .main)
-
-            // Rep input
-            mainRepInput(for: set)
         }
         .listRowBackground(
             ZStack(alignment: .top) {
@@ -587,7 +601,8 @@ struct TemplateWorkoutView: View {
             accessorySetRow(
                 setNumber: index + 1,
                 set: exerciseState.sets[index],
-                previousSet: index < state.previousSets.count ? state.previousSets[index] : nil
+                previousSet: index < state.previousSets.count ? state.previousSets[index] : nil,
+                isBarbell: state.isBarbell
             )
             .onChange(of: exerciseState.sets[index].wrappedValue.actualReps) { oldVal, newVal in
                 if oldVal == 0 && newVal > 0 {
@@ -612,52 +627,65 @@ struct TemplateWorkoutView: View {
         }
     }
 
-    private func accessorySetRow(setNumber: Int, set: Binding<CompletedSet>, previousSet: CompletedSet?) -> some View {
-        HStack(spacing: 12) {
-            Text("\(setNumber)")
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundStyle(.secondary)
-                .frame(width: 20)
+    private func accessorySetRow(setNumber: Int, set: Binding<CompletedSet>, previousSet: CompletedSet?, isBarbell: Bool = false) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 12) {
+                Text("\(setNumber)")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20)
 
-            // Weight — pre-filled from previous, editable
-            WeightField(value: set.weight)
-                .padding(4)
-                .background(Color(.tertiarySystemFill))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                // Weight — pre-filled from previous, editable
+                WeightField(value: set.weight)
+                    .padding(4)
+                    .background(Color(.tertiarySystemFill))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
 
-            Text("lbs")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                Text("lbs")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
 
-            // Reps — binds to targetReps (pre-filled from previous), user edits before confirming
-            RepsField(value: set.targetReps)
-                .padding(4)
-                .background(Color(.tertiarySystemFill))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                // Reps
+                RepsField(value: set.targetReps)
+                    .padding(4)
+                    .background(Color(.tertiarySystemFill))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
 
-            Text("reps")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                Text("reps")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
 
-            Spacer()
+                Spacer()
 
-            // Per-set rest picker
-            setRestPicker(for: set, setType: .accessory)
-
-            // Tap to confirm: copies targetReps → actualReps
-            Button {
-                if set.wrappedValue.isComplete {
-                    set.wrappedValue.actualReps = 0
-                } else {
-                    set.wrappedValue.actualReps = set.wrappedValue.targetReps
+                // Tap to confirm: copies targetReps → actualReps
+                Button {
+                    if set.wrappedValue.isComplete {
+                        set.wrappedValue.actualReps = 0
+                    } else {
+                        set.wrappedValue.actualReps = set.wrappedValue.targetReps
+                    }
+                } label: {
+                    Image(systemName: set.wrappedValue.isComplete ? "checkmark.circle.fill" : "circle")
+                        .font(.title2)
+                        .foregroundStyle(set.wrappedValue.isComplete ? .green : .secondary)
                 }
-            } label: {
-                Image(systemName: set.wrappedValue.isComplete ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundStyle(set.wrappedValue.isComplete ? .green : .secondary)
+                .frame(width: 44, height: 44)
             }
-            .frame(width: 44, height: 44)
+
+            // Plate breakdown for barbell accessories
+            if isBarbell && set.wrappedValue.weight > 0 {
+                let plateResult = PlateCalculator.calculate(
+                    totalWeight: set.wrappedValue.weight,
+                    barWeight: barWeight,
+                    availablePlates: plates
+                )
+                if !plateResult.plates.isEmpty {
+                    PlateVisualView(plateResult: plateResult)
+                        .padding(.leading, 32)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
         }
         .listRowBackground(set.wrappedValue.isComplete ? Color.green.opacity(0.08) : nil)
     }
@@ -784,6 +812,8 @@ struct TemplateWorkoutView: View {
 
                 let unilateral = exerciseByName[entry.exerciseName]?.isUnilateral ?? false
 
+                let equipment = exerciseByName[entry.exerciseName]?.equipmentType ?? "barbell"
+
                 var state = ExerciseState(
                     id: entry.id,
                     exerciseName: entry.exerciseName,
@@ -793,7 +823,8 @@ struct TemplateWorkoutView: View {
                     previousSets: previous?.sets ?? [],
                     previousBestSummary: previous?.bestSetSummary,
                     supersetGroup: entry.supersetGroup,
-                    isUnilateral: unilateral
+                    isUnilateral: unilateral,
+                    equipmentType: equipment
                 )
 
                 if let lift = entry.lift, let cycle {
@@ -1038,8 +1069,10 @@ struct ExerciseState: Identifiable {
     var recentWeights: [(date: Date, weight: Double)] = []
     var supersetGroup: Int?
     var isUnilateral: Bool = false
+    var equipmentType: String = "barbell"
 
     var isMainLift: Bool { mainLift != nil }
+    var isBarbell: Bool { equipmentType == "barbell" }
     var lift: Lift? { mainLift.flatMap { Lift(rawValue: $0) } }
 }
 
@@ -1374,7 +1407,7 @@ struct SupersetRowView: View {
 /// without rejecting intermediate states (empty, trailing decimal, etc.)
 struct WeightField: View {
     @Binding var value: Double
-    var width: CGFloat = 60
+    var width: CGFloat = 48
     var font: Font = .body
 
     @State private var text: String = ""

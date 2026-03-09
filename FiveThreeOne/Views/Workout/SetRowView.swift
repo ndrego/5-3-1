@@ -117,7 +117,7 @@ struct PlateVisualView: View {
                 .foregroundStyle(.secondary)
         } else {
             HStack(spacing: 2) {
-                ForEach(Array(plateResult.plates.enumerated()), id: \.offset) { _, plate in
+                ForEach(Array(plateResult.plates.reversed().enumerated()), id: \.offset) { _, plate in
                     RoundedRectangle(cornerRadius: 2)
                         .fill(plateColor(plate))
                         .frame(width: plateWidth(plate), height: plateHeight(plate))

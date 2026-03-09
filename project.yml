@@ -24,12 +24,12 @@ targets:
           - "Preview Content"
       - path: FiveThreeOne/Preview Content
         buildPhase: sources
-    entitlements:
-      path: FiveThreeOne/FiveThreeOne.entitlements
-      properties:
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access:
-          - health-records
+    # entitlements:
+    #   path: FiveThreeOne/FiveThreeOne.entitlements
+    #   properties:
+    #     com.apple.developer.healthkit: true
+    #     com.apple.developer.healthkit.access:
+    #       - health-records
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ndrego.FiveThreeOne
@@ -61,11 +61,11 @@ targets:
     platform: watchOS
     sources:
       - path: FiveThreeOneWatch
-    entitlements:
-      path: FiveThreeOneWatch/FiveThreeOneWatch.entitlements
-      properties:
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
+    # entitlements:
+    #   path: FiveThreeOneWatch/FiveThreeOneWatch.entitlements
+    #   properties:
+    #     com.apple.developer.healthkit: true
+    #     com.apple.developer.healthkit.access: []
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ndrego.FiveThreeOne.watch
