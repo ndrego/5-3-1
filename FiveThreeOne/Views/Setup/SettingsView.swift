@@ -81,6 +81,34 @@ struct SettingsView: View {
                         }
                     }
 
+                    Section("Body Stats") {
+                        Picker("Age", selection: Binding(
+                            get: { s.userAge ?? 30 },
+                            set: { s.userAge = $0 }
+                        )) {
+                            ForEach(16..<80, id: \.self) { age in
+                                Text("\(age)").tag(age)
+                            }
+                        }
+
+                        Picker("Weight", selection: Binding(
+                            get: { Int(s.bodyWeightLbs ?? 176) },
+                            set: { s.bodyWeightLbs = Double($0) }
+                        )) {
+                            ForEach(Array(stride(from: 90, through: 350, by: 5)), id: \.self) { w in
+                                Text("\(w) lbs").tag(w)
+                            }
+                        }
+
+                        Picker("Sex", selection: Binding(
+                            get: { s.isMale ?? true },
+                            set: { s.isMale = $0 }
+                        )) {
+                            Text("Male").tag(true)
+                            Text("Female").tag(false)
+                        }
+                    }
+
                     Section("Warmup Sets") {
                         ForEach(Array(s.effectiveWarmupPercentages.indices), id: \.self) { i in
                             HStack {

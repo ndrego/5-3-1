@@ -47,6 +47,7 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
         INFOPLIST_KEY_CFBundleDisplayName: "5/3/1"
         INFOPLIST_KEY_NSHealthShareUsageDescription: "5/3/1 reads your heart rate during workouts to track effort and estimate calories burned."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "5/3/1 saves your completed workouts and calories to Apple Health."
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
         SUPPORTS_MACCATALYST: false

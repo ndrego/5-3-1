@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct TemplateWorkoutView: View {
     @Environment(\.modelContext) private var modelContext
@@ -67,6 +68,7 @@ struct TemplateWorkoutView: View {
                         Button {
                             workoutStartTime = .now
                             workoutStarted = true
+                            UIApplication.shared.isIdleTimerDisabled = true
                             phoneConnectivity.sendWorkoutStarted()
                             sendWatchContext()
                         } label: {
@@ -143,12 +145,14 @@ struct TemplateWorkoutView: View {
             phoneConnectivity.activate()
         }
         .task {
+            if heartRateManager.isAvailable {
+                await heartRateManager.requestAuthorization()
+            }
             #if DEBUG && targetEnvironment(simulator)
             heartRateManager.isSimulating = true
             heartRateManager.startMonitoring()
             #else
-            if heartRateManager.isAvailable {
-                await heartRateManager.requestAuthorization()
+            if heartRateManager.isAuthorized {
                 heartRateManager.startMonitoring()
             }
             #endif
@@ -170,6 +174,7 @@ struct TemplateWorkoutView: View {
         }
         .onDisappear {
             heartRateManager.stopMonitoring()
+            UIApplication.shared.isIdleTimerDisabled = false
         }
         .sheet(isPresented: $showingSupersetPicker) {
             supersetPickerSheet
@@ -681,6 +686,7 @@ struct TemplateWorkoutView: View {
         guard !workoutStarted else { return }
         workoutStartTime = .now
         workoutStarted = true
+        UIApplication.shared.isIdleTimerDisabled = true
         phoneConnectivity.sendWorkoutStarted()
     }
 
@@ -866,8 +872,17 @@ struct TemplateWorkoutView: View {
         // Compute HR stats
         let avgHR = heartRateManager.sessionAverageHR
         let durationMinutes = Double(duration) / 60.0
+        let weightKg = (userSettings?.bodyWeightLbs ?? 176) / 2.205
+        let age = userSettings?.userAge ?? 30
+        let isMale = userSettings?.isMale ?? true
         let calories: Double? = if let avgHR {
-            HeartRateManager.estimateCalories(averageHR: avgHR, durationMinutes: durationMinutes)
+            HeartRateManager.estimateCalories(
+                averageHR: avgHR,
+                durationMinutes: durationMinutes,
+                bodyWeightKg: weightKg,
+                age: age,
+                isMale: isMale
+            )
         } else {
             nil
         }
@@ -887,7 +902,22 @@ struct TemplateWorkoutView: View {
         modelContext.insert(workout)
         restTimer.stop()
         heartRateManager.stopMonitoring()
+        UIApplication.shared.isIdleTimerDisabled = false
         phoneConnectivity.sendWorkoutFinished()
+
+        // Save to HealthKit
+        let startTime = workoutStartTime ?? .now
+        let endTime = Date.now
+        let savedCalories = calories
+        let savedAvgHR = avgHR
+        Task {
+            await heartRateManager.saveWorkoutToHealthKit(
+                start: startTime,
+                end: endTime,
+                calories: savedCalories,
+                averageHR: savedAvgHR
+            )
+        }
 
         // Detect changes to the template
         templateChanges = detectTemplateChanges()

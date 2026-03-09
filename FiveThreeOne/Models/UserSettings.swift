@@ -13,6 +13,9 @@ final class UserSettings {
     var warmupPercentages: [Double]?  // e.g. [0.40, 0.50, 0.60]
     var warmupReps: [Int]?            // e.g. [5, 5, 3] — parallel to warmupPercentages
     var recoveryHR: Int?              // Target HR for rest recovery (nil = disabled)
+    var userAge: Int?                  // For calorie calculation
+    var bodyWeightLbs: Double?         // Body weight in lbs for calorie calculation
+    var isMale: Bool?                  // Biological sex for calorie formula (nil = male default)
 
     static let defaultWarmupPercentages: [Double] = [0.40, 0.50, 0.60]
     static let defaultWarmupReps: [Int] = [5, 5, 3]

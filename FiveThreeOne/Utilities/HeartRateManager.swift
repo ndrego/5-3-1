@@ -32,12 +32,55 @@ final class HeartRateManager {
         let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate)!
         let activeEnergy = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
         let readTypes: Set<HKObjectType> = [heartRateType, activeEnergy]
+        let writeTypes: Set<HKSampleType> = [HKWorkoutType.workoutType(), activeEnergy]
 
         do {
-            try await healthStore.requestAuthorization(toShare: [], read: readTypes)
+            try await healthStore.requestAuthorization(toShare: writeTypes, read: readTypes)
             isAuthorized = true
         } catch {
             isAuthorized = false
+        }
+    }
+
+    /// Save a completed workout to HealthKit so it appears in the Fitness app.
+    func saveWorkoutToHealthKit(
+        start: Date,
+        end: Date,
+        calories: Double?,
+        averageHR: Double?
+    ) async {
+        guard isAvailable, isAuthorized else {
+            print("HealthKit save skipped: available=\(isAvailable) authorized=\(isAuthorized)")
+            return
+        }
+
+        let config = HKWorkoutConfiguration()
+        config.activityType = .traditionalStrengthTraining
+        config.locationType = .indoor
+
+        let builder = HKWorkoutBuilder(healthStore: healthStore, configuration: config, device: .local())
+
+        do {
+            try await builder.beginCollection(at: start)
+
+            // Add calorie sample if available
+            if let calories, calories > 0 {
+                let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
+                let energyQuantity = HKQuantity(unit: .kilocalorie(), doubleValue: calories)
+                let energySample = HKQuantitySample(
+                    type: energyType,
+                    quantity: energyQuantity,
+                    start: start,
+                    end: end
+                )
+                try await builder.addSamples([energySample])
+            }
+
+            try await builder.endCollection(at: end)
+            try await builder.finishWorkout()
+            print("HealthKit workout saved successfully")
+        } catch {
+            print("Failed to save workout to HealthKit: \(error.localizedDescription)")
         }
     }
 
@@ -119,14 +162,28 @@ final class HeartRateManager {
         return allSessionSamples.reduce(0, +) / Double(allSessionSamples.count)
     }
 
-    /// Rough calorie estimate using average HR, duration, and body weight.
+    /// Calorie estimate using the Keytel et al. (2005) HR-based formula.
+    /// Accounts for sex, age, weight, average HR, and duration.
     static func estimateCalories(
         averageHR: Double,
         durationMinutes: Double,
-        bodyWeightKg: Double = 80
+        bodyWeightKg: Double = 80,
+        age: Int = 30,
+        isMale: Bool = true
     ) -> Double {
-        let caloriesPerMinute = max(0, (0.6309 * averageHR + 0.1988 * bodyWeightKg - 55.0969) / 4.184)
-        return caloriesPerMinute * durationMinutes
+        let hr = averageHR
+        let wt = bodyWeightKg
+        let a = Double(age)
+        let t = durationMinutes
+
+        // Keytel et al. gender-specific equations (kcal/min)
+        let caloriesPerMinute: Double
+        if isMale {
+            caloriesPerMinute = max(0, (-55.0969 + 0.6309 * hr + 0.1988 * wt + 0.2017 * a) / 4.184)
+        } else {
+            caloriesPerMinute = max(0, (-20.4022 + 0.4472 * hr - 0.1263 * wt + 0.074 * a) / 4.184)
+        }
+        return caloriesPerMinute * t
     }
 
     // MARK: - Private
