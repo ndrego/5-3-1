@@ -105,6 +105,7 @@ struct WorkoutDetailView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("exercise-link-\(perf.exerciseName)")
 
             if perf.totalVolume > 0 {
                 HStack(spacing: 12) {

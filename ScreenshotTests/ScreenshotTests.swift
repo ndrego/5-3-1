@@ -16,7 +16,6 @@ final class ScreenshotTests: XCTestCase {
         if dismissButton.waitForExistence(timeout: 2) {
             dismissButton.tap()
         }
-        // Also dismiss inline notification banners by swiping up
         sleep(1)
     }
 
@@ -38,7 +37,7 @@ final class ScreenshotTests: XCTestCase {
     func testScreenshot02_Dashboard() throws {
         let tab = app.tabBars.buttons["Program"]
         guard tab.waitForExistence(timeout: 5) else {
-            XCTFail("Program tab not found — app may be showing onboarding")
+            XCTFail("Program tab not found")
             return
         }
         tab.tap()
@@ -69,7 +68,6 @@ final class ScreenshotTests: XCTestCase {
     }
 
     func testScreenshot05_ActiveWorkout() throws {
-        // Navigate to Workout tab
         let workoutTab = app.tabBars.buttons["Workout"]
         guard workoutTab.waitForExistence(timeout: 5) else {
             XCTFail("Workout tab not found")
@@ -78,13 +76,10 @@ final class ScreenshotTests: XCTestCase {
         workoutTab.tap()
         sleep(1)
 
-        // Find the first template by looking for "Deadlift + Bench" or "Squat + OHP" text
-        // The template cards are buttons in list cells
         let templateButton = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Deadlift")).firstMatch
         if templateButton.waitForExistence(timeout: 3) {
             templateButton.tap()
         } else {
-            // Fallback: tap second cell (skip the week picker section)
             let cells = app.cells
             if cells.count > 1 {
                 cells.element(boundBy: 1).tap()
@@ -97,29 +92,86 @@ final class ScreenshotTests: XCTestCase {
     }
 
     func testScreenshot06_WorkoutDetail() throws {
-        // Navigate to History
-        let historyTab = app.tabBars.buttons["History"]
-        guard historyTab.waitForExistence(timeout: 5) else {
-            XCTFail("History tab not found")
-            return
-        }
-        historyTab.tap()
-        sleep(1)
-
-        // Tap into the first workout to see the detail view
-        let firstCell = app.cells.firstMatch
-        guard firstCell.waitForExistence(timeout: 3) else {
-            takeScreenshot(named: "06_WorkoutDetail_Empty")
-            return
-        }
-
-        // Tap the disclosure indicator / navigation link area
-        firstCell.tap()
-        sleep(2)
+        navigateToWorkoutDetail()
         takeScreenshot(named: "06_WorkoutDetail")
     }
 
-    // MARK: - Helpers
+    func testScreenshot07_ExerciseCharts() throws {
+        navigateToExerciseDetail()
+
+        let chartsTab = app.buttons["Charts"]
+        if chartsTab.waitForExistence(timeout: 3) {
+            chartsTab.tap()
+        }
+        sleep(1)
+        takeScreenshot(named: "07_ExerciseCharts")
+    }
+
+    func testScreenshot08_ExerciseRecords() throws {
+        navigateToExerciseDetail()
+
+        let recordsTab = app.buttons["Records"]
+        if recordsTab.waitForExistence(timeout: 3) {
+            recordsTab.tap()
+        }
+        sleep(1)
+        takeScreenshot(named: "08_ExerciseRecords")
+    }
+
+    func testScreenshot09_ExerciseHistory() throws {
+        navigateToExerciseDetail()
+        sleep(1)
+        takeScreenshot(named: "09_ExerciseHistory")
+    }
+
+    // MARK: - Navigation Helpers
+
+    private func navigateToWorkoutDetail() {
+        let historyTab = app.tabBars.buttons["History"]
+        guard historyTab.waitForExistence(timeout: 5) else { return }
+        historyTab.tap()
+        sleep(1)
+
+        // History list uses NavigationLink wrapping each row
+        // Look for a static text or button that contains workout info
+        let workoutRow = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Deadlift + Bench")).firstMatch
+        if workoutRow.waitForExistence(timeout: 3) {
+            workoutRow.tap()
+            sleep(2)
+            return
+        }
+
+        // Fallback: tap first cell
+        let firstCell = app.cells.firstMatch
+        if firstCell.waitForExistence(timeout: 3) {
+            firstCell.tap()
+            sleep(2)
+        }
+    }
+
+    private func navigateToExerciseDetail() {
+        navigateToWorkoutDetail()
+
+        // Look for exercise links by accessibility identifier
+        let exerciseLink = app.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH %@", "exercise-link-"
+        )).firstMatch
+
+        if exerciseLink.waitForExistence(timeout: 3) {
+            exerciseLink.tap()
+            sleep(2)
+            return
+        }
+
+        // Fallback: look for "Deadlift" text in the detail view
+        let deadliftText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Deadlift")).firstMatch
+        if deadliftText.waitForExistence(timeout: 3) {
+            deadliftText.tap()
+            sleep(2)
+        }
+    }
+
+    // MARK: - Screenshot Helper
 
     private func takeScreenshot(named name: String) {
         let screenshot = XCUIScreen.main.screenshot()
