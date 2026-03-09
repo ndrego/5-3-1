@@ -76,6 +76,18 @@ struct ExerciseDetailView: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
+                    if let hr = set.averageHR {
+                        Spacer()
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 8))
+                            .foregroundStyle(.red)
+                        Text("\(Int(hr))")
+                            .monospacedDigit()
+                        if let rpe = set.estimatedRPE {
+                            Text("RPE \(String(format: "%.0f", rpe))")
+                                .foregroundStyle(rpeColor(rpe))
+                        }
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -144,6 +156,38 @@ struct ExerciseDetailView: View {
                         color: .purple,
                         unit: ""
                     )
+
+                    // Average HR per session
+                    let hrData: [(date: Date, value: Double)] = performances.reversed().compactMap { entry in
+                        let setsWithHR = entry.performance.sets.compactMap { $0.averageHR }
+                        guard !setsWithHR.isEmpty else { return nil }
+                        let avg = setsWithHR.reduce(0, +) / Double(setsWithHR.count)
+                        return (date: entry.date, value: avg)
+                    }
+                    if hrData.count >= 2 {
+                        chartSection(
+                            title: "Average Heart Rate",
+                            data: hrData,
+                            color: .red,
+                            unit: "BPM"
+                        )
+                    }
+
+                    // Average RPE per session
+                    let rpeData: [(date: Date, value: Double)] = performances.reversed().compactMap { entry in
+                        let setsWithRPE = entry.performance.sets.compactMap { $0.estimatedRPE }
+                        guard !setsWithRPE.isEmpty else { return nil }
+                        let avg = setsWithRPE.reduce(0, +) / Double(setsWithRPE.count)
+                        return (date: entry.date, value: avg)
+                    }
+                    if rpeData.count >= 2 {
+                        chartSection(
+                            title: "Estimated RPE",
+                            data: rpeData,
+                            color: .orange,
+                            unit: ""
+                        )
+                    }
                 } else {
                     ContentUnavailableView("Not Enough Data", systemImage: "chart.xyaxis.line",
                         description: Text("Need at least 2 sessions to show charts."))
@@ -359,6 +403,15 @@ struct ExerciseDetailView: View {
     }
 
     // MARK: - Helpers
+
+    private func rpeColor(_ rpe: Double) -> Color {
+        switch rpe {
+        case ..<7: return .green
+        case ..<8: return .yellow
+        case ..<9: return .orange
+        default: return .red
+        }
+    }
 
     private func formatVolume(_ vol: Double) -> String {
         if vol >= 1000 {

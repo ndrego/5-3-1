@@ -157,6 +157,11 @@ struct WorkoutDetailView: View {
                                 .font(.caption)
                                 .foregroundStyle(.red.opacity(0.6))
                                 .monospacedDigit()
+                            if let rpe = set.estimatedRPE {
+                                Text("RPE \(String(format: "%.0f", rpe))")
+                                    .font(.caption2)
+                                    .foregroundStyle(rpeColor(rpe))
+                            }
                         }
                     }
                 }
@@ -166,5 +171,14 @@ struct WorkoutDetailView: View {
         .padding()
         .background(.background.secondary)
         .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func rpeColor(_ rpe: Double) -> Color {
+        switch rpe {
+        case ..<7: return .green
+        case ..<8: return .yellow
+        case ..<9: return .orange
+        default: return .red
+        }
     }
 }

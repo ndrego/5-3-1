@@ -604,6 +604,29 @@ struct TemplateWorkoutView: View {
                     .onTapGesture { showPlatesForSet.insert(set.wrappedValue.id) }
                 }
             }
+
+            // HR + RPE after set completion
+            if set.wrappedValue.isComplete, let avgHR = set.wrappedValue.averageHR {
+                HStack(spacing: 8) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.red)
+                        Text("\(Int(avgHR))")
+                            .font(.caption2)
+                            .monospacedDigit()
+                    }
+                    if let rpe = set.wrappedValue.estimatedRPE {
+                        Text("RPE \(String(format: "%.1f", rpe))")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundStyle(rpeColor(rpe))
+                    }
+                }
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 4)
+            }
         }
         .listRowBackground(
             ZStack(alignment: .top) {
@@ -781,8 +804,12 @@ struct TemplateWorkoutView: View {
     private func startRest(setRestSeconds: Int?, setType: SetType) {
         autoStartIfNeeded()
 
-        // End HR tracking for previous set, start for next
-        _ = heartRateManager.markSetEnd()
+        // End HR tracking for previous set, store data on it
+        if let hrResult = heartRateManager.markSetEnd() {
+            let age = userSettings?.userAge ?? 30
+            let rpe = HeartRateManager.estimateRPE(heartRate: hrResult.average, age: age)
+            storeHROnLastCompletedSet(average: hrResult.average, samples: hrResult.samples, rpe: rpe)
+        }
         heartRateManager.markSetStart()
 
         // Send workout context to watch
@@ -856,6 +883,29 @@ struct TemplateWorkoutView: View {
                         setRestSeconds: exerciseStates[i].sets[j].restSeconds,
                         setType: exerciseStates[i].sets[j].setType
                     )
+                    return
+                }
+            }
+        }
+    }
+
+    private func rpeColor(_ rpe: Double) -> Color {
+        switch rpe {
+        case ..<7: return .green
+        case ..<8: return .yellow
+        case ..<9: return .orange
+        default: return .red
+        }
+    }
+
+    /// Stores HR data on the most recently completed set that doesn't have HR yet.
+    private func storeHROnLastCompletedSet(average: Double, samples: [Double], rpe: Double) {
+        for i in exerciseStates.indices.reversed() {
+            for j in exerciseStates[i].sets.indices.reversed() {
+                if exerciseStates[i].sets[j].isComplete && exerciseStates[i].sets[j].averageHR == nil {
+                    exerciseStates[i].sets[j].averageHR = average
+                    exerciseStates[i].sets[j].hrSamples = samples
+                    exerciseStates[i].sets[j].estimatedRPE = rpe
                     return
                 }
             }

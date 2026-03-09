@@ -146,14 +146,28 @@ final class HeartRateManager {
         setHRSamples = []
     }
 
-    /// Call when a set ends. Returns the average HR during the set, or nil.
-    func markSetEnd() -> Double? {
+    /// Call when a set ends. Returns average HR and all samples during the set.
+    func markSetEnd() -> (average: Double, samples: [Double])? {
         defer {
             setStartTime = nil
             setHRSamples = []
         }
         guard !setHRSamples.isEmpty else { return nil }
-        return setHRSamples.reduce(0, +) / Double(setHRSamples.count)
+        let avg = setHRSamples.reduce(0, +) / Double(setHRSamples.count)
+        return (average: avg, samples: setHRSamples)
+    }
+
+    /// Estimate RPE (6-10 scale) from heart rate as percentage of max HR.
+    /// Uses age-predicted max HR (220 - age).
+    static func estimateRPE(heartRate: Double, age: Int) -> Double {
+        let maxHR = Double(220 - age)
+        guard maxHR > 0 else { return 6 }
+        let pctMax = heartRate / maxHR
+
+        // Map HR% to RPE 6-10 scale
+        // <60% → 6, 60-70% → 6-7, 70-80% → 7-8, 80-90% → 8-9, 90%+ → 9-10
+        let rpe = 6.0 + (pctMax - 0.5) * 10.0
+        return min(10, max(6, rpe))
     }
 
     /// Session average HR.
