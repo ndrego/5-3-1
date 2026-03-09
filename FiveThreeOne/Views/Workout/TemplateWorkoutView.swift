@@ -18,6 +18,8 @@ struct TemplateWorkoutView: View {
     @State private var isReordering = false
     @State private var showingSaveTemplateSheet = false
     @State private var templateChanges = TemplateChanges()
+    @State private var showingSupersetPicker = false
+    @State private var supersetSourceIndex: Int?
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -56,18 +58,13 @@ struct TemplateWorkoutView: View {
                 }
                 .listRowBackground(Color.clear)
 
-                // Rest timer
-                if restTimer.isRunning {
-                    Section {
-                        RestTimerView(timer: restTimer)
+                // Exercise sections (grouped by superset)
+                ForEach(exerciseSectionGroups, id: \.id) { group in
+                    if group.indices.count > 1 {
+                        supersetSection(for: group)
+                    } else if let idx = group.indices.first {
+                        exerciseSection(for: $exerciseStates[idx], index: idx)
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                }
-
-                // Exercise sections
-                ForEach(Array(exerciseStates.indices), id: \.self) { index in
-                    exerciseSection(for: $exerciseStates[index])
                 }
 
                 // Notes
@@ -92,6 +89,14 @@ struct TemplateWorkoutView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .safeAreaInset(edge: .bottom) {
+            if restTimer.isRunning {
+                RestTimerView(timer: restTimer)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial)
+            }
+        }
         .environment(\.editMode, isReordering ? .constant(.active) : .constant(.inactive))
         .navigationTitle(template.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -110,6 +115,10 @@ struct TemplateWorkoutView: View {
             initialized = true
             workoutStartTime = .now
             initializeExercises()
+        }
+        .sheet(isPresented: $showingSupersetPicker) {
+            supersetPickerSheet
+                .presentationDetents([.medium])
         }
         .sheet(isPresented: $showingSaveTemplateSheet) {
             SaveTemplateChangesView(
@@ -148,9 +157,39 @@ struct TemplateWorkoutView: View {
         }
     }
 
-    // MARK: - Exercise Section
+    // MARK: - Section Grouping
 
-    private func exerciseSection(for exerciseState: Binding<ExerciseState>) -> some View {
+    /// Groups exercises into superset groups or standalone entries.
+    private var exerciseSectionGroups: [ExerciseSectionGroup] {
+        var groups: [ExerciseSectionGroup] = []
+        var usedIndices = Set<Int>()
+
+        for (index, state) in exerciseStates.enumerated() {
+            guard !usedIndices.contains(index) else { continue }
+
+            if let group = state.supersetGroup {
+                // Collect all exercises in this superset group
+                let indices = exerciseStates.indices.filter {
+                    exerciseStates[$0].supersetGroup == group && !usedIndices.contains($0)
+                }
+                for i in indices { usedIndices.insert(i) }
+                groups.append(ExerciseSectionGroup(indices: indices, supersetGroup: group))
+            } else {
+                usedIndices.insert(index)
+                groups.append(ExerciseSectionGroup(indices: [index], supersetGroup: nil))
+            }
+        }
+        return groups
+    }
+
+    private var nextSupersetGroupNumber: Int {
+        let existing = exerciseStates.compactMap { $0.supersetGroup }
+        return (existing.max() ?? 0) + 1
+    }
+
+    // MARK: - Exercise Section (standalone)
+
+    private func exerciseSection(for exerciseState: Binding<ExerciseState>, index: Int) -> some View {
         let state = exerciseState.wrappedValue
         return Section {
             if state.isMainLift {
@@ -158,42 +197,176 @@ struct TemplateWorkoutView: View {
             } else {
                 accessoryRows(for: exerciseState)
             }
+
+            // Superset link button
+            Button {
+                supersetSourceIndex = index
+                showingSupersetPicker = true
+            } label: {
+                Label("Superset with...", systemImage: "link")
+                    .font(.caption)
+                    .foregroundStyle(.purple)
+            }
         } header: {
-            HStack {
-                Text(state.exerciseName)
-                if state.isMainLift {
-                    Text("5/3/1")
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.blue)
-                        .foregroundStyle(.white)
-                        .clipShape(Capsule())
-                }
-                Spacer()
-                if let lift = state.lift, let cycle {
-                    let tm = cycle.trainingMax(for: lift)
-                    let tmPct = userSettings?.tmPercentage(for: lift) ?? 0.9
-                    let e1rm = tm / tmPct
-                    VStack(alignment: .trailing, spacing: 0) {
-                        Text("E1RM \(Int(e1rm))")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Text("TM \(Int(tm))")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+            exerciseSectionHeader(state: state)
+        }
+    }
+
+    // MARK: - Superset Section (interleaved)
+
+    @ViewBuilder
+    private func supersetSection(for group: ExerciseSectionGroup) -> some View {
+        let states = group.indices.map { exerciseStates[$0] }
+        let names = states.map { $0.exerciseName }.joined(separator: " + ")
+        let maxSets = states.map { $0.sets.count }.max() ?? 0
+
+        Section {
+            ForEach(0..<maxSets, id: \.self) { setIndex in
+                ForEach(Array(group.indices.enumerated()), id: \.offset) { offset, exerciseIdx in
+                    let state = exerciseStates[exerciseIdx]
+                    if setIndex < state.sets.count {
+                        supersetRow(
+                            exerciseIndex: exerciseIdx,
+                            setIndex: setIndex,
+                            label: supersetLabel(offset: offset),
+                            state: state,
+                            isLastInRound: offset == group.indices.count - 1
+                        )
                     }
                 }
-                if state.recentWeights.count >= 2 {
-                    LiftSparklineView(dataPoints: state.recentWeights)
-                } else if let previousSummary = state.previousBestSummary {
-                    Text("Prev: \(previousSummary)")
+            }
+
+            // Unlink button
+            Button {
+                for idx in group.indices {
+                    exerciseStates[idx].supersetGroup = nil
+                }
+            } label: {
+                Label("Unlink Superset", systemImage: "link.badge.plus")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        } header: {
+            HStack {
+                Image(systemName: "link")
+                    .font(.caption2)
+                    .foregroundStyle(.purple)
+                Text(names)
+                Spacer()
+                // Show sparkline for first exercise that has data
+                if let sparkState = states.first(where: { $0.recentWeights.count >= 2 }) {
+                    LiftSparklineView(dataPoints: sparkState.recentWeights)
+                }
+            }
+        }
+    }
+
+    private func supersetLabel(offset: Int) -> String {
+        let letters = "ABCDEFGH"
+        guard offset < letters.count else { return "\(offset + 1)" }
+        return String(letters[letters.index(letters.startIndex, offsetBy: offset)])
+    }
+
+    private func supersetRow(exerciseIndex: Int, setIndex: Int, label: String, state: ExerciseState, isLastInRound: Bool) -> some View {
+        SupersetRowView(
+            setBinding: $exerciseStates[exerciseIndex].sets[setIndex],
+            label: "\(label)\(setIndex + 1)",
+            exerciseName: state.exerciseName,
+            isMainLift: state.isMainLift,
+            isAMRAP: exerciseStates[exerciseIndex].sets[setIndex].isAMRAP,
+            onComplete: {
+                if isLastInRound {
+                    startRestIfNeeded(setType: state.isMainLift ? .main : .accessory)
+                }
+            }
+        )
+    }
+
+    // MARK: - Exercise Section Header
+
+    private func exerciseSectionHeader(state: ExerciseState) -> some View {
+        HStack {
+            Text(state.exerciseName)
+            if state.isMainLift {
+                Text("5/3/1")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(.blue)
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
+            }
+            if state.supersetGroup != nil {
+                Image(systemName: "link")
+                    .font(.caption2)
+                    .foregroundStyle(.purple)
+            }
+            Spacer()
+            if let lift = state.lift, let cycle {
+                let tm = cycle.trainingMax(for: lift)
+                let tmPct = userSettings?.tmPercentage(for: lift) ?? 0.9
+                let e1rm = tm / tmPct
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("E1RM \(Int(e1rm))")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text("TM \(Int(tm))")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
             }
+            if state.recentWeights.count >= 2 {
+                LiftSparklineView(dataPoints: state.recentWeights)
+            } else if let previousSummary = state.previousBestSummary {
+                Text("Prev: \(previousSummary)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
+    }
+
+    // MARK: - Superset Picker
+
+    private var supersetPickerSheet: some View {
+        let candidates = exerciseStates.indices.filter { $0 != supersetSourceIndex }
+        return NavigationStack {
+            List {
+                ForEach(candidates, id: \.self) { index in
+                    let state = exerciseStates[index]
+                    Button {
+                        linkSuperset(sourceIndex: supersetSourceIndex!, targetIndex: index)
+                        showingSupersetPicker = false
+                    } label: {
+                        HStack {
+                            Text(state.exerciseName)
+                            Spacer()
+                            if let sg = state.supersetGroup {
+                                Text("Superset \(sg)")
+                                    .font(.caption)
+                                    .foregroundStyle(.purple)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Superset With")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showingSupersetPicker = false }
+                }
+            }
+        }
+    }
+
+    private func linkSuperset(sourceIndex: Int, targetIndex: Int) {
+        let existingGroup = exerciseStates[targetIndex].supersetGroup
+            ?? exerciseStates[sourceIndex].supersetGroup
+        let group = existingGroup ?? nextSupersetGroupNumber
+
+        exerciseStates[sourceIndex].supersetGroup = group
+        exerciseStates[targetIndex].supersetGroup = group
     }
 
     // MARK: - Main Lift Rows
@@ -267,7 +440,7 @@ struct TemplateWorkoutView: View {
         )
     }
 
-    private func mainRepInput(for set: Binding<CompletedSet>) -> some View {
+    private func mainRepInput(for set: Binding<CompletedSet>, triggerRest: Bool = true) -> some View {
         HStack(spacing: 8) {
             Button {
                 if set.wrappedValue.actualReps > 0 {
@@ -288,12 +461,13 @@ struct TemplateWorkoutView: View {
 
             Button {
                 if set.wrappedValue.actualReps == 0 {
-                    // First tap: jump to target reps
                     set.wrappedValue.actualReps = set.wrappedValue.targetReps
                 } else {
                     set.wrappedValue.actualReps += 1
                 }
-                startRestIfNeeded(setType: set.wrappedValue.setType)
+                if triggerRest {
+                    startRestIfNeeded(setType: set.wrappedValue.setType)
+                }
             } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.title2)
@@ -430,7 +604,8 @@ struct TemplateWorkoutView: View {
                     sets: [],
                     plannedSets: [],
                     previousSets: previous?.sets ?? [],
-                    previousBestSummary: previous?.bestSetSummary
+                    previousBestSummary: previous?.bestSetSummary,
+                    supersetGroup: entry.supersetGroup
                 )
 
                 if let lift = entry.lift, let cycle {
@@ -486,7 +661,8 @@ struct TemplateWorkoutView: View {
                 exerciseName: state.exerciseName,
                 mainLift: state.mainLift,
                 sets: state.sets,
-                sortOrder: index
+                sortOrder: index,
+                supersetGroup: state.supersetGroup
             )
         }
 
@@ -561,6 +737,18 @@ struct TemplateWorkoutView: View {
             }
         }
 
+        // Check superset changes
+        let originalSupersets = Dictionary(
+            uniqueKeysWithValues: originalEntries.map { ($0.exerciseName, $0.supersetGroup) }
+        )
+        for state in exerciseStates {
+            let original = originalSupersets[state.exerciseName] ?? nil
+            if state.supersetGroup != original {
+                changes.supersetsChanged = true
+                break
+            }
+        }
+
         return changes
     }
 
@@ -576,7 +764,8 @@ struct TemplateWorkoutView: View {
                 return TemplateExerciseEntry(
                     exerciseName: state.exerciseName,
                     mainLift: state.mainLift,
-                    sortOrder: index
+                    sortOrder: index,
+                    supersetGroup: state.supersetGroup
                 )
             }
         }
@@ -588,8 +777,17 @@ struct TemplateWorkoutView: View {
                 updatedEntries.append(TemplateExerciseEntry(
                     exerciseName: state.exerciseName,
                     mainLift: state.mainLift,
-                    sortOrder: selections.saveOrder ? offset : maxOrder + offset
+                    sortOrder: selections.saveOrder ? offset : maxOrder + offset,
+                    supersetGroup: state.supersetGroup
                 ))
+            }
+        }
+
+        if selections.saveSupersets {
+            for i in updatedEntries.indices {
+                if let state = exerciseStates.first(where: { $0.id == updatedEntries[i].id }) {
+                    updatedEntries[i].supersetGroup = state.supersetGroup
+                }
             }
         }
 
@@ -608,9 +806,18 @@ struct ExerciseState: Identifiable {
     var previousSets: [CompletedSet]
     var previousBestSummary: String?
     var recentWeights: [(date: Date, weight: Double)] = []
+    var supersetGroup: Int?
 
     var isMainLift: Bool { mainLift != nil }
     var lift: Lift? { mainLift.flatMap { Lift(rawValue: $0) } }
+}
+
+// MARK: - Exercise Section Group
+
+struct ExerciseSectionGroup: Identifiable {
+    let id = UUID()
+    let indices: [Int]
+    let supersetGroup: Int?
 }
 
 // MARK: - Template Changes
@@ -620,15 +827,17 @@ struct TemplateChanges {
     var newExercises: [String] = []
     var exercisesWithNewValues: [String] = []
     var setCountChanged = false
+    var supersetsChanged = false
 
     var hasChanges: Bool {
-        orderChanged || !newExercises.isEmpty
+        orderChanged || !newExercises.isEmpty || supersetsChanged
     }
 }
 
 struct TemplateChangeSelections {
     var saveOrder = true
     var saveNewExercises = true
+    var saveSupersets = true
 }
 
 // MARK: - Save Template Changes Sheet
@@ -674,6 +883,18 @@ struct SaveTemplateChangesView: View {
                             }
                         }
                     }
+
+                    if changes.supersetsChanged {
+                        Toggle(isOn: $selections.saveSupersets) {
+                            VStack(alignment: .leading) {
+                                Text("Superset groupings")
+                                    .font(.body)
+                                Text("Update which exercises are supersetted")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
                 }
             }
             .listStyle(.insetGrouped)
@@ -690,6 +911,120 @@ struct SaveTemplateChangesView: View {
                         onSkip()
                     }
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Superset Row View
+
+/// Separate view so bindings are read reactively in body (not captured as lets).
+struct SupersetRowView: View {
+    @Binding var setBinding: CompletedSet
+    let label: String
+    let exerciseName: String
+    let isMainLift: Bool
+    let isAMRAP: Bool
+    let onComplete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundStyle(.purple)
+                .frame(width: 24)
+
+            Text(exerciseName)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .frame(width: 80, alignment: .leading)
+
+            TextField("0", value: $setBinding.weight, format: .number)
+                .font(.body)
+                .fontWeight(.medium)
+                .keyboardType(.decimalPad)
+                .textFieldStyle(.plain)
+                .monospacedDigit()
+                .frame(width: 55)
+                .padding(4)
+                .background(Color(.tertiarySystemFill))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            if isMainLift {
+                Spacer()
+                supersetRepStepper
+            } else {
+                TextField("0", value: $setBinding.targetReps, format: .number)
+                    .font(.body)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(.plain)
+                    .monospacedDigit()
+                    .frame(width: 35)
+                    .padding(4)
+                    .background(Color(.tertiarySystemFill))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                Spacer()
+
+                Button {
+                    let wasComplete = setBinding.isComplete
+                    if wasComplete {
+                        setBinding.actualReps = 0
+                    } else {
+                        setBinding.actualReps = setBinding.targetReps
+                        onComplete()
+                    }
+                } label: {
+                    Image(systemName: setBinding.isComplete ? "checkmark.circle.fill" : "circle")
+                        .font(.title3)
+                        .foregroundStyle(setBinding.isComplete ? .green : .secondary)
+                }
+            }
+        }
+        .listRowBackground(
+            ZStack(alignment: .top) {
+                setBinding.isComplete ? Color.green.opacity(0.08) : Color.clear
+                if isAMRAP {
+                    Rectangle().fill(Color.orange).frame(height: 3)
+                }
+            }
+        )
+    }
+
+    private var supersetRepStepper: some View {
+        HStack(spacing: 8) {
+            Button {
+                if setBinding.actualReps > 0 {
+                    setBinding.actualReps -= 1
+                }
+            } label: {
+                Image(systemName: "minus.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(setBinding.actualReps > 0 ? .primary : .quaternary)
+            }
+            .disabled(setBinding.actualReps == 0)
+
+            Text("\(setBinding.actualReps)")
+                .font(.title2)
+                .fontWeight(.bold)
+                .monospacedDigit()
+                .frame(minWidth: 36)
+
+            Button {
+                let wasZero = setBinding.actualReps == 0
+                if wasZero {
+                    setBinding.actualReps = setBinding.targetReps
+                } else {
+                    setBinding.actualReps += 1
+                }
+                if wasZero {
+                    onComplete()
+                }
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
             }
         }
     }

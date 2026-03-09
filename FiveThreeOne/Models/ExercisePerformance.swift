@@ -8,18 +8,21 @@ struct ExercisePerformance: Codable, Identifiable, Hashable {
     var mainLift: String?  // Lift.rawValue if 5/3/1 lift
     var sets: [CompletedSet]
     var sortOrder: Int
+    var supersetGroup: Int?
 
     init(
         exerciseName: String,
         mainLift: String? = nil,
         sets: [CompletedSet] = [],
-        sortOrder: Int = 0
+        sortOrder: Int = 0,
+        supersetGroup: Int? = nil
     ) {
         self.id = UUID()
         self.exerciseName = exerciseName
         self.mainLift = mainLift
         self.sets = sets
         self.sortOrder = sortOrder
+        self.supersetGroup = supersetGroup
     }
 
     var isMainLift: Bool { mainLift != nil }

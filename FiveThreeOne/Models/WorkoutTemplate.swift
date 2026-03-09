@@ -92,12 +92,14 @@ struct TemplateExerciseEntry: Codable, Identifiable, Hashable {
     var exerciseName: String
     var mainLift: String?  // Lift.rawValue if this is a 5/3/1 lift, nil for accessories
     var sortOrder: Int
+    var supersetGroup: Int?  // Exercises with same non-nil value are supersetted
 
-    init(exerciseName: String, mainLift: String? = nil, sortOrder: Int = 0) {
+    init(exerciseName: String, mainLift: String? = nil, sortOrder: Int = 0, supersetGroup: Int? = nil) {
         self.id = UUID()
         self.exerciseName = exerciseName
         self.mainLift = mainLift
         self.sortOrder = sortOrder
+        self.supersetGroup = supersetGroup
     }
 
     var isMainLift: Bool { mainLift != nil }

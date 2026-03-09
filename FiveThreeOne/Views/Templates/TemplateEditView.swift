@@ -11,8 +11,19 @@ struct TemplateEditView: View {
     @State private var name: String = ""
     @State private var entries: [TemplateExerciseEntry] = []
     @State private var showingExercisePicker = false
+    @State private var supersetLinkingIndex: Int?
 
     private var isNew: Bool { template == nil }
+
+    private var nextSupersetGroup: Int {
+        (entries.compactMap { $0.supersetGroup }.max() ?? 0) + 1
+    }
+
+    private static let supersetColors: [Color] = [.purple, .teal, .pink, .indigo, .mint]
+
+    private func supersetColor(for group: Int) -> Color {
+        Self.supersetColors[(group - 1) % Self.supersetColors.count]
+    }
 
     var body: some View {
         List {
@@ -27,6 +38,13 @@ struct TemplateEditView: View {
                 } else {
                     ForEach(Array(entries.indices), id: \.self) { index in
                         HStack(spacing: 12) {
+                            // Superset color bar
+                            if let group = entries[index].supersetGroup {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(supersetColor(for: group))
+                                    .frame(width: 4, height: 36)
+                            }
+
                             // Move buttons
                             VStack(spacing: 0) {
                                 Button {
@@ -56,17 +74,72 @@ struct TemplateEditView: View {
                             VStack(alignment: .leading) {
                                 Text(entries[index].exerciseName)
                                     .font(.body)
-                                if entries[index].isMainLift {
-                                    Text("5/3/1 Main Lift")
-                                        .font(.caption)
-                                        .foregroundStyle(.blue)
+                                HStack(spacing: 4) {
+                                    if entries[index].isMainLift {
+                                        Text("5/3/1 Main Lift")
+                                            .font(.caption)
+                                            .foregroundStyle(.blue)
+                                    }
+                                    if let group = entries[index].supersetGroup {
+                                        Text("Superset \(group)")
+                                            .font(.caption)
+                                            .foregroundStyle(supersetColor(for: group))
+                                    }
                                 }
                             }
 
                             Spacer()
 
+                            // Superset link/unlink
+                            if let group = entries[index].supersetGroup {
+                                Button {
+                                    entries[index].supersetGroup = nil
+                                    // If only one remains in group, unlink it too
+                                    let remaining = entries.indices.filter { entries[$0].supersetGroup == group }
+                                    if remaining.count == 1 {
+                                        entries[remaining[0]].supersetGroup = nil
+                                    }
+                                } label: {
+                                    Image(systemName: "link.badge.plus")
+                                        .font(.caption)
+                                        .foregroundStyle(supersetColor(for: group))
+                                }
+                                .buttonStyle(.plain)
+                            } else if supersetLinkingIndex == index {
+                                Button {
+                                    supersetLinkingIndex = nil
+                                } label: {
+                                    Text("Cancel")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                            } else if let sourceIdx = supersetLinkingIndex {
+                                Button {
+                                    let group = entries[sourceIdx].supersetGroup ?? nextSupersetGroup
+                                    entries[sourceIdx].supersetGroup = group
+                                    entries[index].supersetGroup = group
+                                    supersetLinkingIndex = nil
+                                } label: {
+                                    Image(systemName: "link")
+                                        .font(.caption)
+                                        .foregroundStyle(.purple)
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                Button {
+                                    supersetLinkingIndex = index
+                                } label: {
+                                    Image(systemName: "link")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+
                             Button {
                                 entries.remove(at: index)
+                                supersetLinkingIndex = nil
                                 reindex()
                             } label: {
                                 Image(systemName: "trash")
