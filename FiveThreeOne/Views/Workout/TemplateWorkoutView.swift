@@ -27,6 +27,7 @@ struct TemplateWorkoutView: View {
     @State private var showPlatesForSet: Set<UUID> = []
     @State private var showRepTuning = false
     @State private var selectedExerciseForDetail: String?
+    @State private var showDiscardConfirmation = false
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -122,6 +123,14 @@ struct TemplateWorkoutView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .listRowBackground(Color.clear)
+
+                        Button(role: .destructive) {
+                            showDiscardConfirmation = true
+                        } label: {
+                            Label("Cancel Workout", systemImage: "xmark.circle")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .listRowBackground(Color.clear)
                     }
                 }
             }
@@ -139,8 +148,33 @@ struct TemplateWorkoutView: View {
         .environment(\.editMode, isReordering ? .constant(.active) : .constant(.inactive))
         .navigationTitle(template.name)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(workoutStarted)
         .scrollDismissesKeyboard(.interactively)
+        .confirmationDialog("Workout in Progress", isPresented: $showDiscardConfirmation) {
+            Button("Discard Workout", role: .destructive) {
+                UIApplication.shared.isIdleTimerDisabled = false
+                phoneConnectivity.sendWorkoutFinished()
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You have a workout in progress. Are you sure you want to leave? Your progress will be lost.")
+        }
         .toolbar {
+            if workoutStarted {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showDiscardConfirmation = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .fontWeight(.semibold)
+                                .font(.callout)
+                            Text("Back")
+                        }
+                    }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 12) {
                     if workoutStarted && (userSettings?.repCountingEnabled ?? false) {
