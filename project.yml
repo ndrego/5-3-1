@@ -10,6 +10,8 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "Apple Development"
 
 targets:
   FiveThreeOne:
@@ -20,7 +22,7 @@ targets:
         excludes:
           - "Preview Content"
       - path: FiveThreeOne/Preview Content
-        buildPhase: resources
+        buildPhase: sources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ndrego.FiveThreeOne

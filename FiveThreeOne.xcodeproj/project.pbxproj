@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		052886316DE040C84A086EF3 /* SetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342892DF7BB145BC5C61A846 /* SetRowView.swift */; };
 		124A2D3D7686280E9FFDB46E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA08E42318BE8236610E842 /* SettingsView.swift */; };
+		20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB2E2E170599DCA54721387 /* PreviewData.swift */; };
 		21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE467A519D792ED441F742E /* PlateCalculator.swift */; };
-		3DF9D09191ABEE3CF0C1BF8C /* PreviewData.swift in Resources */ = {isa = PBXBuildFile; fileRef = 9CB2E2E170599DCA54721387 /* PreviewData.swift */; };
 		49C4EAFFB2A489D84C16661C /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7695B5AD6606F0A852EB2 /* UserSettings.swift */; };
 		4BE90F7735ED5DCE1A60B616 /* Cycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0247C0C120E576E7E0290C60 /* Cycle.swift */; };
 		6F2CCEC4D5F32C887FDDC8C8 /* FiveThreeOneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE577FD8B1B84EDB075AAB8C /* FiveThreeOneApp.swift */; };
@@ -232,6 +232,7 @@
 				TargetAttributes = {
 					4A50F5911B8B726A73F83F4E = {
 						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -260,7 +261,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B515AC7C0CD0C80222830CBC /* Assets.xcassets in Resources */,
-				3DF9D09191ABEE3CF0C1BF8C /* PreviewData.swift in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -281,6 +281,7 @@
 				E74EED874D95E9E6EA5A24AA /* HistoryListView.swift in Sources */,
 				D45075E0FA1E1EF30A772030 /* Lift.swift in Sources */,
 				21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */,
+				20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */,
 				F22696A242FF8A8A99432EF3 /* ProgramEngine.swift in Sources */,
 				CDA494DD690C481E8A4B6DBD /* ProgramVariant.swift in Sources */,
 				052886316DE040C84A086EF3 /* SetRowView.swift in Sources */,
@@ -356,6 +357,8 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
@@ -420,6 +423,8 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
