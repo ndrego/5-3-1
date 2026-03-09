@@ -170,13 +170,18 @@ struct WorkoutView: View {
 
     private func saveWorkout() {
         let duration = Int(Date.now.timeIntervalSince(workoutStartTime ?? .now))
+        let perf = ExercisePerformance(
+            exerciseName: lift.displayName,
+            mainLift: lift.rawValue,
+            sets: completedSets + supplementalCompletedSets,
+            sortOrder: 0
+        )
         let workout = CompletedWorkout(
             date: .now,
-            lift: lift,
+            templateName: lift.displayName,
             cycleNumber: cycle.number,
             weekNumber: week,
-            sets: completedSets,
-            accessorySets: supplementalCompletedSets,
+            exercisePerformances: [perf],
             notes: notes,
             durationSeconds: duration,
             variant: cycle.programVariant

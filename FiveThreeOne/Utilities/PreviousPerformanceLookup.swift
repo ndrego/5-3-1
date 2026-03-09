@@ -15,24 +15,10 @@ struct PreviousPerformanceLookup {
         guard let workouts = try? context.fetch(descriptor) else { return nil }
 
         for workout in workouts {
-            // Check new multi-exercise format
-            if !workout.exercisePerformances.isEmpty {
-                if let match = workout.exercisePerformances.first(where: {
-                    $0.exerciseName == exerciseName
-                }) {
-                    return match
-                }
-            }
-            // Check legacy format: match by lift display name
-            if workout.templateName.isEmpty && workout.liftType.displayName == exerciseName {
-                let sets = workout.sets + workout.accessorySets
-                guard !sets.isEmpty else { continue }
-                return ExercisePerformance(
-                    exerciseName: exerciseName,
-                    mainLift: workout.lift,
-                    sets: sets,
-                    sortOrder: 0
-                )
+            if let match = workout.allExercisePerformances.first(where: {
+                $0.exerciseName == exerciseName
+            }) {
+                return match
             }
         }
         return nil
@@ -61,24 +47,12 @@ struct PreviousPerformanceLookup {
 
         for workout in workouts {
             guard results.count < limit else { break }
-
-            // Check new format
-            if !workout.exercisePerformances.isEmpty {
-                if let perf = workout.exercisePerformances.first(where: { $0.exerciseName == exerciseName }),
-                   let best = perf.bestSet {
-                    results.append((date: workout.date, weight: best.weight))
-                }
-                continue
-            }
-            // Legacy format
-            if workout.templateName.isEmpty && workout.liftType.displayName == exerciseName {
-                let allSets = workout.sets + workout.accessorySets
-                if let best = allSets.filter({ $0.isComplete }).max(by: { $0.weight < $1.weight }) {
-                    results.append((date: workout.date, weight: best.weight))
-                }
+            if let perf = workout.allExercisePerformances.first(where: { $0.exerciseName == exerciseName }),
+               let best = perf.bestSet {
+                results.append((date: workout.date, weight: best.weight))
             }
         }
 
-        return results.reversed() // chronological order
+        return results.reversed()
     }
 }

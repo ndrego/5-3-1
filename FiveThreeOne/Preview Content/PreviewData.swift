@@ -21,13 +21,20 @@ enum PreviewData {
     static var sampleWorkout: CompletedWorkout {
         CompletedWorkout(
             date: .now,
-            lift: .squat,
+            templateName: "Squat Day",
             cycleNumber: 1,
             weekNumber: 1,
-            sets: [
-                CompletedSet(weight: 205, targetReps: 5, actualReps: 5),
-                CompletedSet(weight: 235, targetReps: 5, actualReps: 5),
-                CompletedSet(weight: 270, targetReps: 5, actualReps: 8, isAMRAP: true),
+            exercisePerformances: [
+                ExercisePerformance(
+                    exerciseName: "Squat",
+                    mainLift: Lift.squat.rawValue,
+                    sets: [
+                        CompletedSet(weight: 205, targetReps: 5, actualReps: 5),
+                        CompletedSet(weight: 235, targetReps: 5, actualReps: 5),
+                        CompletedSet(weight: 270, targetReps: 5, actualReps: 8, isAMRAP: true),
+                    ],
+                    sortOrder: 0
+                )
             ]
         )
     }

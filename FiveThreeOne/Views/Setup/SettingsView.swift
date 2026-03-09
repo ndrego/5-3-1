@@ -8,49 +8,65 @@ struct SettingsView: View {
 
     @State private var showingTMSetup = false
     @State private var showingImport = false
-    @State private var showingNewCycleConfirm = false
+    @State private var showingNewCycleSheet = false
 
     private var userSettings: UserSettings? { settings.first }
     private var currentCycle: Cycle? { cycles.first(where: { !$0.isComplete }) ?? cycles.first }
+
+    private static let barWeightOptions: [Double] = [33, 35, 44, 45, 55, 65]
+    private static let roundToOptions: [Double] = [1, 2.5, 5, 10]
+    private static let restOptions = [30, 45, 60, 90, 120, 150, 180, 210, 240, 300]
 
     var body: some View {
         NavigationStack {
             Form {
                 if let s = userSettings {
                     Section("Equipment") {
-                        HStack {
-                            Text("Bar Weight")
-                            Spacer()
-                            Text("\(Int(s.barWeight)) lbs")
-                                .foregroundStyle(.secondary)
+                        Picker("Bar Weight", selection: Binding(
+                            get: { s.barWeight },
+                            set: { s.barWeight = $0 }
+                        )) {
+                            ForEach(Self.barWeightOptions, id: \.self) { w in
+                                Text("\(formatWeight(w)) lbs").tag(w)
+                            }
                         }
-                        HStack {
-                            Text("Round To")
-                            Spacer()
-                            Text("\(Int(s.roundTo)) lbs")
-                                .foregroundStyle(.secondary)
-                        }
-                        HStack {
-                            Text("Available Plates")
-                            Spacer()
-                            Text(s.availablePlates.map { formatWeight($0) }.joined(separator: ", "))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+
+                        Picker("Round To", selection: Binding(
+                            get: { s.roundTo },
+                            set: { s.roundTo = $0 }
+                        )) {
+                            ForEach(Self.roundToOptions, id: \.self) { r in
+                                Text("\(formatWeight(r)) lbs").tag(r)
+                            }
                         }
                     }
 
                     Section("Rest Timers") {
-                        HStack {
-                            Text("Main Sets")
-                            Spacer()
-                            Text("\(s.defaultRestSeconds / 60):\(String(format: "%02d", s.defaultRestSeconds % 60))")
-                                .foregroundStyle(.secondary)
+                        Picker("Main Sets", selection: Binding(
+                            get: { s.defaultRestSeconds },
+                            set: { s.defaultRestSeconds = $0 }
+                        )) {
+                            ForEach(Self.restOptions, id: \.self) { secs in
+                                Text(restLabel(secs)).tag(secs)
+                            }
                         }
-                        HStack {
-                            Text("Supplemental")
-                            Spacer()
-                            Text("\(s.supplementalRestSeconds / 60):\(String(format: "%02d", s.supplementalRestSeconds % 60))")
-                                .foregroundStyle(.secondary)
+
+                        Picker("Supplemental", selection: Binding(
+                            get: { s.supplementalRestSeconds },
+                            set: { s.supplementalRestSeconds = $0 }
+                        )) {
+                            ForEach(Self.restOptions, id: \.self) { secs in
+                                Text(restLabel(secs)).tag(secs)
+                            }
+                        }
+
+                        Picker("Accessory", selection: Binding(
+                            get: { s.accessoryRestSeconds },
+                            set: { s.accessoryRestSeconds = $0 }
+                        )) {
+                            ForEach(Self.restOptions, id: \.self) { secs in
+                                Text(restLabel(secs)).tag(secs)
+                            }
                         }
                     }
 
@@ -115,8 +131,8 @@ struct SettingsView: View {
                         showingTMSetup = true
                     }
 
-                    Button("Start New Cycle (+5/+10)") {
-                        showingNewCycleConfirm = true
+                    Button("Start New Cycle") {
+                        showingNewCycleSheet = true
                     }
                 }
 
@@ -133,23 +149,108 @@ struct SettingsView: View {
             .sheet(isPresented: $showingImport) {
                 StrongImportView()
             }
-            .confirmationDialog("Start New Cycle?", isPresented: $showingNewCycleConfirm) {
-                Button("Start New Cycle") {
-                    startNewCycle()
-                }
-            } message: {
+            .sheet(isPresented: $showingNewCycleSheet) {
                 if let cycle = currentCycle {
-                    Text("This will increase your training maxes (+5 upper, +10 lower) and start Cycle \(cycle.number + 1).")
+                    NewCycleSheet(cycle: cycle) { increments in
+                        startNewCycle(increments: increments)
+                    }
+                    .presentationDetents([.medium])
                 }
             }
         }
     }
 
-    private func startNewCycle() {
+    private func startNewCycle(increments: [Lift: Double]) {
         guard let current = currentCycle else { return }
         current.isComplete = true
-        let next = current.nextCycle()
+        var newMaxes: [String: Double] = [:]
+        for lift in Lift.allCases {
+            let currentTM = current.trainingMax(for: lift)
+            newMaxes[lift.rawValue] = currentTM + (increments[lift] ?? lift.progressionIncrement)
+        }
+        let next = Cycle(
+            number: current.number + 1,
+            startDate: .now,
+            trainingMaxes: newMaxes,
+            variant: current.programVariant
+        )
         modelContext.insert(next)
+    }
+
+    private func restLabel(_ seconds: Int) -> String {
+        let m = seconds / 60
+        let s = seconds % 60
+        return s > 0 ? "\(m)m \(s)s" : "\(m)m"
+    }
+
+    private func formatWeight(_ w: Double) -> String {
+        w.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(w))" : String(format: "%.1f", w)
+    }
+}
+
+// MARK: - New Cycle Sheet
+
+struct NewCycleSheet: View {
+    let cycle: Cycle
+    let onStart: ([Lift: Double]) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var increments: [Lift: Double] = [:]
+
+    private static let incrementOptions: [Double] = [0, 2.5, 5, 10, 15, 20]
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Cycle \(cycle.number) → \(cycle.number + 1)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .listRowBackground(Color.clear)
+
+                Section("TM Increases") {
+                    ForEach(Lift.allCases) { lift in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(lift.displayName)
+                                Text("\(Int(cycle.trainingMax(for: lift))) → \(Int(cycle.trainingMax(for: lift) + increment(for: lift))) lbs")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            Spacer()
+                            Picker("", selection: Binding(
+                                get: { increment(for: lift) },
+                                set: { increments[lift] = $0 }
+                            )) {
+                                ForEach(Self.incrementOptions, id: \.self) { inc in
+                                    Text("+\(formatWeight(inc))").tag(inc)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("New Cycle")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Start") {
+                        onStart(increments)
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func increment(for lift: Lift) -> Double {
+        increments[lift] ?? lift.progressionIncrement
     }
 
     private func formatWeight(_ w: Double) -> String {

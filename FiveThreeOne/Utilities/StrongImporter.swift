@@ -158,13 +158,20 @@ struct StrongImporter {
 
             let notes = setRows.first(where: { !$0.workoutNotes.isEmpty })?.workoutNotes ?? ""
 
+            let perf = ExercisePerformance(
+                exerciseName: lift.displayName,
+                mainLift: lift.rawValue,
+                sets: sets,
+                sortOrder: 0
+            )
+
             // We don't know the original cycle/week, so mark as cycle 0
             let workout = CompletedWorkout(
                 date: key.date,
-                lift: lift,
+                templateName: lift.displayName,
                 cycleNumber: 0,
                 weekNumber: 0,
-                sets: sets,
+                exercisePerformances: [perf],
                 notes: notes
             )
 

@@ -5,11 +5,11 @@ import SwiftData
 final class CompletedWorkout {
     var id: UUID
     var date: Date
-    var lift: String  // Lift.rawValue (legacy single-lift field)
+    var lift: String  // Kept for SwiftData schema compatibility with old data
     var cycleNumber: Int
     var weekNumber: Int  // 1-4
-    var sets: [CompletedSet]
-    var accessorySets: [CompletedSet]
+    var sets: [CompletedSet]  // Kept for SwiftData schema compatibility with old data
+    var accessorySets: [CompletedSet]  // Kept for SwiftData schema compatibility with old data
     var notes: String
     var durationSeconds: Int
     var variant: String  // ProgramVariant.rawValue
@@ -18,35 +18,6 @@ final class CompletedWorkout {
     var averageHeartRate: Double?
     var estimatedCalories: Double?
 
-    // Legacy single-lift init (kept for backward compatibility and imports)
-    init(
-        date: Date = .now,
-        lift: Lift,
-        cycleNumber: Int,
-        weekNumber: Int,
-        sets: [CompletedSet] = [],
-        accessorySets: [CompletedSet] = [],
-        notes: String = "",
-        durationSeconds: Int = 0,
-        variant: ProgramVariant = .standard
-    ) {
-        self.id = UUID()
-        self.date = date
-        self.lift = lift.rawValue
-        self.cycleNumber = cycleNumber
-        self.weekNumber = weekNumber
-        self.sets = sets
-        self.accessorySets = accessorySets
-        self.notes = notes
-        self.durationSeconds = durationSeconds
-        self.variant = variant.rawValue
-        self.templateName = ""
-        self.exercisePerformances = []
-        self.averageHeartRate = nil
-        self.estimatedCalories = nil
-    }
-
-    // Template-based init for multi-exercise sessions
     init(
         date: Date = .now,
         templateName: String,
@@ -61,9 +32,7 @@ final class CompletedWorkout {
     ) {
         self.id = UUID()
         self.date = date
-        // Use first main lift as the legacy lift field, fallback to squat
-        let firstMainLift = exercisePerformances.first(where: { $0.isMainLift })?.mainLift ?? Lift.squat.rawValue
-        self.lift = firstMainLift
+        self.lift = exercisePerformances.first(where: { $0.isMainLift })?.mainLift ?? ""
         self.cycleNumber = cycleNumber
         self.weekNumber = weekNumber
         self.sets = []
@@ -93,49 +62,41 @@ final class CompletedWorkout {
         return "\(minutes / 60)h \(minutes % 60)m"
     }
 
-    /// Unified view of all exercise performances (works for both legacy and new format)
+    /// All exercise performances — migrates old data on read if needed.
     var allExercisePerformances: [ExercisePerformance] {
         if !exercisePerformances.isEmpty { return exercisePerformances }
-        // Legacy fallback: construct from old single-lift fields
+        // Migrate pre-exercisePerformances data on read
+        guard !sets.isEmpty || !accessorySets.isEmpty else { return [] }
         var perf = ExercisePerformance(
             exerciseName: liftType.displayName,
             mainLift: lift,
             sets: sets + accessorySets,
             sortOrder: 0
         )
-        perf.id = id  // Stable ID for legacy data
+        perf.id = id
         return [perf]
     }
 
-    /// Display name: template name if available, otherwise lift name
     var displayName: String {
         if !templateName.isEmpty { return templateName }
         return liftType.displayName
     }
 
-    /// The top set (AMRAP) result — key metric for progression tracking
     var topSetReps: Int? {
-        // Check new format first
-        if !exercisePerformances.isEmpty {
-            for perf in exercisePerformances where perf.isMainLift {
-                if let amrap = perf.sets.first(where: { $0.isAMRAP }), amrap.actualReps > 0 {
-                    return amrap.actualReps
-                }
+        for perf in allExercisePerformances where perf.isMainLift {
+            if let amrap = perf.sets.first(where: { $0.isAMRAP }), amrap.actualReps > 0 {
+                return amrap.actualReps
             }
-            return nil
         }
-        return sets.first(where: { $0.isAMRAP })?.actualReps
+        return nil
     }
 
     var topSetWeight: Double? {
-        if !exercisePerformances.isEmpty {
-            for perf in exercisePerformances where perf.isMainLift {
-                if let amrap = perf.sets.first(where: { $0.isAMRAP }), amrap.actualReps > 0 {
-                    return amrap.weight
-                }
+        for perf in allExercisePerformances where perf.isMainLift {
+            if let amrap = perf.sets.first(where: { $0.isAMRAP }), amrap.actualReps > 0 {
+                return amrap.weight
             }
-            return nil
         }
-        return sets.first(where: { $0.isAMRAP })?.weight
+        return nil
     }
 }
