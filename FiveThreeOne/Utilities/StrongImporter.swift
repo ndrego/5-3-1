@@ -52,6 +52,9 @@ struct StrongImporter {
                 continue
             }
 
+            // Skip rest timer rows (Strong exports these between sets)
+            if fields[4].lowercased().contains("rest") { continue }
+
             guard let date = parseDate(fields[0]) else {
                 errors.append("Line \(lineIndex + 2): invalid date '\(fields[0])'")
                 continue
@@ -62,11 +65,11 @@ struct StrongImporter {
                 workoutName: fields[1],
                 duration: fields[2],
                 exerciseName: fields[3],
-                setOrder: Int(fields[4]) ?? 1,
+                setOrder: Int(fields[4]) ?? Int(Double(fields[4]) ?? 1),
                 weight: Double(fields[5]) ?? 0,
-                reps: Int(fields[6]) ?? 0,
+                reps: Int(fields[6]) ?? Int(Double(fields[6]) ?? 0),
                 distance: fields.count > 7 ? Double(fields[7]) ?? 0 : 0,
-                seconds: fields.count > 8 ? Int(fields[8]) ?? 0 : 0,
+                seconds: fields.count > 8 ? (Int(fields[8]) ?? Int(Double(fields[8]) ?? 0)) : 0,
                 notes: fields.count > 9 ? fields[9] : "",
                 workoutNotes: fields.count > 10 ? fields[10] : "",
                 rpe: fields.count > 11 ? Double(fields[11]) : nil
@@ -148,11 +151,40 @@ struct StrongImporter {
 
     // MARK: - Import
 
+    /// Normalize a Strong exercise name to match our exercise library.
+    /// e.g. "Romanian Deadlift (Barbell)" → "Romanian Deadlift" if that exists in our library.
+    private static func normalizeExerciseName(_ strongName: String, knownNames: Set<String>) -> String {
+        // Direct match
+        if knownNames.contains(strongName) { return strongName }
+
+        // Try stripping parenthetical equipment suffix: "Exercise (Barbell)" → "Exercise"
+        if let parenRange = strongName.range(of: #"\s*\([^)]+\)\s*$"#, options: .regularExpression) {
+            let stripped = String(strongName[strongName.startIndex..<parenRange.lowerBound])
+            if knownNames.contains(stripped) { return stripped }
+        }
+
+        return strongName
+    }
+
     /// Import Strong CSV data into the app's data store.
     /// Groups all exercises from the same session into a single CompletedWorkout.
     /// Imports both main lifts and accessory exercises as workout history.
     static func importCSV(_ csvString: String, context: ModelContext) -> ImportResult {
         let (rows, parseErrors) = parseCSV(csvString)
+
+        // Clear previously imported workouts (cycle 0 = imported data)
+        let importedPredicate = #Predicate<CompletedWorkout> { $0.cycleNumber == 0 }
+        let importedDescriptor = FetchDescriptor<CompletedWorkout>(predicate: importedPredicate)
+        if let existing = try? context.fetch(importedDescriptor) {
+            for workout in existing {
+                context.delete(workout)
+            }
+        }
+
+        // Build set of known exercise names from our library for name normalization
+        let exerciseDescriptor = FetchDescriptor<Exercise>()
+        let knownExercises = (try? context.fetch(exerciseDescriptor)) ?? []
+        let knownNames = Set(knownExercises.map(\.name))
 
         var allExercises: Set<String> = []
         var unmapped: Set<String> = []
@@ -208,8 +240,10 @@ struct StrongImporter {
                     )
                 }
 
+                let displayName = lift?.displayName ?? normalizeExerciseName(group.name, knownNames: knownNames)
+
                 let perf = ExercisePerformance(
-                    exerciseName: lift?.displayName ?? group.name,
+                    exerciseName: displayName,
                     mainLift: lift?.rawValue,
                     sets: sets,
                     sortOrder: sortOrder,
@@ -263,14 +297,23 @@ struct StrongImporter {
         let (rows, _) = parseCSV(csvString)
         var added: [String] = []
 
+        // Build known names for normalization
+        let exerciseDescriptor = FetchDescriptor<Exercise>()
+        let knownExercises = (try? context.fetch(exerciseDescriptor)) ?? []
+        let knownNames = Set(knownExercises.map(\.name))
+
         let allNames = Set(rows.map(\.exerciseName))
 
         for name in allNames {
             // Skip if it's a main lift
             if Lift.fromStrongName(name) != nil { continue }
 
-            // Check if already in library
-            let predicate = #Predicate<Exercise> { $0.name == name }
+            // Normalize name to match existing library entries
+            let normalized = normalizeExerciseName(name, knownNames: knownNames)
+
+            // Skip if already in library (check both original and normalized)
+            let checkName = normalized
+            let predicate = #Predicate<Exercise> { $0.name == checkName }
             let descriptor = FetchDescriptor<Exercise>(predicate: predicate)
             let existing = (try? context.fetchCount(descriptor)) ?? 0
             guard existing == 0 else { continue }
@@ -278,8 +321,8 @@ struct StrongImporter {
             // Add with best-guess category
             let category = guessCategory(for: name)
             let unilateral = isLikelyUnilateral(name)
-            context.insert(Exercise(name: name, category: category, equipmentType: guessEquipment(for: name), isCustom: false, isUnilateral: unilateral))
-            added.append(name)
+            context.insert(Exercise(name: normalized, category: category, equipmentType: guessEquipment(for: name), isCustom: false, isUnilateral: unilateral))
+            added.append(normalized)
         }
 
         return added
