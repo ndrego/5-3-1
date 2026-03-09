@@ -32,6 +32,11 @@ struct WorkoutDetailView: View {
                                 .font(.caption)
                                 .foregroundStyle(.orange.opacity(0.7))
                         }
+                        if workout.totalVolume > 0 {
+                            Label("\(workout.formattedVolume) lbs", systemImage: "scalemass.fill")
+                                .font(.caption)
+                                .foregroundStyle(.blue.opacity(0.7))
+                        }
                     }
                 }
 
@@ -90,6 +95,20 @@ struct WorkoutDetailView: View {
                         .background(.blue)
                         .foregroundStyle(.white)
                         .clipShape(Capsule())
+                }
+            }
+
+            if perf.totalVolume > 0 {
+                HStack(spacing: 12) {
+                    Text("\(perf.completedWorkingSets) sets")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(perf.totalReps) reps")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(Int(perf.totalVolume)) lbs vol")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
                 }
             }
 

@@ -72,6 +72,11 @@ struct WorkoutRowView: View {
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
+                    if workout.totalVolume > 0 {
+                        Text("\(workout.formattedVolume) lbs")
+                            .font(.caption)
+                            .foregroundStyle(.blue.opacity(0.7))
+                    }
                 }
             }
 

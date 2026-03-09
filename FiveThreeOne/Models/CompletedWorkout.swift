@@ -82,6 +82,19 @@ final class CompletedWorkout {
         return liftType.displayName
     }
 
+    /// Total training volume across all exercises (weight × reps, excludes warmup)
+    var totalVolume: Double {
+        allExercisePerformances.reduce(0) { $0 + $1.totalVolume }
+    }
+
+    var formattedVolume: String {
+        let vol = totalVolume
+        if vol >= 1000 {
+            return String(format: "%.1fk", vol / 1000)
+        }
+        return "\(Int(vol))"
+    }
+
     var topSetReps: Int? {
         for perf in allExercisePerformances where perf.isMainLift {
             if let amrap = perf.sets.first(where: { $0.isAMRAP }), amrap.actualReps > 0 {

@@ -491,13 +491,7 @@ struct TemplateWorkoutView: View {
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    TextField("Weight", value: set.weight, format: .number)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .monospacedDigit()
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(.plain)
-                        .frame(width: 60)
+                    WeightField(value: set.weight, font: .title3)
                     Text("lbs")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -627,13 +621,7 @@ struct TemplateWorkoutView: View {
                 .frame(width: 20)
 
             // Weight — pre-filled from previous, editable
-            TextField("0", value: set.weight, format: .number)
-                .font(.body)
-                .fontWeight(.medium)
-                .keyboardType(.decimalPad)
-                .textFieldStyle(.plain)
-                .monospacedDigit()
-                .frame(width: 60)
+            WeightField(value: set.weight)
                 .padding(4)
                 .background(Color(.tertiarySystemFill))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -643,13 +631,7 @@ struct TemplateWorkoutView: View {
                 .foregroundStyle(.tertiary)
 
             // Reps — binds to targetReps (pre-filled from previous), user edits before confirming
-            TextField("0", value: set.targetReps, format: .number)
-                .font(.body)
-                .fontWeight(.medium)
-                .keyboardType(.numberPad)
-                .textFieldStyle(.plain)
-                .monospacedDigit()
-                .frame(width: 40)
+            RepsField(value: set.targetReps)
                 .padding(4)
                 .background(Color(.tertiarySystemFill))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -788,6 +770,10 @@ struct TemplateWorkoutView: View {
     // MARK: - Initialize
 
     private func initializeExercises() {
+        // Look up unilateral flags from exercise library
+        let allExercises = (try? modelContext.fetch(FetchDescriptor<Exercise>())) ?? []
+        let exerciseByName = Dictionary(allExercises.map { ($0.name, $0) }, uniquingKeysWith: { a, _ in a })
+
         exerciseStates = template.exerciseEntries
             .sorted(by: { $0.sortOrder < $1.sortOrder })
             .map { entry in
@@ -795,6 +781,8 @@ struct TemplateWorkoutView: View {
                     exerciseName: entry.exerciseName,
                     in: modelContext
                 )
+
+                let unilateral = exerciseByName[entry.exerciseName]?.isUnilateral ?? false
 
                 var state = ExerciseState(
                     id: entry.id,
@@ -804,7 +792,8 @@ struct TemplateWorkoutView: View {
                     plannedSets: [],
                     previousSets: previous?.sets ?? [],
                     previousBestSummary: previous?.bestSetSummary,
-                    supersetGroup: entry.supersetGroup
+                    supersetGroup: entry.supersetGroup,
+                    isUnilateral: unilateral
                 )
 
                 if let lift = entry.lift, let cycle {
@@ -865,7 +854,8 @@ struct TemplateWorkoutView: View {
                 mainLift: state.mainLift,
                 sets: state.sets,
                 sortOrder: index,
-                supersetGroup: state.supersetGroup
+                supersetGroup: state.supersetGroup,
+                isUnilateral: state.isUnilateral
             )
         }
 
@@ -1047,6 +1037,7 @@ struct ExerciseState: Identifiable {
     var previousBestSummary: String?
     var recentWeights: [(date: Date, weight: Double)] = []
     var supersetGroup: Int?
+    var isUnilateral: Bool = false
 
     var isMainLift: Bool { mainLift != nil }
     var lift: Lift? { mainLift.flatMap { Lift(rawValue: $0) } }
@@ -1267,13 +1258,7 @@ struct SupersetRowView: View {
                 .lineLimit(1)
                 .frame(width: 80, alignment: .leading)
 
-            TextField("0", value: $setBinding.weight, format: .number)
-                .font(.body)
-                .fontWeight(.medium)
-                .keyboardType(.decimalPad)
-                .textFieldStyle(.plain)
-                .monospacedDigit()
-                .frame(width: 55)
+            WeightField(value: $setBinding.weight, width: 55)
                 .padding(4)
                 .background(Color(.tertiarySystemFill))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -1283,12 +1268,7 @@ struct SupersetRowView: View {
                 supersetRestMenu
                 supersetRepStepper
             } else {
-                TextField("0", value: $setBinding.targetReps, format: .number)
-                    .font(.body)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.plain)
-                    .monospacedDigit()
-                    .frame(width: 35)
+                RepsField(value: $setBinding.targetReps, width: 35)
                     .padding(4)
                     .background(Color(.tertiarySystemFill))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -1385,5 +1365,78 @@ struct SupersetRowView: View {
             }
             .buttonStyle(.borderless)
         }
+    }
+}
+
+// MARK: - Weight Text Field
+
+/// A text field that binds to a Double but allows free-form numeric text entry
+/// without rejecting intermediate states (empty, trailing decimal, etc.)
+struct WeightField: View {
+    @Binding var value: Double
+    var width: CGFloat = 60
+    var font: Font = .body
+
+    @State private var text: String = ""
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        TextField("0", text: $text)
+            .font(font)
+            .fontWeight(.medium)
+            .monospacedDigit()
+            .keyboardType(.decimalPad)
+            .textFieldStyle(.plain)
+            .frame(width: width)
+            .focused($isFocused)
+            .onAppear { text = formatValue(value) }
+            .onChange(of: value) { _, newVal in
+                if !isFocused {
+                    text = formatValue(newVal)
+                }
+            }
+            .onChange(of: isFocused) { _, focused in
+                if !focused {
+                    // Commit on blur
+                    value = Double(text) ?? 0
+                    text = formatValue(value)
+                }
+            }
+    }
+
+    private func formatValue(_ v: Double) -> String {
+        v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", v)
+    }
+}
+
+/// Same pattern for integer fields (reps)
+struct RepsField: View {
+    @Binding var value: Int
+    var width: CGFloat = 40
+
+    @State private var text: String = ""
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        TextField("0", text: $text)
+            .font(.body)
+            .fontWeight(.medium)
+            .monospacedDigit()
+            .keyboardType(.numberPad)
+            .textFieldStyle(.plain)
+            .frame(width: width)
+            .focused($isFocused)
+            .onAppear { text = value > 0 ? "\(value)" : "" }
+            .onChange(of: value) { _, newVal in
+                if !isFocused {
+                    text = newVal > 0 ? "\(newVal)" : ""
+                }
+            }
+            .onChange(of: isFocused) { _, focused in
+                if !focused {
+                    value = Int(text) ?? 0
+                    text = value > 0 ? "\(value)" : ""
+                }
+            }
     }
 }
