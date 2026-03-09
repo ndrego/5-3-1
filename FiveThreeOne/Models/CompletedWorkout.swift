@@ -15,6 +15,8 @@ final class CompletedWorkout {
     var variant: String  // ProgramVariant.rawValue
     var templateName: String
     var exercisePerformances: [ExercisePerformance]
+    var averageHeartRate: Double?
+    var estimatedCalories: Double?
 
     // Legacy single-lift init (kept for backward compatibility and imports)
     init(
@@ -40,6 +42,8 @@ final class CompletedWorkout {
         self.variant = variant.rawValue
         self.templateName = ""
         self.exercisePerformances = []
+        self.averageHeartRate = nil
+        self.estimatedCalories = nil
     }
 
     // Template-based init for multi-exercise sessions
@@ -51,7 +55,9 @@ final class CompletedWorkout {
         exercisePerformances: [ExercisePerformance],
         notes: String = "",
         durationSeconds: Int = 0,
-        variant: ProgramVariant = .standard
+        variant: ProgramVariant = .standard,
+        averageHeartRate: Double? = nil,
+        estimatedCalories: Double? = nil
     ) {
         self.id = UUID()
         self.date = date
@@ -67,6 +73,8 @@ final class CompletedWorkout {
         self.variant = variant.rawValue
         self.templateName = templateName
         self.exercisePerformances = exercisePerformances
+        self.averageHeartRate = averageHeartRate
+        self.estimatedCalories = estimatedCalories
     }
 
     var liftType: Lift {

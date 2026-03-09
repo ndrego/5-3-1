@@ -27,6 +27,7 @@
 		9182240799F61B1D374BAA8D /* TrainingMaxSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC5CD132C6798CD7DB3097F /* TrainingMaxSetupView.swift */; };
 		970A3EACC5C7C53F01DD8839 /* AccessorySetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CC7B6053AFB7ECE8CF22EA /* AccessorySetRowView.swift */; };
 		A2953E28823A445160A6A649 /* WorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC9B438F744231E2C9D1B5A /* WorkoutView.swift */; };
+		A6A18F21D138AE4FEDFFF4D8 /* HeartRateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5B09F98212E7C06D938D93 /* HeartRateManager.swift */; };
 		ACE6C40306B66AC18980B72C /* StrongImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8FE052FB06BDAED95A37379 /* StrongImporter.swift */; };
 		AF77BCED810D2D390F60CFCD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEAC4BA8FB0B58A0D6A0BCC3 /* ContentView.swift */; };
 		B515AC7C0CD0C80222830CBC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A355D24994B7E9A96EDE7096 /* Assets.xcassets */; };
@@ -56,6 +57,7 @@
 		452048773705C2BF75CC773C /* TemplateEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditView.swift; sourceTree = "<group>"; };
 		4BE467A519D792ED441F742E /* PlateCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateCalculator.swift; sourceTree = "<group>"; };
 		4F86E2103F18680D17C60A28 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
+		62ED226F8A02894A6E4C1835 /* FiveThreeOne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FiveThreeOne.entitlements; sourceTree = "<group>"; };
 		7B9F5B0A48B730B51F34F609 /* ProgramVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramVariant.swift; sourceTree = "<group>"; };
 		7EF430C5547890FEBB16A3B4 /* ProgramEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramEngine.swift; sourceTree = "<group>"; };
 		82F0A1C31E0BDF2E0528B288 /* StrongImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongImportView.swift; sourceTree = "<group>"; };
@@ -73,6 +75,7 @@
 		DE577FD8B1B84EDB075AAB8C /* FiveThreeOneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveThreeOneApp.swift; sourceTree = "<group>"; };
 		DED8FCDBE3E01F5CAC0F6B0F /* CompletedWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedWorkout.swift; sourceTree = "<group>"; };
 		E8FE052FB06BDAED95A37379 /* StrongImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongImporter.swift; sourceTree = "<group>"; };
+		EF5B09F98212E7C06D938D93 /* HeartRateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateManager.swift; sourceTree = "<group>"; };
 		F3393FE9AF129A9031A0F141 /* WorkoutTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTemplate.swift; sourceTree = "<group>"; };
 		FEAC4BA8FB0B58A0D6A0BCC3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -170,6 +173,7 @@
 			isa = PBXGroup;
 			children = (
 				A355D24994B7E9A96EDE7096 /* Assets.xcassets */,
+				62ED226F8A02894A6E4C1835 /* FiveThreeOne.entitlements */,
 				F9D88ECF7E43C039BBDC0EC1 /* App */,
 				43F93C07C9CC8F6CE508CB33 /* Models */,
 				B9A3639238806E86D64C6CC3 /* Utilities */,
@@ -196,6 +200,7 @@
 		B9A3639238806E86D64C6CC3 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				EF5B09F98212E7C06D938D93 /* HeartRateManager.swift */,
 				4BE467A519D792ED441F742E /* PlateCalculator.swift */,
 				00B16D82D7CF0F5A99A88CAB /* PreviousPerformanceLookup.swift */,
 				7EF430C5547890FEBB16A3B4 /* ProgramEngine.swift */,
@@ -318,6 +323,7 @@
 				FED16055DBFC550D702F06CF /* Exercise.swift in Sources */,
 				612FE433F6370ABF0BBD2DFF /* ExercisePerformance.swift in Sources */,
 				6F2CCEC4D5F32C887FDDC8C8 /* FiveThreeOneApp.swift in Sources */,
+				A6A18F21D138AE4FEDFFF4D8 /* HeartRateManager.swift in Sources */,
 				E74EED874D95E9E6EA5A24AA /* HistoryListView.swift in Sources */,
 				D45075E0FA1E1EF30A772030 /* Lift.swift in Sources */,
 				3A49BC7591A92ACE6AB9128D /* LiftSparklineView.swift in Sources */,
@@ -351,12 +357,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FiveThreeOne/FiveThreeOne.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = 5/3/1;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "5/3/1 reads your heart rate during workouts to track effort and estimate calories burned.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -502,12 +510,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FiveThreeOne/FiveThreeOne.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = 5/3/1;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "5/3/1 reads your heart rate during workouts to track effort and estimate calories burned.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

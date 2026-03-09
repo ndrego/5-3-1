@@ -16,10 +16,22 @@ struct WorkoutDetailView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    if workout.durationSeconds > 0 {
-                        Text(workout.formattedDuration)
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
+                    HStack(spacing: 12) {
+                        if workout.durationSeconds > 0 {
+                            Label(workout.formattedDuration, systemImage: "clock")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
+                        if let hr = workout.averageHeartRate {
+                            Label("\(Int(hr)) avg BPM", systemImage: "heart.fill")
+                                .font(.caption)
+                                .foregroundStyle(.red.opacity(0.7))
+                        }
+                        if let cal = workout.estimatedCalories {
+                            Label("\(Int(cal)) kcal", systemImage: "flame.fill")
+                                .font(.caption)
+                                .foregroundStyle(.orange.opacity(0.7))
+                        }
                     }
                 }
 
@@ -110,6 +122,15 @@ struct WorkoutDetailView: View {
                         }
                         Text("reps")
                             .foregroundStyle(.secondary)
+                        if let hr = set.averageHR {
+                            Image(systemName: "heart.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.red.opacity(0.6))
+                            Text("\(Int(hr))")
+                                .font(.caption)
+                                .foregroundStyle(.red.opacity(0.6))
+                                .monospacedDigit()
+                        }
                     }
                 }
                 .padding(.vertical, 2)

@@ -12,6 +12,7 @@ struct TemplateWorkoutView: View {
 
     @State private var exerciseStates: [ExerciseState] = []
     @State private var workoutStartTime: Date?
+    @State private var workoutStarted = false
     @State private var notes = ""
     @State private var restTimer = RestTimerState()
     @State private var initialized = false
@@ -20,6 +21,7 @@ struct TemplateWorkoutView: View {
     @State private var templateChanges = TemplateChanges()
     @State private var showingSupersetPicker = false
     @State private var supersetSourceIndex: Int?
+    @State private var heartRateManager = HeartRateManager()
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -58,6 +60,24 @@ struct TemplateWorkoutView: View {
                 }
                 .listRowBackground(Color.clear)
 
+                // Start button (before workout begins)
+                if !workoutStarted {
+                    Section {
+                        Button {
+                            workoutStartTime = .now
+                            workoutStarted = true
+                        } label: {
+                            Label("Start Workout", systemImage: "play.fill")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                        .listRowBackground(Color.clear)
+                    }
+                }
+
                 // Exercise sections (grouped by superset)
                 ForEach(exerciseSectionGroups, id: \.id) { group in
                     if group.indices.count > 1 {
@@ -74,27 +94,30 @@ struct TemplateWorkoutView: View {
                 }
 
                 // Finish
-                Section {
-                    Button {
-                        saveWorkout()
-                    } label: {
-                        Text("Finish Workout")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
+                if workoutStarted {
+                    Section {
+                        Button {
+                            saveWorkout()
+                        } label: {
+                            Label("Finish Workout", systemImage: "checkmark.circle.fill")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .listRowBackground(Color.clear)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .listRowBackground(Color.clear)
                 }
             }
         }
         .listStyle(.insetGrouped)
         .safeAreaInset(edge: .bottom) {
-            if restTimer.isRunning {
-                RestTimerView(timer: restTimer)
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial)
+            if workoutStarted {
+                WorkoutBottomBar(
+                    restTimer: restTimer,
+                    heartRateManager: heartRateManager,
+                    workoutStartTime: $workoutStartTime
+                )
             }
         }
         .environment(\.editMode, isReordering ? .constant(.active) : .constant(.inactive))
@@ -113,8 +136,21 @@ struct TemplateWorkoutView: View {
         .onAppear {
             guard !initialized else { return }
             initialized = true
-            workoutStartTime = .now
             initializeExercises()
+        }
+        .task {
+            #if DEBUG && targetEnvironment(simulator)
+            heartRateManager.isSimulating = true
+            heartRateManager.startMonitoring()
+            #else
+            if heartRateManager.isAvailable {
+                await heartRateManager.requestAuthorization()
+                heartRateManager.startMonitoring()
+            }
+            #endif
+        }
+        .onDisappear {
+            heartRateManager.stopMonitoring()
         }
         .sheet(isPresented: $showingSupersetPicker) {
             supersetPickerSheet
@@ -570,7 +606,19 @@ struct TemplateWorkoutView: View {
 
     // MARK: - Rest Timer
 
+    private func autoStartIfNeeded() {
+        guard !workoutStarted else { return }
+        workoutStartTime = .now
+        workoutStarted = true
+    }
+
     private func startRestIfNeeded(setType: SetType) {
+        autoStartIfNeeded()
+
+        // End HR tracking for previous set, start for next
+        _ = heartRateManager.markSetEnd()
+        heartRateManager.markSetStart()
+
         guard let settings = userSettings else { return }
         let seconds: Int
         switch setType {
@@ -666,6 +714,15 @@ struct TemplateWorkoutView: View {
             )
         }
 
+        // Compute HR stats
+        let avgHR = heartRateManager.sessionAverageHR
+        let durationMinutes = Double(duration) / 60.0
+        let calories: Double? = if let avgHR {
+            HeartRateManager.estimateCalories(averageHR: avgHR, durationMinutes: durationMinutes)
+        } else {
+            nil
+        }
+
         let workout = CompletedWorkout(
             date: .now,
             templateName: template.name,
@@ -674,10 +731,13 @@ struct TemplateWorkoutView: View {
             exercisePerformances: performances,
             notes: notes,
             durationSeconds: duration,
-            variant: cycle?.programVariant ?? .standard
+            variant: cycle?.programVariant ?? .standard,
+            averageHeartRate: avgHR,
+            estimatedCalories: calories
         )
         modelContext.insert(workout)
         restTimer.stop()
+        heartRateManager.stopMonitoring()
 
         // Detect changes to the template
         templateChanges = detectTemplateChanges()
@@ -913,6 +973,90 @@ struct SaveTemplateChangesView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Workout Bottom Bar
+
+struct WorkoutBottomBar: View {
+    @Bindable var restTimer: RestTimerState
+    var heartRateManager: HeartRateManager
+    @Binding var workoutStartTime: Date?
+
+    @State private var elapsed: TimeInterval = 0
+    @State private var elapsedTimer: Timer?
+
+    var body: some View {
+        VStack(spacing: 6) {
+            // Top row: workout timer + HR
+            HStack {
+                // Workout elapsed time
+                HStack(spacing: 4) {
+                    Image(systemName: "timer")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(formattedElapsed)
+                        .font(.system(.subheadline, design: .monospaced))
+                        .fontWeight(.medium)
+                        .monospacedDigit()
+                }
+
+                Spacer()
+
+                // Heart rate
+                if heartRateManager.isMonitoring && heartRateManager.currentHR > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "heart.fill")
+                            .foregroundStyle(.red)
+                            .symbolEffect(.pulse, options: .repeating)
+                        Text("\(Int(heartRateManager.currentHR))")
+                            .font(.system(.title3, design: .rounded))
+                            .fontWeight(.bold)
+                            .monospacedDigit()
+                        if let avg = heartRateManager.sessionAverageHR {
+                            Text("avg \(Int(avg))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+
+            // Rest timer (only when active)
+            if restTimer.isRunning {
+                RestTimerView(timer: restTimer)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial)
+        .onAppear { startElapsedTimer() }
+        .onDisappear { elapsedTimer?.invalidate() }
+    }
+
+    private var formattedElapsed: String {
+        let total = Int(elapsed)
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let seconds = total % 60
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        }
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    private func startElapsedTimer() {
+        updateElapsed()
+        elapsedTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            Task { @MainActor in
+                updateElapsed()
+            }
+        }
+    }
+
+    private func updateElapsed() {
+        guard let start = workoutStartTime else { return }
+        elapsed = Date.now.timeIntervalSince(start)
     }
 }
 

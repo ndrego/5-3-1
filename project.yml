@@ -23,6 +23,12 @@ targets:
           - "Preview Content"
       - path: FiveThreeOne/Preview Content
         buildPhase: sources
+    entitlements:
+      path: FiveThreeOne/FiveThreeOne.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access:
+          - health-records
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ndrego.FiveThreeOne
@@ -39,6 +45,7 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
         INFOPLIST_KEY_CFBundleDisplayName: "5/3/1"
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "5/3/1 reads your heart rate during workouts to track effort and estimate calories burned."
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
         SUPPORTS_MACCATALYST: false

@@ -7,13 +7,15 @@ struct CompletedSet: Codable, Identifiable, Hashable {
     var actualReps: Int
     var isAMRAP: Bool
     var setType: SetType
+    var averageHR: Double?  // Average heart rate during this set
 
     init(
         weight: Double,
         targetReps: Int,
         actualReps: Int = 0,
         isAMRAP: Bool = false,
-        setType: SetType = .main
+        setType: SetType = .main,
+        averageHR: Double? = nil
     ) {
         self.id = UUID()
         self.weight = weight
@@ -21,6 +23,7 @@ struct CompletedSet: Codable, Identifiable, Hashable {
         self.actualReps = actualReps
         self.isAMRAP = isAMRAP
         self.setType = setType
+        self.averageHR = averageHR
     }
 
     var isComplete: Bool {
