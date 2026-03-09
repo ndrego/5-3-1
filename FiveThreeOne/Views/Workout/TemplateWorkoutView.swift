@@ -26,6 +26,7 @@ struct TemplateWorkoutView: View {
     @State private var phoneConnectivity = PhoneConnectivityManager()
     @State private var showPlatesForSet: Set<UUID> = []
     @State private var showRepTuning = false
+    @State private var selectedExerciseForDetail: String?
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -199,6 +200,21 @@ struct TemplateWorkoutView: View {
         .onDisappear {
             heartRateManager.stopMonitoring()
             UIApplication.shared.isIdleTimerDisabled = false
+        }
+        .sheet(isPresented: Binding(
+            get: { selectedExerciseForDetail != nil },
+            set: { if !$0 { selectedExerciseForDetail = nil } }
+        )) {
+            if let name = selectedExerciseForDetail {
+                NavigationStack {
+                    ExerciseDetailView(exerciseName: name)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") { selectedExerciseForDetail = nil }
+                            }
+                        }
+                }
+            }
         }
         .sheet(isPresented: $showRepTuning) {
             RepCountingTuningView { sensitivity, tempo in
@@ -382,7 +398,10 @@ struct TemplateWorkoutView: View {
     private func exerciseSectionHeader(for exerciseState: Binding<ExerciseState>) -> some View {
         let state = exerciseState.wrappedValue
         return HStack {
-            Text(state.exerciseName)
+            Button(state.exerciseName) {
+                selectedExerciseForDetail = state.exerciseName
+            }
+            .buttonStyle(.plain)
             if state.isMainLift {
                 Text("5/3/1")
                     .font(.caption2)

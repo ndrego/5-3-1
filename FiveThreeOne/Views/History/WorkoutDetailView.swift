@@ -83,20 +83,28 @@ struct WorkoutDetailView: View {
     @ViewBuilder
     private func exerciseSection(_ perf: ExercisePerformance) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(perf.exerciseName)
-                    .font(.headline)
-                if perf.isMainLift {
-                    Text("5/3/1")
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.blue)
-                        .foregroundStyle(.white)
-                        .clipShape(Capsule())
+            NavigationLink {
+                ExerciseDetailView(exerciseName: perf.exerciseName)
+            } label: {
+                HStack {
+                    Text(perf.exerciseName)
+                        .font(.headline)
+                    if perf.isMainLift {
+                        Text("5/3/1")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.blue)
+                            .foregroundStyle(.white)
+                            .clipShape(Capsule())
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
             }
+            .buttonStyle(.plain)
 
             if perf.totalVolume > 0 {
                 HStack(spacing: 12) {
