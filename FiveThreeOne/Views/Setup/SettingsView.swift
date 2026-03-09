@@ -16,6 +16,7 @@ struct SettingsView: View {
     private static let barWeightOptions: [Double] = [33, 35, 44, 45, 55, 65]
     private static let roundToOptions: [Double] = [1, 2.5, 5, 10]
     private static let restOptions = [30, 45, 60, 90, 120, 150, 180, 210, 240, 300]
+    private static let recoveryHROptions = [100, 110, 120, 130, 140]
 
     var body: some View {
         NavigationStack {
@@ -66,6 +67,16 @@ struct SettingsView: View {
                         )) {
                             ForEach(Self.restOptions, id: \.self) { secs in
                                 Text(restLabel(secs)).tag(secs)
+                            }
+                        }
+
+                        Picker("Recovery HR", selection: Binding(
+                            get: { s.recoveryHR ?? 0 },
+                            set: { s.recoveryHR = $0 == 0 ? nil : $0 }
+                        )) {
+                            Text("Off").tag(0)
+                            ForEach(Self.recoveryHROptions, id: \.self) { hr in
+                                Text("\(hr) BPM").tag(hr)
                             }
                         }
                     }

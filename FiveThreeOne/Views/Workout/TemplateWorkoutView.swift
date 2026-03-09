@@ -22,6 +22,7 @@ struct TemplateWorkoutView: View {
     @State private var showingSupersetPicker = false
     @State private var supersetSourceIndex: Int?
     @State private var heartRateManager = HeartRateManager()
+    @State private var phoneConnectivity = PhoneConnectivityManager()
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -66,6 +67,8 @@ struct TemplateWorkoutView: View {
                         Button {
                             workoutStartTime = .now
                             workoutStarted = true
+                            phoneConnectivity.sendWorkoutStarted()
+                            sendWatchContext()
                         } label: {
                             Label("Start Workout", systemImage: "play.fill")
                                 .font(.headline)
@@ -137,6 +140,7 @@ struct TemplateWorkoutView: View {
             guard !initialized else { return }
             initialized = true
             initializeExercises()
+            phoneConnectivity.activate()
         }
         .task {
             #if DEBUG && targetEnvironment(simulator)
@@ -148,6 +152,21 @@ struct TemplateWorkoutView: View {
                 heartRateManager.startMonitoring()
             }
             #endif
+        }
+        .onChange(of: restTimer.isRunning) { _, isRunning in
+            if !isRunning {
+                phoneConnectivity.sendTimerStopped()
+            }
+        }
+        .onChange(of: phoneConnectivity.watchRequestedStopTimer) {
+            guard phoneConnectivity.watchRequestedStopTimer else { return }
+            phoneConnectivity.watchRequestedStopTimer = false
+            restTimer.stop()
+        }
+        .onChange(of: phoneConnectivity.watchRequestedCompleteSet) {
+            guard phoneConnectivity.watchRequestedCompleteSet else { return }
+            phoneConnectivity.watchRequestedCompleteSet = false
+            completeNextSet()
         }
         .onDisappear {
             heartRateManager.stopMonitoring()
@@ -377,13 +396,19 @@ struct TemplateWorkoutView: View {
             Button {
                 set.wrappedValue.restSeconds = nil
             } label: {
-                Label("Default (\(restLabel(defaultSecs)))", systemImage: currentRest == nil ? "checkmark" : "")
+                HStack {
+                    Text("Default (\(restLabel(defaultSecs)))")
+                    if currentRest == nil { Image(systemName: "checkmark") }
+                }
             }
             ForEach(Self.restOptions.filter { $0 > 0 }, id: \.self) { secs in
                 Button {
                     set.wrappedValue.restSeconds = secs
                 } label: {
-                    Label(restLabel(secs), systemImage: currentRest == secs ? "checkmark" : "")
+                    HStack {
+                        Text(restLabel(secs))
+                        if currentRest == secs { Image(systemName: "checkmark") }
+                    }
                 }
             }
         } label: {
@@ -656,6 +681,7 @@ struct TemplateWorkoutView: View {
         guard !workoutStarted else { return }
         workoutStartTime = .now
         workoutStarted = true
+        phoneConnectivity.sendWorkoutStarted()
     }
 
     private func startRest(setRestSeconds: Int?, setType: SetType) {
@@ -665,9 +691,15 @@ struct TemplateWorkoutView: View {
         _ = heartRateManager.markSetEnd()
         heartRateManager.markSetStart()
 
+        // Send workout context to watch
+        sendWatchContext()
+
+        let recoveryHR = userSettings?.recoveryHR
+
         // Use per-set rest if set, otherwise fall back to global defaults
         if let custom = setRestSeconds, custom > 0 {
-            restTimer.start(seconds: custom)
+            restTimer.start(seconds: custom, recoveryHR: recoveryHR)
+            phoneConnectivity.sendTimerStarted(totalSeconds: custom, recoveryHR: recoveryHR)
             return
         }
 
@@ -685,7 +717,55 @@ struct TemplateWorkoutView: View {
         case .joker:
             seconds = settings.defaultRestSeconds
         }
-        restTimer.start(seconds: seconds)
+        restTimer.start(seconds: seconds, recoveryHR: recoveryHR)
+        phoneConnectivity.sendTimerStarted(totalSeconds: seconds, recoveryHR: recoveryHR)
+    }
+
+    private func sendWatchContext() {
+        // Find the next incomplete set to tell the watch what's coming
+        for state in exerciseStates {
+            let completedCount = state.sets.filter(\.isComplete).count
+            if completedCount < state.sets.count {
+                let nextIndex = completedCount
+                let set = state.sets[nextIndex]
+                phoneConnectivity.sendCurrentExercise(
+                    name: state.exerciseName,
+                    setNumber: nextIndex + 1,
+                    totalSets: state.sets.count,
+                    weight: set.weight,
+                    targetReps: set.targetReps,
+                    isAMRAP: set.isAMRAP,
+                    setType: set.setType.rawValue
+                )
+
+                // Also send completion progress
+                phoneConnectivity.sendSetCompleted(
+                    exerciseName: state.exerciseName,
+                    setNumber: completedCount,
+                    totalSets: state.sets.count,
+                    weight: set.weight,
+                    reps: set.targetReps,
+                    setType: set.setType.rawValue
+                )
+                return
+            }
+        }
+    }
+
+    /// Complete the next incomplete set (triggered from watch)
+    private func completeNextSet() {
+        for i in exerciseStates.indices {
+            for j in exerciseStates[i].sets.indices {
+                if !exerciseStates[i].sets[j].isComplete {
+                    exerciseStates[i].sets[j].actualReps = exerciseStates[i].sets[j].targetReps
+                    startRest(
+                        setRestSeconds: exerciseStates[i].sets[j].restSeconds,
+                        setType: exerciseStates[i].sets[j].setType
+                    )
+                    return
+                }
+            }
+        }
     }
 
     private func defaultRestSeconds(for setType: SetType) -> Int {
@@ -807,6 +887,7 @@ struct TemplateWorkoutView: View {
         modelContext.insert(workout)
         restTimer.stop()
         heartRateManager.stopMonitoring()
+        phoneConnectivity.sendWorkoutFinished()
 
         // Detect changes to the template
         templateChanges = detectTemplateChanges()
@@ -1093,7 +1174,7 @@ struct WorkoutBottomBar: View {
 
             // Rest timer (only when active)
             if restTimer.isRunning {
-                RestTimerView(timer: restTimer)
+                RestTimerView(timer: restTimer, currentHR: heartRateManager.currentHR)
             }
         }
         .padding(.horizontal)
@@ -1217,13 +1298,19 @@ struct SupersetRowView: View {
             Button {
                 setBinding.restSeconds = nil
             } label: {
-                Label("Default", systemImage: currentRest == nil ? "checkmark" : "")
+                HStack {
+                    Text("Default")
+                    if currentRest == nil { Image(systemName: "checkmark") }
+                }
             }
             ForEach(restOptions.filter { $0 > 0 }, id: \.self) { secs in
                 Button {
                     setBinding.restSeconds = secs
                 } label: {
-                    Label(restLabel(secs), systemImage: currentRest == secs ? "checkmark" : "")
+                    HStack {
+                        Text(restLabel(secs))
+                        if currentRest == secs { Image(systemName: "checkmark") }
+                    }
                 }
             }
         } label: {

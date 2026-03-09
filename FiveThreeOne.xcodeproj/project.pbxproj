@@ -12,16 +12,21 @@
 		1364187D2F741593678B9593 /* TemplateWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */; };
 		20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB2E2E170599DCA54721387 /* PreviewData.swift */; };
 		21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE467A519D792ED441F742E /* PlateCalculator.swift */; };
+		230643B5A9143AA28050C77B /* WatchHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A24EB0B7C4C3A70DA0FF949 /* WatchHomeView.swift */; };
+		29A582EAE6A0853AD03A3F06 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40E82BFB0327F6EAF318C1A /* WatchConnectivityManager.swift */; };
 		2C8579C905B99A76D513AE9E /* TemplateListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CF49725EDCFA52F8B30B6D /* TemplateListView.swift */; };
 		3A49BC7591A92ACE6AB9128D /* LiftSparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C8617DEC3D016FB142EDC14 /* LiftSparklineView.swift */; };
+		43FC0A74596CFFC120F0EB4D /* FiveThreeOneWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		49C4EAFFB2A489D84C16661C /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7695B5AD6606F0A852EB2 /* UserSettings.swift */; };
 		4BE90F7735ED5DCE1A60B616 /* Cycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0247C0C120E576E7E0290C60 /* Cycle.swift */; };
 		5BC12CDBFFD67BDA353D9E2E /* PreviousPerformanceLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B16D82D7CF0F5A99A88CAB /* PreviousPerformanceLookup.swift */; };
 		612FE433F6370ABF0BBD2DFF /* ExercisePerformance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C50280FC64462F470CE51B2 /* ExercisePerformance.swift */; };
 		6F2CCEC4D5F32C887FDDC8C8 /* FiveThreeOneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE577FD8B1B84EDB075AAB8C /* FiveThreeOneApp.swift */; };
+		7B9B49987EA31CDF85E034E2 /* PhoneConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08369B15D0D20319E0EACBFC /* PhoneConnectivityManager.swift */; };
 		7DF41D7559FBD0BE6D967BB8 /* CompletedWorkout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DED8FCDBE3E01F5CAC0F6B0F /* CompletedWorkout.swift */; };
 		7F649B0E7AC26560F7E4EB37 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F86E2103F18680D17C60A28 /* WorkoutDetailView.swift */; };
 		80DAC022A245E6FBA1F06079 /* StrongImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F0A1C31E0BDF2E0528B288 /* StrongImportView.swift */; };
+		83A527D457330749031696F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 284CAB02879259FE36883AAD /* Assets.xcassets */; };
 		83BB9CDE8E9F150D3B8F6CA5 /* RestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94AF72042394A17E3FC3361 /* RestTimerView.swift */; };
 		8DCF4F72CDB53A0A6CCD429C /* RestTimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3520A61ACEA04BE124C43E37 /* RestTimerState.swift */; };
 		9182240799F61B1D374BAA8D /* TrainingMaxSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC5CD132C6798CD7DB3097F /* TrainingMaxSetupView.swift */; };
@@ -37,17 +42,48 @@
 		D3C15F1B5A6F483D609D28B8 /* WorkoutTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3393FE9AF129A9031A0F141 /* WorkoutTemplate.swift */; };
 		D45075E0FA1E1EF30A772030 /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EA6814D61250E9F23592DD /* Lift.swift */; };
 		E74EED874D95E9E6EA5A24AA /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B54678A56D15CD4243E9B7 /* HistoryListView.swift */; };
+		F1AB479CFDBCE4176BA21B40 /* WatchWorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 627679734B52F316E9A55257 /* WatchWorkoutManager.swift */; };
 		F22696A242FF8A8A99432EF3 /* ProgramEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EF430C5547890FEBB16A3B4 /* ProgramEngine.swift */; };
 		F8756B53B9CD9B8B9CACE8DE /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE430402E11A12C53BCB6D2 /* DashboardView.swift */; };
+		FEB7E4B80AF7E25045F1EFA2 /* FiveThreeOneWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3197C68B90AD54986FDB9AC3 /* FiveThreeOneWatchApp.swift */; };
 		FED16055DBFC550D702F06CF /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3548FFE34F56F4323AE1B185 /* Exercise.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6E0224A0BB701A515EBCB2B5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D40AE766716C699F67766868 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4553201F6F8826AF2EA50545;
+			remoteInfo = FiveThreeOneWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		EFF9DCCF2189C7D326B68A60 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				43FC0A74596CFFC120F0EB4D /* FiveThreeOneWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		00B16D82D7CF0F5A99A88CAB /* PreviousPerformanceLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviousPerformanceLookup.swift; sourceTree = "<group>"; };
 		0247C0C120E576E7E0290C60 /* Cycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cycle.swift; sourceTree = "<group>"; };
+		08369B15D0D20319E0EACBFC /* PhoneConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneConnectivityManager.swift; sourceTree = "<group>"; };
 		0C50280FC64462F470CE51B2 /* ExercisePerformance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePerformance.swift; sourceTree = "<group>"; };
 		1EC9B438F744231E2C9D1B5A /* WorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutView.swift; sourceTree = "<group>"; };
+		284CAB02879259FE36883AAD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2A24EB0B7C4C3A70DA0FF949 /* WatchHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHomeView.swift; sourceTree = "<group>"; };
+		2ADAE2D0E19BDA6343C20FC8 /* FiveThreeOneWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FiveThreeOneWatch.entitlements; sourceTree = "<group>"; };
 		2C8617DEC3D016FB142EDC14 /* LiftSparklineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftSparklineView.swift; sourceTree = "<group>"; };
+		3197C68B90AD54986FDB9AC3 /* FiveThreeOneWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveThreeOneWatchApp.swift; sourceTree = "<group>"; };
 		32D7695B5AD6606F0A852EB2 /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		342892DF7BB145BC5C61A846 /* SetRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRowView.swift; sourceTree = "<group>"; };
 		3520A61ACEA04BE124C43E37 /* RestTimerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerState.swift; sourceTree = "<group>"; };
@@ -57,7 +93,9 @@
 		452048773705C2BF75CC773C /* TemplateEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditView.swift; sourceTree = "<group>"; };
 		4BE467A519D792ED441F742E /* PlateCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateCalculator.swift; sourceTree = "<group>"; };
 		4F86E2103F18680D17C60A28 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
+		627679734B52F316E9A55257 /* WatchWorkoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutManager.swift; sourceTree = "<group>"; };
 		62ED226F8A02894A6E4C1835 /* FiveThreeOne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FiveThreeOne.entitlements; sourceTree = "<group>"; };
+		7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiveThreeOneWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B9F5B0A48B730B51F34F609 /* ProgramVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramVariant.swift; sourceTree = "<group>"; };
 		7EF430C5547890FEBB16A3B4 /* ProgramEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramEngine.swift; sourceTree = "<group>"; };
 		82F0A1C31E0BDF2E0528B288 /* StrongImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongImportView.swift; sourceTree = "<group>"; };
@@ -74,6 +112,7 @@
 		C9B54678A56D15CD4243E9B7 /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
 		DE577FD8B1B84EDB075AAB8C /* FiveThreeOneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveThreeOneApp.swift; sourceTree = "<group>"; };
 		DED8FCDBE3E01F5CAC0F6B0F /* CompletedWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedWorkout.swift; sourceTree = "<group>"; };
+		E40E82BFB0327F6EAF318C1A /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		E8FE052FB06BDAED95A37379 /* StrongImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongImporter.swift; sourceTree = "<group>"; };
 		EF5B09F98212E7C06D938D93 /* HeartRateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateManager.swift; sourceTree = "<group>"; };
 		F3393FE9AF129A9031A0F141 /* WorkoutTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTemplate.swift; sourceTree = "<group>"; };
@@ -81,6 +120,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		1DD765BA02AFCA39359BE44F /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2A24EB0B7C4C3A70DA0FF949 /* WatchHomeView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		43F93C07C9CC8F6CE508CB33 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -122,6 +169,7 @@
 			isa = PBXGroup;
 			children = (
 				AE13EB05FCF739C84CD4F00A /* FiveThreeOne */,
+				D3915B5066797DD7ADA3E01E /* FiveThreeOneWatch */,
 				85A8EBB082014B8DB5499D43 /* Preview Content */,
 				6E962D60C6B2A58E51D77FE2 /* Products */,
 			);
@@ -131,6 +179,7 @@
 			isa = PBXGroup;
 			children = (
 				3CEC1276ADADB11C4B07AEED /* FiveThreeOne.app */,
+				7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -175,6 +224,7 @@
 				A355D24994B7E9A96EDE7096 /* Assets.xcassets */,
 				62ED226F8A02894A6E4C1835 /* FiveThreeOne.entitlements */,
 				F9D88ECF7E43C039BBDC0EC1 /* App */,
+				BCAFCE1E08D8890DABFD52A1 /* Connectivity */,
 				43F93C07C9CC8F6CE508CB33 /* Models */,
 				B9A3639238806E86D64C6CC3 /* Utilities */,
 				71E69553A8C79E356C9382D0 /* ViewModels */,
@@ -209,12 +259,33 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
+		BCAFCE1E08D8890DABFD52A1 /* Connectivity */ = {
+			isa = PBXGroup;
+			children = (
+				08369B15D0D20319E0EACBFC /* PhoneConnectivityManager.swift */,
+			);
+			path = Connectivity;
+			sourceTree = "<group>";
+		};
 		C042A757D84A30610D2B7450 /* Import */ = {
 			isa = PBXGroup;
 			children = (
 				82F0A1C31E0BDF2E0528B288 /* StrongImportView.swift */,
 			);
 			path = Import;
+			sourceTree = "<group>";
+		};
+		D3915B5066797DD7ADA3E01E /* FiveThreeOneWatch */ = {
+			isa = PBXGroup;
+			children = (
+				284CAB02879259FE36883AAD /* Assets.xcassets */,
+				2ADAE2D0E19BDA6343C20FC8 /* FiveThreeOneWatch.entitlements */,
+				3197C68B90AD54986FDB9AC3 /* FiveThreeOneWatchApp.swift */,
+				E40E82BFB0327F6EAF318C1A /* WatchConnectivityManager.swift */,
+				627679734B52F316E9A55257 /* WatchWorkoutManager.swift */,
+				1DD765BA02AFCA39359BE44F /* Views */,
+			);
+			path = FiveThreeOneWatch;
 			sourceTree = "<group>";
 		};
 		E9CB953E8BB130C2F77FD20A /* Templates */ = {
@@ -246,16 +317,36 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4553201F6F8826AF2EA50545 /* FiveThreeOneWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D5E6CC080A723AE8AEFDF7BC /* Build configuration list for PBXNativeTarget "FiveThreeOneWatch" */;
+			buildPhases = (
+				E437C54626C849923D637D61 /* Sources */,
+				BF9CEF93D5C17D5930A463DF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FiveThreeOneWatch;
+			packageProductDependencies = (
+			);
+			productName = FiveThreeOneWatch;
+			productReference = 7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 		4A50F5911B8B726A73F83F4E /* FiveThreeOne */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 126C28D53C78BDD4DF7CFE72 /* Build configuration list for PBXNativeTarget "FiveThreeOne" */;
 			buildPhases = (
 				6831EBC20EE79085BBB78FB1 /* Sources */,
 				A971EDF35A9C0A7A4D6B5F2D /* Resources */,
+				EFF9DCCF2189C7D326B68A60 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				59A8D2C09DC4C358D3A1C3B3 /* PBXTargetDependency */,
 			);
 			name = FiveThreeOne;
 			packageProductDependencies = (
@@ -273,6 +364,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					4553201F6F8826AF2EA50545 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
 					4A50F5911B8B726A73F83F4E = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -294,6 +389,7 @@
 			projectRoot = "";
 			targets = (
 				4A50F5911B8B726A73F83F4E /* FiveThreeOne */,
+				4553201F6F8826AF2EA50545 /* FiveThreeOneWatch */,
 			);
 		};
 /* End PBXProject section */
@@ -304,6 +400,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				B515AC7C0CD0C80222830CBC /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BF9CEF93D5C17D5930A463DF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				83A527D457330749031696F1 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -327,6 +431,7 @@
 				E74EED874D95E9E6EA5A24AA /* HistoryListView.swift in Sources */,
 				D45075E0FA1E1EF30A772030 /* Lift.swift in Sources */,
 				3A49BC7591A92ACE6AB9128D /* LiftSparklineView.swift in Sources */,
+				7B9B49987EA31CDF85E034E2 /* PhoneConnectivityManager.swift in Sources */,
 				21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */,
 				20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */,
 				5BC12CDBFFD67BDA353D9E2E /* PreviousPerformanceLookup.swift in Sources */,
@@ -349,7 +454,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E437C54626C849923D637D61 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEB7E4B80AF7E25045F1EFA2 /* FiveThreeOneWatchApp.swift in Sources */,
+				29A582EAE6A0853AD03A3F06 /* WatchConnectivityManager.swift in Sources */,
+				230643B5A9143AA28050C77B /* WatchHomeView.swift in Sources */,
+				F1AB479CFDBCE4176BA21B40 /* WatchWorkoutManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		59A8D2C09DC4C358D3A1C3B3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4553201F6F8826AF2EA50545 /* FiveThreeOneWatch */;
+			targetProxy = 6E0224A0BB701A515EBCB2B5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		5559DBC2C12DD016EA4DF4F5 /* Debug */ = {
@@ -379,6 +503,30 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
+		};
+		82A5D7D33760733B3F298144 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FiveThreeOneWatch/FiveThreeOneWatch.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
+				INFOPLIST_KEY_CFBundleDisplayName = 5/3/1;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "5/3/1 reads your heart rate during workouts to show recovery status.";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ndrego.FiveThreeOne;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ndrego.FiveThreeOne.watch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
 		};
 		AB017585635A0829D25EF7F9 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -439,10 +587,10 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -498,10 +646,10 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -533,6 +681,30 @@
 			};
 			name = Release;
 		};
+		F575D6F95B82CEE44B3ED89E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FiveThreeOneWatch/FiveThreeOneWatch.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
+				INFOPLIST_KEY_CFBundleDisplayName = 5/3/1;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "5/3/1 reads your heart rate during workouts to show recovery status.";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ndrego.FiveThreeOne;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ndrego.FiveThreeOne.watch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -550,6 +722,15 @@
 			buildConfigurations = (
 				AB017585635A0829D25EF7F9 /* Debug */,
 				AE7ADA8AD1E1F4CD1140EFB0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D5E6CC080A723AE8AEFDF7BC /* Build configuration list for PBXNativeTarget "FiveThreeOneWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F575D6F95B82CEE44B3ED89E /* Debug */,
+				82A5D7D33760733B3F298144 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
