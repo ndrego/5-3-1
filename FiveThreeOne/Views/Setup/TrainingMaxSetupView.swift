@@ -7,82 +7,146 @@ struct TrainingMaxSetupView: View {
 
     var isOnboarding: Bool = false
 
-    @State private var squatTM: String = ""
-    @State private var benchTM: String = ""
-    @State private var deadliftTM: String = ""
-    @State private var ohpTM: String = ""
-    @State private var tmPercentage: Double = 90
+    @State private var liftInputs: [Lift: String] = [
+        .squat: "", .bench: "", .deadlift: "", .overheadPress: ""
+    ]
+    @State private var liftTMPercents: [Lift: Double] = [
+        .squat: 90, .bench: 90, .deadlift: 90, .overheadPress: 90
+    ]
     @State private var selectedVariant: ProgramVariant = .standard
     @State private var useOneRepMax = true
+    @State private var useSamePercent = true
+    @State private var globalPercent: Double = 90
 
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    Picker("Input Method", selection: $useOneRepMax) {
-                        Text("Enter 1RM (auto-calculate TM)").tag(true)
-                        Text("Enter Training Max directly").tag(false)
-                    }
-                    .pickerStyle(.segmented)
-
-                    if useOneRepMax {
-                        HStack {
-                            Text("TM Percentage")
-                            Spacer()
-                            Text("\(Int(tmPercentage))%")
-                                .foregroundStyle(.secondary)
-                        }
-                        Slider(value: $tmPercentage, in: 80...95, step: 5)
-                    }
-                } header: {
-                    Text(useOneRepMax ? "Enter your 1 Rep Max" : "Enter your Training Max")
-                }
-
-                Section("Lifts (lbs)") {
-                    liftField("Squat", value: $squatTM)
-                    liftField("Bench Press", value: $benchTM)
-                    liftField("Deadlift", value: $deadliftTM)
-                    liftField("Overhead Press", value: $ohpTM)
-                }
-
+                inputMethodSection
+                liftsSection
                 if useOneRepMax {
-                    Section("Calculated Training Maxes") {
-                        tmPreview("Squat", input: squatTM)
-                        tmPreview("Bench Press", input: benchTM)
-                        tmPreview("Deadlift", input: deadliftTM)
-                        tmPreview("OHP", input: ohpTM)
-                    }
+                    tmPercentSection
+                    calculatedTMSection
                 }
-
-                Section("Program Variant") {
-                    Picker("Variant", selection: $selectedVariant) {
-                        ForEach(ProgramVariant.allCases) { variant in
-                            Text(variant.displayName).tag(variant)
-                        }
-                    }
-                    .pickerStyle(.menu)
-
-                    Text(selectedVariant.description)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                variantSection
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(isOnboarding ? "Welcome to 5/3/1" : "Training Maxes")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        save()
-                    }
-                    .disabled(!isValid)
+                    Button("Save") { save() }
+                        .disabled(!isValid)
                 }
                 if !isOnboarding {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
                     }
                 }
+                ToolbarItem(placement: .keyboard) {
+                    HStack {
+                        Spacer()
+                        Button("Done") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        }
+                    }
+                }
             }
         }
     }
+
+    // MARK: - Sections
+
+    private var inputMethodSection: some View {
+        Section {
+            Picker("Input Method", selection: $useOneRepMax) {
+                Text("Enter 1RM").tag(true)
+                Text("Enter TM directly").tag(false)
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            Text(useOneRepMax ? "Enter your 1 Rep Max" : "Enter your Training Max")
+        }
+    }
+
+    private var liftsSection: some View {
+        Section("Lifts (lbs)") {
+            ForEach(Lift.allCases) { lift in
+                liftField(lift.displayName, value: binding(for: lift))
+            }
+        }
+    }
+
+    private var tmPercentSection: some View {
+        Section("TM Percentage") {
+            Toggle("Same % for all lifts", isOn: $useSamePercent)
+                .onChange(of: useSamePercent) { _, newValue in
+                    if newValue {
+                        for lift in Lift.allCases {
+                            liftTMPercents[lift] = globalPercent
+                        }
+                    }
+                }
+
+            if useSamePercent {
+                percentRow(label: "All Lifts", value: $globalPercent)
+                    .onChange(of: globalPercent) { _, newValue in
+                        for lift in Lift.allCases {
+                            liftTMPercents[lift] = newValue
+                        }
+                    }
+            } else {
+                ForEach(Lift.allCases) { lift in
+                    percentRow(
+                        label: lift.shortName,
+                        value: Binding(
+                            get: { liftTMPercents[lift] ?? 90 },
+                            set: { liftTMPercents[lift] = $0 }
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private var calculatedTMSection: some View {
+        Section("Calculated Training Maxes") {
+            ForEach(Lift.allCases) { lift in
+                HStack {
+                    Text(lift.displayName)
+                    Spacer()
+                    if let value = Double(liftInputs[lift] ?? "") {
+                        let pct = liftTMPercents[lift] ?? 90
+                        let tm = roundToFive(value * pct / 100.0)
+                        Text("\(Int(tm)) lbs")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                        Text("(\(Int(pct))%)")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    } else {
+                        Text("—")
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+        }
+    }
+
+    private var variantSection: some View {
+        Section("Program Variant") {
+            Picker("Variant", selection: $selectedVariant) {
+                ForEach(ProgramVariant.allCases) { variant in
+                    Text(variant.displayName).tag(variant)
+                }
+            }
+            .pickerStyle(.menu)
+
+            Text(selectedVariant.description)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Components
 
     private func liftField(_ label: String, value: Binding<String>) -> some View {
         HStack {
@@ -95,35 +159,45 @@ struct TrainingMaxSetupView: View {
         }
     }
 
-    private func tmPreview(_ label: String, input: String) -> some View {
+    private func percentRow(label: String, value: Binding<Double>) -> some View {
         HStack {
             Text(label)
-            Spacer()
-            if let value = Double(input) {
-                let tm = roundToFive(value * tmPercentage / 100.0)
-                Text("\(Int(tm)) lbs")
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            } else {
-                Text("—")
-                    .foregroundStyle(.tertiary)
-            }
+                .frame(width: 60, alignment: .leading)
+            Slider(value: value, in: 80...95, step: 5)
+            Text("\(Int(value.wrappedValue))%")
+                .monospacedDigit()
+                .frame(width: 40)
+                .foregroundStyle(.secondary)
         }
     }
 
+    // MARK: - Helpers
+
+    private func binding(for lift: Lift) -> Binding<String> {
+        Binding(
+            get: { liftInputs[lift] ?? "" },
+            set: { liftInputs[lift] = $0 }
+        )
+    }
+
     private var isValid: Bool {
-        [squatTM, benchTM, deadliftTM, ohpTM].allSatisfy { Double($0) != nil && Double($0)! > 0 }
+        Lift.allCases.allSatisfy { lift in
+            guard let val = Double(liftInputs[lift] ?? "") else { return false }
+            return val > 0
+        }
     }
 
     private func save() {
-        let multiplier = useOneRepMax ? tmPercentage / 100.0 : 1.0
+        var trainingMaxes: [String: Double] = [:]
+        var tmPercentages: [String: Double] = [:]
 
-        let trainingMaxes: [String: Double] = [
-            Lift.squat.rawValue: roundToFive(Double(squatTM)! * multiplier),
-            Lift.bench.rawValue: roundToFive(Double(benchTM)! * multiplier),
-            Lift.deadlift.rawValue: roundToFive(Double(deadliftTM)! * multiplier),
-            Lift.overheadPress.rawValue: roundToFive(Double(ohpTM)! * multiplier),
-        ]
+        for lift in Lift.allCases {
+            let input = Double(liftInputs[lift] ?? "0") ?? 0
+            let pct = liftTMPercents[lift] ?? 90
+            let multiplier = useOneRepMax ? pct / 100.0 : 1.0
+            trainingMaxes[lift.rawValue] = roundToFive(input * multiplier)
+            tmPercentages[lift.rawValue] = pct / 100.0
+        }
 
         let cycle = Cycle(
             number: 1,
@@ -132,9 +206,8 @@ struct TrainingMaxSetupView: View {
         )
         modelContext.insert(cycle)
 
-        // Create settings if onboarding
         if isOnboarding {
-            let settings = UserSettings(trainingMaxPercentage: tmPercentage / 100.0)
+            let settings = UserSettings(trainingMaxPercentages: tmPercentages)
             modelContext.insert(settings)
             Exercise.seedDefaults(in: modelContext)
         }
