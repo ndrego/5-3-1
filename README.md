@@ -1,4 +1,4 @@
-# 5/3/1 Workout Tracker
+# 531 Strength
 
 A personal iOS + watchOS app for tracking the Wendler 5/3/1 weightlifting program.
 
@@ -6,7 +6,7 @@ A personal iOS + watchOS app for tracking the Wendler 5/3/1 weightlifting progra
 
 - **All 6 program variants**: Standard, BBB, FSL, 5s PRO, BBB Beefcake, SSL
 - **Auto-calculated weights**: Enter training maxes, get exact weights per set with per-lift TM percentages
-- **Plate calculator**: Shows which plates to load, inline per set
+- **Plate calculator**: Tap-to-toggle colored plate diagrams on any barbell set
 - **AMRAP tracking**: Log your plus-set reps with estimated 1RM (Epley formula)
 - **Auto-progression**: +5 lbs upper body, +10 lbs lower body between cycles (configurable)
 - **Configurable warmup sets**: Add/remove warmup sets with custom percentages and reps
@@ -18,7 +18,9 @@ A personal iOS + watchOS app for tracking the Wendler 5/3/1 weightlifting progra
 - **HealthKit integration**: Heart rate streaming during workouts, calorie estimation (Keytel et al. formula with age/weight/sex), and completed workouts saved to Apple Health
 - **Strong app import**: Import full workout history from Strong's CSV export — all exercises, not just main lifts
 - **Backup & restore**: Export all data to JSON, save to iCloud Drive or Files for safekeeping
+- **Screen stays on**: Display stays awake during active workouts
 - **Dark mode**: Full dark mode UI
+- **Privacy**: No analytics, no tracking, no data leaves your device (except optional HealthKit sync)
 
 ## Tech Stack
 

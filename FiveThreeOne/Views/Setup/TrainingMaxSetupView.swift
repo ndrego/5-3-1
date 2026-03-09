@@ -30,7 +30,7 @@ struct TrainingMaxSetupView: View {
                 variantSection
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationTitle(isOnboarding ? "Welcome to 5/3/1" : "Training Maxes")
+            .navigationTitle(isOnboarding ? "Welcome to 531" : "Training Maxes")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }

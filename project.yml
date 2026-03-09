@@ -45,9 +45,9 @@ targets:
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
-        INFOPLIST_KEY_CFBundleDisplayName: "5/3/1"
-        INFOPLIST_KEY_NSHealthShareUsageDescription: "5/3/1 reads your heart rate during workouts to track effort and estimate calories burned."
-        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "5/3/1 saves your completed workouts and calories to Apple Health."
+        INFOPLIST_KEY_CFBundleDisplayName: "531 Strength"
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "531 Strength reads your heart rate during workouts to track effort and estimate calories burned."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "531 Strength saves your completed workouts and calories to Apple Health."
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
         SUPPORTS_MACCATALYST: false
@@ -76,9 +76,9 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: true
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
-        INFOPLIST_KEY_CFBundleDisplayName: "5/3/1"
+        INFOPLIST_KEY_CFBundleDisplayName: "531 Strength"
         INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.ndrego.FiveThreeOne
-        INFOPLIST_KEY_NSHealthShareUsageDescription: "5/3/1 reads your heart rate during workouts to show recovery status."
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "531 Strength reads your heart rate during workouts to show recovery status."
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
         SUPPORTED_PLATFORMS: "watchos watchsimulator"
         TARGETED_DEVICE_FAMILY: "4"

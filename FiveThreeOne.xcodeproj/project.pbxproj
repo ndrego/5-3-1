@@ -20,6 +20,7 @@
 		43FC0A74596CFFC120F0EB4D /* FiveThreeOneWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		49C4EAFFB2A489D84C16661C /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7695B5AD6606F0A852EB2 /* UserSettings.swift */; };
 		4BE90F7735ED5DCE1A60B616 /* Cycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0247C0C120E576E7E0290C60 /* Cycle.swift */; };
+		576014CA9B11D22C2CDE2E7A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 127668896D621C1033626435 /* PrivacyInfo.xcprivacy */; };
 		5BC12CDBFFD67BDA353D9E2E /* PreviousPerformanceLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B16D82D7CF0F5A99A88CAB /* PreviousPerformanceLookup.swift */; };
 		612FE433F6370ABF0BBD2DFF /* ExercisePerformance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C50280FC64462F470CE51B2 /* ExercisePerformance.swift */; };
 		6F2CCEC4D5F32C887FDDC8C8 /* FiveThreeOneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE577FD8B1B84EDB075AAB8C /* FiveThreeOneApp.swift */; };
@@ -80,6 +81,7 @@
 		0247C0C120E576E7E0290C60 /* Cycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cycle.swift; sourceTree = "<group>"; };
 		08369B15D0D20319E0EACBFC /* PhoneConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneConnectivityManager.swift; sourceTree = "<group>"; };
 		0C50280FC64462F470CE51B2 /* ExercisePerformance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePerformance.swift; sourceTree = "<group>"; };
+		127668896D621C1033626435 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1EC9B438F744231E2C9D1B5A /* WorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutView.swift; sourceTree = "<group>"; };
 		284CAB02879259FE36883AAD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2A24EB0B7C4C3A70DA0FF949 /* WatchHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHomeView.swift; sourceTree = "<group>"; };
@@ -228,6 +230,7 @@
 			children = (
 				A355D24994B7E9A96EDE7096 /* Assets.xcassets */,
 				62ED226F8A02894A6E4C1835 /* FiveThreeOne.entitlements */,
+				127668896D621C1033626435 /* PrivacyInfo.xcprivacy */,
 				F9D88ECF7E43C039BBDC0EC1 /* App */,
 				BCAFCE1E08D8890DABFD52A1 /* Connectivity */,
 				43F93C07C9CC8F6CE508CB33 /* Models */,
@@ -404,6 +407,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B515AC7C0CD0C80222830CBC /* Assets.xcassets in Resources */,
+				576014CA9B11D22C2CDE2E7A /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -493,9 +497,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
-				INFOPLIST_KEY_CFBundleDisplayName = 5/3/1;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "5/3/1 reads your heart rate during workouts to track effort and estimate calories burned.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "5/3/1 saves your completed workouts and calories to Apple Health.";
+				INFOPLIST_KEY_CFBundleDisplayName = "531 Strength";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "531 Strength reads your heart rate during workouts to track effort and estimate calories burned.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "531 Strength saves your completed workouts and calories to Apple Health.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -523,8 +527,8 @@
 				DEVELOPMENT_TEAM = 788PV93CSX;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
-				INFOPLIST_KEY_CFBundleDisplayName = 5/3/1;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "5/3/1 reads your heart rate during workouts to show recovery status.";
+				INFOPLIST_KEY_CFBundleDisplayName = "531 Strength";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "531 Strength reads your heart rate during workouts to show recovery status.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ndrego.FiveThreeOne;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -677,9 +681,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
-				INFOPLIST_KEY_CFBundleDisplayName = 5/3/1;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "5/3/1 reads your heart rate during workouts to track effort and estimate calories burned.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "5/3/1 saves your completed workouts and calories to Apple Health.";
+				INFOPLIST_KEY_CFBundleDisplayName = "531 Strength";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "531 Strength reads your heart rate during workouts to track effort and estimate calories burned.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "531 Strength saves your completed workouts and calories to Apple Health.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -707,8 +711,8 @@
 				DEVELOPMENT_TEAM = 788PV93CSX;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
-				INFOPLIST_KEY_CFBundleDisplayName = 5/3/1;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "5/3/1 reads your heart rate during workouts to show recovery status.";
+				INFOPLIST_KEY_CFBundleDisplayName = "531 Strength";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "531 Strength reads your heart rate during workouts to show recovery status.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ndrego.FiveThreeOne;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

@@ -26,7 +26,7 @@ struct DashboardView: View {
                 }
                 .padding()
             }
-            .navigationTitle("5/3/1")
+            .navigationTitle("531 Strength")
         }
     }
 

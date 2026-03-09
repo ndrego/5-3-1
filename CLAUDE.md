@@ -1,4 +1,4 @@
-# 5/3/1 Workout Tracker
+# 531 Strength
 
 ## Project Overview
 Personal iOS + watchOS app for tracking the Wendler 5/3/1 weightlifting program. SwiftUI + SwiftData, Swift 6, iOS 17+, watchOS 10+, no external dependencies.
