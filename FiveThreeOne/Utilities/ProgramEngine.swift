@@ -32,6 +32,26 @@ struct ProgramEngine {
         [5, 5, 5],   // Week 4
     ]
 
+    // MARK: - Warmup Sets
+
+    static func warmupSets(
+        trainingMax: Double,
+        scheme: [(percentage: Double, reps: Int)] = [(0.40, 5), (0.50, 5), (0.60, 3)],
+        roundTo: Double = 5.0
+    ) -> [PlannedSet] {
+        scheme.enumerated().map { i, entry in
+            let weight = roundWeight(trainingMax * entry.percentage, to: roundTo)
+            return PlannedSet(
+                setNumber: i + 1,
+                weight: weight,
+                reps: entry.reps,
+                percentage: entry.percentage,
+                isAMRAP: false,
+                setType: .warmup
+            )
+        }
+    }
+
     // MARK: - Main Sets
 
     static func mainSets(
@@ -164,16 +184,17 @@ struct ProgramEngine {
 
     // MARK: - Full Workout
 
-    /// Generate all planned sets for a workout (main + supplemental)
+    /// Generate all planned sets for a workout (warmup + main + supplemental)
     static func allSets(
         trainingMax: Double,
         week: Int,
         variant: ProgramVariant,
         roundTo: Double = 5.0
     ) -> [PlannedSet] {
+        let warmup = warmupSets(trainingMax: trainingMax, roundTo: roundTo)
         let main = mainSets(trainingMax: trainingMax, week: week, variant: variant, roundTo: roundTo)
         let supplemental = supplementalSets(trainingMax: trainingMax, week: week, variant: variant, roundTo: roundTo)
-        return main + supplemental
+        return warmup + main + supplemental
     }
 
     // MARK: - Estimated 1RM (Epley formula)

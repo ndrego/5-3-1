@@ -53,6 +53,46 @@ struct SettingsView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+
+                    Section("Warmup Sets") {
+                        ForEach(Array(s.effectiveWarmupPercentages.indices), id: \.self) { i in
+                            HStack {
+                                Text("Set \(i + 1)")
+                                    .frame(width: 44, alignment: .leading)
+                                Spacer()
+                                Text("\(Int(s.effectiveWarmupPercentages[i] * 100))%")
+                                    .monospacedDigit()
+                                Text("×")
+                                Text("\(s.effectiveWarmupReps[i]) reps")
+                                    .monospacedDigit()
+
+                                Button(role: .destructive) {
+                                    s.effectiveWarmupPercentages.remove(at: i)
+                                    s.effectiveWarmupReps.remove(at: i)
+                                } label: {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundStyle(.red)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+
+                        Menu {
+                            ForEach([20, 30, 40, 50, 60, 70], id: \.self) { pct in
+                                Menu("\(pct)%") {
+                                    ForEach([3, 5, 8, 10], id: \.self) { reps in
+                                        Button("\(pct)% × \(reps) reps") {
+                                            s.effectiveWarmupPercentages.append(Double(pct) / 100.0)
+                                            s.effectiveWarmupReps.append(reps)
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            Label("Add Warmup Set", systemImage: "plus.circle")
+                                .font(.subheadline)
+                        }
+                    }
                 }
 
                 Section("Program") {

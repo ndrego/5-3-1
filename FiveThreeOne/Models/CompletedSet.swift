@@ -8,6 +8,7 @@ struct CompletedSet: Codable, Identifiable, Hashable {
     var isAMRAP: Bool
     var setType: SetType
     var averageHR: Double?  // Average heart rate during this set
+    var restSeconds: Int?   // Custom rest duration after this set (nil = use default)
 
     init(
         weight: Double,
@@ -15,7 +16,8 @@ struct CompletedSet: Codable, Identifiable, Hashable {
         actualReps: Int = 0,
         isAMRAP: Bool = false,
         setType: SetType = .main,
-        averageHR: Double? = nil
+        averageHR: Double? = nil,
+        restSeconds: Int? = nil
     ) {
         self.id = UUID()
         self.weight = weight
@@ -24,6 +26,7 @@ struct CompletedSet: Codable, Identifiable, Hashable {
         self.isAMRAP = isAMRAP
         self.setType = setType
         self.averageHR = averageHR
+        self.restSeconds = restSeconds
     }
 
     var isComplete: Bool {
@@ -36,6 +39,7 @@ struct CompletedSet: Codable, Identifiable, Hashable {
 }
 
 enum SetType: String, Codable, Hashable {
+    case warmup
     case main
     case supplemental  // BBB, FSL, SSL sets
     case joker
@@ -43,6 +47,7 @@ enum SetType: String, Codable, Hashable {
 
     var displayName: String {
         switch self {
+        case .warmup: return "Warm-up"
         case .main: return "Main"
         case .supplemental: return "Supplemental"
         case .joker: return "Joker"

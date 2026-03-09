@@ -244,7 +244,7 @@ struct TemplateWorkoutView: View {
                     .foregroundStyle(.purple)
             }
         } header: {
-            exerciseSectionHeader(state: state)
+            exerciseSectionHeader(for: $exerciseStates[index])
         }
     }
 
@@ -283,13 +283,14 @@ struct TemplateWorkoutView: View {
                     .foregroundStyle(.red)
             }
         } header: {
+            let firstIdx = group.indices.first!
             HStack {
                 Image(systemName: "link")
                     .font(.caption2)
                     .foregroundStyle(.purple)
                 Text(names)
+
                 Spacer()
-                // Show sparkline for first exercise that has data
                 if let sparkState = states.first(where: { $0.recentWeights.count >= 2 }) {
                     LiftSparklineView(dataPoints: sparkState.recentWeights)
                 }
@@ -310,9 +311,12 @@ struct TemplateWorkoutView: View {
             exerciseName: state.exerciseName,
             isMainLift: state.isMainLift,
             isAMRAP: exerciseStates[exerciseIndex].sets[setIndex].isAMRAP,
+            restOptions: Self.restOptions,
+            restLabel: restLabel,
             onComplete: {
                 if isLastInRound {
-                    startRestIfNeeded(setType: state.isMainLift ? .main : .accessory)
+                    let set = exerciseStates[exerciseIndex].sets[setIndex]
+                    startRest(setRestSeconds: set.restSeconds, setType: state.isMainLift ? .main : .accessory)
                 }
             }
         )
@@ -320,8 +324,11 @@ struct TemplateWorkoutView: View {
 
     // MARK: - Exercise Section Header
 
-    private func exerciseSectionHeader(state: ExerciseState) -> some View {
-        HStack {
+    private static let restOptions = [0, 30, 60, 90, 120, 180, 240, 300]
+
+    private func exerciseSectionHeader(for exerciseState: Binding<ExerciseState>) -> some View {
+        let state = exerciseState.wrappedValue
+        return HStack {
             Text(state.exerciseName)
             if state.isMainLift {
                 Text("5/3/1")
@@ -338,6 +345,7 @@ struct TemplateWorkoutView: View {
                     .font(.caption2)
                     .foregroundStyle(.purple)
             }
+
             Spacer()
             if let lift = state.lift, let cycle {
                 let tm = cycle.trainingMax(for: lift)
@@ -360,6 +368,39 @@ struct TemplateWorkoutView: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+
+    private func setRestPicker(for set: Binding<CompletedSet>, setType: SetType) -> some View {
+        let currentRest = set.wrappedValue.restSeconds
+        let defaultSecs = defaultRestSeconds(for: setType)
+        return Menu {
+            Button {
+                set.wrappedValue.restSeconds = nil
+            } label: {
+                Label("Default (\(restLabel(defaultSecs)))", systemImage: currentRest == nil ? "checkmark" : "")
+            }
+            ForEach(Self.restOptions.filter { $0 > 0 }, id: \.self) { secs in
+                Button {
+                    set.wrappedValue.restSeconds = secs
+                } label: {
+                    Label(restLabel(secs), systemImage: currentRest == secs ? "checkmark" : "")
+                }
+            }
+        } label: {
+            Image(systemName: currentRest != nil ? "timer.circle.fill" : "timer")
+                .font(.caption)
+                .foregroundStyle(currentRest != nil ? Color.blue : Color.gray)
+                .frame(width: 28, height: 28)
+        }
+    }
+
+    private func restLabel(_ seconds: Int) -> String {
+        if seconds >= 60 {
+            let min = seconds / 60
+            let sec = seconds % 60
+            return sec > 0 ? "\(min)m\(sec)s" : "\(min)m"
+        }
+        return "\(seconds)s"
     }
 
     // MARK: - Superset Picker
@@ -419,30 +460,26 @@ struct TemplateWorkoutView: View {
         let planned = setIndex < state.plannedSets.count ? state.plannedSets[setIndex] : nil
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     TextField("Weight", value: set.weight, format: .number)
                         .font(.title3)
                         .fontWeight(.semibold)
                         .monospacedDigit()
                         .keyboardType(.decimalPad)
                         .textFieldStyle(.plain)
-                        .frame(width: 70)
-                        .padding(4)
-                        .background(Color(.tertiarySystemFill))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .frame(width: 60)
                     Text("lbs")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
-                    if set.wrappedValue.isAMRAP {
-                        Text("AMRAP")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.orange)
-                            .fixedSize()
-                    }
+                        .fixedSize()
                 }
+                .fixedSize()
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(Color(.tertiarySystemFill))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
                 if let p = planned {
-                    Text("\(Int(p.percentage * 100))% × \(p.reps)\(p.isAMRAP ? "+" : "") — \(p.setType.displayName)")
+                    Text("\(Int(p.percentage * 100))% × \(p.reps)\(p.isAMRAP ? "+" : "")\(p.setType == .main ? "" : " — \(p.setType.displayName)")")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -460,6 +497,9 @@ struct TemplateWorkoutView: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
+
+            // Per-set rest picker
+            setRestPicker(for: set, setType: state.sets.first?.setType ?? .main)
 
             // Rep input
             mainRepInput(for: set)
@@ -487,27 +527,30 @@ struct TemplateWorkoutView: View {
                     .font(.title2)
                     .foregroundStyle(set.wrappedValue.actualReps > 0 ? .primary : .quaternary)
             }
-            .disabled(set.wrappedValue.actualReps == 0)
+            .buttonStyle(.borderless)
 
-            Text("\(set.wrappedValue.actualReps)")
+            Text("\(set.wrappedValue.isComplete ? set.wrappedValue.actualReps : set.wrappedValue.targetReps)")
                 .font(.title2)
                 .fontWeight(.bold)
                 .monospacedDigit()
                 .frame(minWidth: 36)
+                .foregroundStyle(set.wrappedValue.isComplete ? .primary : .tertiary)
 
             Button {
-                if set.wrappedValue.actualReps == 0 {
-                    set.wrappedValue.actualReps = set.wrappedValue.targetReps
+                if set.wrappedValue.isComplete {
+                    set.wrappedValue.actualReps = 0
                 } else {
-                    set.wrappedValue.actualReps += 1
-                }
-                if triggerRest {
-                    startRestIfNeeded(setType: set.wrappedValue.setType)
+                    set.wrappedValue.actualReps = set.wrappedValue.targetReps
+                    if triggerRest {
+                        startRest(setRestSeconds: set.wrappedValue.restSeconds, setType: set.wrappedValue.setType)
+                    }
                 }
             } label: {
-                Image(systemName: "plus.circle.fill")
+                Image(systemName: set.wrappedValue.isComplete ? "checkmark.circle.fill" : "plus.circle.fill")
                     .font(.title2)
+                    .foregroundStyle(set.wrappedValue.isComplete ? .green : .accentColor)
             }
+            .buttonStyle(.borderless)
         }
     }
 
@@ -524,7 +567,7 @@ struct TemplateWorkoutView: View {
             )
             .onChange(of: exerciseState.sets[index].wrappedValue.actualReps) { oldVal, newVal in
                 if oldVal == 0 && newVal > 0 {
-                    startRestIfNeeded(setType: .accessory)
+                    startRest(setRestSeconds: exerciseState.sets[index].wrappedValue.restSeconds, setType: .accessory)
                 }
             }
         }
@@ -587,6 +630,9 @@ struct TemplateWorkoutView: View {
 
             Spacer()
 
+            // Per-set rest picker
+            setRestPicker(for: set, setType: .accessory)
+
             // Tap to confirm: copies targetReps → actualReps
             Button {
                 if set.wrappedValue.isComplete {
@@ -612,16 +658,24 @@ struct TemplateWorkoutView: View {
         workoutStarted = true
     }
 
-    private func startRestIfNeeded(setType: SetType) {
+    private func startRest(setRestSeconds: Int?, setType: SetType) {
         autoStartIfNeeded()
 
         // End HR tracking for previous set, start for next
         _ = heartRateManager.markSetEnd()
         heartRateManager.markSetStart()
 
+        // Use per-set rest if set, otherwise fall back to global defaults
+        if let custom = setRestSeconds, custom > 0 {
+            restTimer.start(seconds: custom)
+            return
+        }
+
         guard let settings = userSettings else { return }
         let seconds: Int
         switch setType {
+        case .warmup:
+            seconds = 60
         case .main:
             seconds = settings.defaultRestSeconds
         case .supplemental:
@@ -632,6 +686,17 @@ struct TemplateWorkoutView: View {
             seconds = settings.defaultRestSeconds
         }
         restTimer.start(seconds: seconds)
+    }
+
+    private func defaultRestSeconds(for setType: SetType) -> Int {
+        guard let settings = userSettings else { return 90 }
+        switch setType {
+        case .warmup: return 60
+        case .main: return settings.defaultRestSeconds
+        case .supplemental: return settings.supplementalRestSeconds
+        case .accessory: return settings.accessoryRestSeconds
+        case .joker: return settings.defaultRestSeconds
+        }
     }
 
     // MARK: - Initialize
@@ -658,6 +723,10 @@ struct TemplateWorkoutView: View {
 
                 if let lift = entry.lift, let cycle {
                     let tm = cycle.trainingMax(for: lift)
+                    let warmupScheme = userSettings?.warmupScheme ?? [(0.40, 5), (0.50, 5), (0.60, 3)]
+                    let warmupPlanned = ProgramEngine.warmupSets(
+                        trainingMax: tm, scheme: warmupScheme, roundTo: roundTo
+                    )
                     let mainPlanned = ProgramEngine.mainSets(
                         trainingMax: tm, week: week,
                         variant: cycle.programVariant, roundTo: roundTo
@@ -666,7 +735,7 @@ struct TemplateWorkoutView: View {
                         trainingMax: tm, week: week,
                         variant: cycle.programVariant, roundTo: roundTo
                     )
-                    let allPlanned = mainPlanned + suppPlanned
+                    let allPlanned = warmupPlanned + mainPlanned + suppPlanned
                     state.plannedSets = allPlanned
                     state.sets = allPlanned.map { planned in
                         CompletedSet(
@@ -1069,6 +1138,8 @@ struct SupersetRowView: View {
     let exerciseName: String
     let isMainLift: Bool
     let isAMRAP: Bool
+    let restOptions: [Int]
+    let restLabel: (Int) -> String
     let onComplete: () -> Void
 
     var body: some View {
@@ -1098,6 +1169,7 @@ struct SupersetRowView: View {
 
             if isMainLift {
                 Spacer()
+                supersetRestMenu
                 supersetRepStepper
             } else {
                 TextField("0", value: $setBinding.targetReps, format: .number)
@@ -1111,6 +1183,8 @@ struct SupersetRowView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 
                 Spacer()
+
+                supersetRestMenu
 
                 Button {
                     let wasComplete = setBinding.isComplete
@@ -1137,6 +1211,29 @@ struct SupersetRowView: View {
         )
     }
 
+    private var supersetRestMenu: some View {
+        let currentRest = setBinding.restSeconds
+        return Menu {
+            Button {
+                setBinding.restSeconds = nil
+            } label: {
+                Label("Default", systemImage: currentRest == nil ? "checkmark" : "")
+            }
+            ForEach(restOptions.filter { $0 > 0 }, id: \.self) { secs in
+                Button {
+                    setBinding.restSeconds = secs
+                } label: {
+                    Label(restLabel(secs), systemImage: currentRest == secs ? "checkmark" : "")
+                }
+            }
+        } label: {
+            Image(systemName: currentRest != nil ? "timer.circle.fill" : "timer")
+                .font(.caption)
+                .foregroundStyle(currentRest != nil ? Color.blue : Color.gray)
+                .frame(width: 28, height: 28)
+        }
+    }
+
     private var supersetRepStepper: some View {
         HStack(spacing: 8) {
             Button {
@@ -1148,28 +1245,28 @@ struct SupersetRowView: View {
                     .font(.title2)
                     .foregroundStyle(setBinding.actualReps > 0 ? .primary : .quaternary)
             }
-            .disabled(setBinding.actualReps == 0)
+            .buttonStyle(.borderless)
 
-            Text("\(setBinding.actualReps)")
+            Text("\(setBinding.isComplete ? setBinding.actualReps : setBinding.targetReps)")
                 .font(.title2)
                 .fontWeight(.bold)
                 .monospacedDigit()
                 .frame(minWidth: 36)
+                .foregroundStyle(setBinding.isComplete ? .primary : .tertiary)
 
             Button {
-                let wasZero = setBinding.actualReps == 0
-                if wasZero {
-                    setBinding.actualReps = setBinding.targetReps
+                if setBinding.isComplete {
+                    setBinding.actualReps = 0
                 } else {
-                    setBinding.actualReps += 1
-                }
-                if wasZero {
+                    setBinding.actualReps = setBinding.targetReps
                     onComplete()
                 }
             } label: {
-                Image(systemName: "plus.circle.fill")
+                Image(systemName: setBinding.isComplete ? "checkmark.circle.fill" : "plus.circle.fill")
                     .font(.title2)
+                    .foregroundStyle(setBinding.isComplete ? .green : .accentColor)
             }
+            .buttonStyle(.borderless)
         }
     }
 }
