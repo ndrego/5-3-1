@@ -17,9 +17,14 @@ struct ContentView: View {
 struct MainTabView: View {
     var body: some View {
         TabView {
+            TemplateListView()
+                .tabItem {
+                    Label("Workout", systemImage: "figure.strengthtraining.traditional")
+                }
+
             DashboardView()
                 .tabItem {
-                    Label("Dashboard", systemImage: "house.fill")
+                    Label("Program", systemImage: "calendar")
                 }
 
             HistoryListView()

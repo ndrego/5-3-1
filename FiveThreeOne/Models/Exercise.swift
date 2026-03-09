@@ -47,45 +47,66 @@ extension Exercise {
         ("Dumbbell Bench Press", .push, "dumbbell"),
         ("Incline Dumbbell Press", .push, "dumbbell"),
         ("Dips", .push, "bodyweight"),
+        ("Triceps Dip", .push, "bodyweight"),
         ("Dumbbell Overhead Press", .push, "dumbbell"),
         ("Push-Ups", .push, "bodyweight"),
         ("Tricep Pushdown", .push, "cable"),
         ("Close-Grip Bench Press", .push, "barbell"),
         ("Lateral Raise", .push, "dumbbell"),
         ("Skull Crushers", .push, "barbell"),
+        ("Chest Fly", .push, "dumbbell"),
 
         // Pull
         ("Barbell Row", .pull, "barbell"),
+        ("Bent Over Row", .pull, "barbell"),
         ("Dumbbell Row", .pull, "dumbbell"),
         ("Pull-Ups", .pull, "bodyweight"),
+        ("Pull Up", .pull, "bodyweight"),
         ("Chin-Ups", .pull, "bodyweight"),
         ("Lat Pulldown", .pull, "cable"),
         ("Face Pulls", .pull, "cable"),
         ("Cable Row", .pull, "cable"),
+        ("Seated Row (Cable)", .pull, "cable"),
+        ("Reverse Fly (Cable)", .pull, "cable"),
         ("Barbell Curl", .pull, "barbell"),
         ("Dumbbell Curl", .pull, "dumbbell"),
+        ("Bicep Curl (Dumbbell)", .pull, "dumbbell"),
         ("Hammer Curl", .pull, "dumbbell"),
 
         // Single Leg / Core
         ("Bulgarian Split Squat", .singleLegCore, "dumbbell"),
         ("Lunges", .singleLegCore, "dumbbell"),
         ("Romanian Deadlift", .singleLegCore, "barbell"),
+        ("Overhead Squat", .singleLegCore, "barbell"),
+        ("Front Squat", .singleLegCore, "barbell"),
         ("Leg Press", .singleLegCore, "machine"),
         ("Leg Curl", .singleLegCore, "machine"),
+        ("Standing Calf Raise", .singleLegCore, "barbell"),
         ("Ab Wheel", .singleLegCore, "bodyweight"),
         ("Hanging Leg Raise", .singleLegCore, "bodyweight"),
+        ("Hanging Knee Raise", .singleLegCore, "bodyweight"),
         ("Plank", .singleLegCore, "bodyweight"),
+        ("Side Plank", .singleLegCore, "bodyweight"),
+        ("Bicycle Crunch", .singleLegCore, "bodyweight"),
+        ("Sit Up", .singleLegCore, "bodyweight"),
+        ("Side Bend (Dumbbell)", .singleLegCore, "dumbbell"),
         ("Cable Crunch", .singleLegCore, "cable"),
         ("Back Extension", .singleLegCore, "bodyweight"),
         ("Hip Thrust", .singleLegCore, "barbell"),
+
+        // Olympic
+        ("Power Clean", .pull, "barbell"),
+        ("Clean and Jerk", .pull, "barbell"),
     ]
 
+    /// Seeds default exercises. Additive — only inserts exercises not already present.
     static func seedDefaults(in context: ModelContext) {
         let descriptor = FetchDescriptor<Exercise>()
-        let count = (try? context.fetchCount(descriptor)) ?? 0
-        guard count == 0 else { return }
+        let existing = (try? context.fetch(descriptor)) ?? []
+        let existingNames = Set(existing.map { $0.name })
 
         for (name, category, equipment) in defaultExercises {
+            guard !existingNames.contains(name) else { continue }
             context.insert(Exercise(name: name, category: category, equipmentType: equipment))
         }
     }

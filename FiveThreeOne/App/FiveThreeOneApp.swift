@@ -9,6 +9,7 @@ struct FiveThreeOneApp: App {
             CompletedWorkout.self,
             UserSettings.self,
             Exercise.self,
+            WorkoutTemplate.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

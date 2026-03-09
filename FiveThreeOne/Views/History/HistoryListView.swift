@@ -42,7 +42,6 @@ struct HistoryListView: View {
         }
 
         return grouped.sorted { a, b in
-            // Sort by the date of the first workout in each group (most recent first)
             guard let dateA = a.value.first?.date, let dateB = b.value.first?.date else { return false }
             return dateA > dateB
         }
@@ -55,7 +54,7 @@ struct WorkoutRowView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(workout.liftType.displayName)
+                Text(workout.displayName)
                     .font(.body)
                     .fontWeight(.medium)
 
@@ -68,6 +67,11 @@ struct WorkoutRowView: View {
                     Text(workout.date, style: .date)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    if workout.durationSeconds > 0 {
+                        Text(workout.formattedDuration)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
                 }
             }
 

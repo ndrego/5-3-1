@@ -23,33 +23,29 @@ struct WorkoutDetailView: View {
                     }
                 }
 
-                // Main Sets
-                if !workout.sets.isEmpty {
-                    setsSection(title: "Main Sets", sets: workout.sets)
+                // Exercise performances
+                ForEach(workout.allExercisePerformances.sorted(by: { $0.sortOrder < $1.sortOrder })) { perf in
+                    exerciseSection(perf)
                 }
 
-                // Supplemental / Accessory Sets
-                if !workout.accessorySets.isEmpty {
-                    setsSection(title: "Supplemental", sets: workout.accessorySets)
-                }
-
-                // Estimated 1RM from AMRAP
-                if let topSet = workout.sets.first(where: { $0.isAMRAP }),
-                   topSet.actualReps > 0 {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Estimated 1RM")
-                            .font(.headline)
-                        let e1rm = ProgramEngine.estimated1RM(weight: topSet.weight, reps: topSet.actualReps)
-                        Text("\(Int(e1rm)) lbs")
-                            .font(.title)
-                            .fontWeight(.bold)
-                        Text("Epley formula: \(Int(topSet.weight)) × \(topSet.actualReps) reps")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                // Estimated 1RM from AMRAP sets
+                ForEach(workout.allExercisePerformances.filter { $0.isMainLift }) { perf in
+                    if let topSet = perf.sets.first(where: { $0.isAMRAP }), topSet.actualReps > 0 {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(perf.exerciseName) — Estimated 1RM")
+                                .font(.headline)
+                            let e1rm = ProgramEngine.estimated1RM(weight: topSet.weight, reps: topSet.actualReps)
+                            Text("\(Int(e1rm)) lbs")
+                                .font(.title)
+                                .fontWeight(.bold)
+                            Text("Epley formula: \(Int(topSet.weight)) × \(topSet.actualReps) reps")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding()
+                        .background(.background.secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
-                    .padding()
-                    .background(.background.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
 
                 // Notes
@@ -64,16 +60,28 @@ struct WorkoutDetailView: View {
             }
             .padding()
         }
-        .navigationTitle(workout.liftType.displayName)
+        .navigationTitle(workout.displayName)
     }
 
     @ViewBuilder
-    private func setsSection(title: String, sets: [CompletedSet]) -> some View {
+    private func exerciseSection(_ perf: ExercisePerformance) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.headline)
+            HStack {
+                Text(perf.exerciseName)
+                    .font(.headline)
+                if perf.isMainLift {
+                    Text("5/3/1")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.blue)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                }
+            }
 
-            ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
+            ForEach(Array(perf.sets.enumerated()), id: \.element.id) { index, set in
                 HStack {
                     Text("Set \(index + 1)")
                         .font(.subheadline)
@@ -96,7 +104,7 @@ struct WorkoutDetailView: View {
                                     .foregroundStyle(.orange)
                                     .font(.caption)
                             }
-                        } else {
+                        } else if set.targetReps > 0 {
                             Text("/ \(set.targetReps)")
                                 .foregroundStyle(.secondary)
                         }
@@ -104,8 +112,11 @@ struct WorkoutDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
             }
         }
+        .padding()
+        .background(.background.secondary)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
