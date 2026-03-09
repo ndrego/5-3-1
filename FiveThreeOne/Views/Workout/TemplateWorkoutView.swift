@@ -172,7 +172,22 @@ struct TemplateWorkoutView: View {
                         .clipShape(Capsule())
                 }
                 Spacer()
-                if let previousSummary = state.previousBestSummary {
+                if let lift = state.lift, let cycle {
+                    let tm = cycle.trainingMax(for: lift)
+                    let tmPct = userSettings?.tmPercentage(for: lift) ?? 0.9
+                    let e1rm = tm / tmPct
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Text("E1RM \(Int(e1rm))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text("TM \(Int(tm))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                if state.recentWeights.count >= 2 {
+                    LiftSparklineView(dataPoints: state.recentWeights)
+                } else if let previousSummary = state.previousBestSummary {
                     Text("Prev: \(previousSummary)")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -213,11 +228,8 @@ struct TemplateWorkoutView: View {
                         Text("AMRAP")
                             .font(.caption2)
                             .fontWeight(.bold)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(.orange)
-                            .foregroundStyle(.white)
-                            .clipShape(Capsule())
+                            .foregroundStyle(.orange)
+                            .fixedSize()
                     }
                 }
                 if let p = planned {
@@ -243,49 +255,49 @@ struct TemplateWorkoutView: View {
             // Rep input
             mainRepInput(for: set)
         }
-        .listRowBackground(set.wrappedValue.isComplete ? Color.green.opacity(0.08) : nil)
+        .listRowBackground(
+            ZStack(alignment: .top) {
+                set.wrappedValue.isComplete ? Color.green.opacity(0.08) : Color.clear
+                if set.wrappedValue.isAMRAP {
+                    Rectangle()
+                        .fill(Color.orange)
+                        .frame(height: 3)
+                }
+            }
+        )
     }
 
-    @ViewBuilder
     private func mainRepInput(for set: Binding<CompletedSet>) -> some View {
-        if set.wrappedValue.isAMRAP {
-            HStack(spacing: 8) {
-                Button {
-                    if set.wrappedValue.actualReps > 0 {
-                        set.wrappedValue.actualReps -= 1
-                    }
-                } label: {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.title2)
-                }
-
-                Text("\(set.wrappedValue.actualReps)")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .monospacedDigit()
-                    .frame(minWidth: 36)
-
-                Button {
-                    set.wrappedValue.actualReps += 1
-                    startRestIfNeeded(setType: .main)
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                }
-            }
-        } else {
+        HStack(spacing: 8) {
             Button {
-                let wasComplete = set.wrappedValue.isComplete
-                set.wrappedValue.actualReps = wasComplete ? 0 : set.wrappedValue.targetReps
-                if !wasComplete {
-                    startRestIfNeeded(setType: set.wrappedValue.setType)
+                if set.wrappedValue.actualReps > 0 {
+                    set.wrappedValue.actualReps -= 1
                 }
             } label: {
-                Image(systemName: set.wrappedValue.isComplete ? "checkmark.circle.fill" : "circle")
-                    .font(.title)
-                    .foregroundStyle(set.wrappedValue.isComplete ? .green : .secondary)
+                Image(systemName: "minus.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(set.wrappedValue.actualReps > 0 ? .primary : .quaternary)
             }
-            .frame(width: 44, height: 44)
+            .disabled(set.wrappedValue.actualReps == 0)
+
+            Text("\(set.wrappedValue.actualReps)")
+                .font(.title2)
+                .fontWeight(.bold)
+                .monospacedDigit()
+                .frame(minWidth: 36)
+
+            Button {
+                if set.wrappedValue.actualReps == 0 {
+                    // First tap: jump to target reps
+                    set.wrappedValue.actualReps = set.wrappedValue.targetReps
+                } else {
+                    set.wrappedValue.actualReps += 1
+                }
+                startRestIfNeeded(setType: set.wrappedValue.setType)
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+            }
         }
     }
 
@@ -454,6 +466,12 @@ struct TemplateWorkoutView: View {
                     }
                 }
 
+                // Load recent weights for sparkline
+                state.recentWeights = PreviousPerformanceLookup.recentTopSets(
+                    exerciseName: entry.exerciseName,
+                    in: modelContext
+                )
+
                 return state
             }
     }
@@ -589,6 +607,7 @@ struct ExerciseState: Identifiable {
     var plannedSets: [ProgramEngine.PlannedSet]
     var previousSets: [CompletedSet]
     var previousBestSummary: String?
+    var recentWeights: [(date: Date, weight: Double)] = []
 
     var isMainLift: Bool { mainLift != nil }
     var lift: Lift? { mainLift.flatMap { Lift(rawValue: $0) } }

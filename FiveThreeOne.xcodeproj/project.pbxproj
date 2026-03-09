@@ -13,6 +13,7 @@
 		20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB2E2E170599DCA54721387 /* PreviewData.swift */; };
 		21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE467A519D792ED441F742E /* PlateCalculator.swift */; };
 		2C8579C905B99A76D513AE9E /* TemplateListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CF49725EDCFA52F8B30B6D /* TemplateListView.swift */; };
+		3A49BC7591A92ACE6AB9128D /* LiftSparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C8617DEC3D016FB142EDC14 /* LiftSparklineView.swift */; };
 		49C4EAFFB2A489D84C16661C /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7695B5AD6606F0A852EB2 /* UserSettings.swift */; };
 		4BE90F7735ED5DCE1A60B616 /* Cycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0247C0C120E576E7E0290C60 /* Cycle.swift */; };
 		5BC12CDBFFD67BDA353D9E2E /* PreviousPerformanceLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B16D82D7CF0F5A99A88CAB /* PreviousPerformanceLookup.swift */; };
@@ -45,6 +46,7 @@
 		0247C0C120E576E7E0290C60 /* Cycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cycle.swift; sourceTree = "<group>"; };
 		0C50280FC64462F470CE51B2 /* ExercisePerformance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePerformance.swift; sourceTree = "<group>"; };
 		1EC9B438F744231E2C9D1B5A /* WorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutView.swift; sourceTree = "<group>"; };
+		2C8617DEC3D016FB142EDC14 /* LiftSparklineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftSparklineView.swift; sourceTree = "<group>"; };
 		32D7695B5AD6606F0A852EB2 /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		342892DF7BB145BC5C61A846 /* SetRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRowView.swift; sourceTree = "<group>"; };
 		3520A61ACEA04BE124C43E37 /* RestTimerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerState.swift; sourceTree = "<group>"; };
@@ -222,6 +224,7 @@
 		F76253C119957F4452A4FC62 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				2C8617DEC3D016FB142EDC14 /* LiftSparklineView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -317,6 +320,7 @@
 				6F2CCEC4D5F32C887FDDC8C8 /* FiveThreeOneApp.swift in Sources */,
 				E74EED874D95E9E6EA5A24AA /* HistoryListView.swift in Sources */,
 				D45075E0FA1E1EF30A772030 /* Lift.swift in Sources */,
+				3A49BC7591A92ACE6AB9128D /* LiftSparklineView.swift in Sources */,
 				21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */,
 				20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */,
 				5BC12CDBFFD67BDA353D9E2E /* PreviousPerformanceLookup.swift in Sources */,
