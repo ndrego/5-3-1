@@ -68,6 +68,10 @@ struct BackupManager {
         let userAge: Int?
         let bodyWeightLbs: Double?
         let isMale: Bool?
+        let appearanceMode: String?
+        let repCountingEnabled: Bool?
+        let repSensitivity: [String: Double]?
+        let repTempo: [String: Double]?
     }
 
     // MARK: - Export
@@ -136,7 +140,11 @@ struct BackupManager {
                     recoveryHR: s.recoveryHR,
                     userAge: s.userAge,
                     bodyWeightLbs: s.bodyWeightLbs,
-                    isMale: s.isMale
+                    isMale: s.isMale,
+                    appearanceMode: s.appearanceMode,
+                    repCountingEnabled: s.repCountingEnabled,
+                    repSensitivity: s.repSensitivity,
+                    repTempo: s.repTempo
                 )
             }
         )
@@ -246,6 +254,10 @@ struct BackupManager {
             settings.userAge = s.userAge
             settings.bodyWeightLbs = s.bodyWeightLbs
             settings.isMale = s.isMale
+            settings.appearanceMode = s.appearanceMode
+            settings.repCountingEnabled = s.repCountingEnabled
+            settings.repSensitivity = s.repSensitivity
+            settings.repTempo = s.repTempo
             context.insert(settings)
             settingsRestored = true
         }
