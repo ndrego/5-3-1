@@ -16,6 +16,7 @@ final class UserSettings {
     var userAge: Int?                  // For calorie calculation
     var bodyWeightLbs: Double?         // Body weight in lbs for calorie calculation
     var isMale: Bool?                  // Biological sex for calorie formula (nil = male default)
+    var appearanceMode: String?         // "system", "light", "dark" (nil = dark for backward compat)
 
     static let defaultWarmupPercentages: [Double] = [0.40, 0.50, 0.60]
     static let defaultWarmupReps: [Int] = [5, 5, 3]

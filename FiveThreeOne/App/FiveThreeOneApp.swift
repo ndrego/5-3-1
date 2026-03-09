@@ -23,9 +23,25 @@ struct FiveThreeOneApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .preferredColorScheme(.dark)
+            AppearanceWrapper()
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+struct AppearanceWrapper: View {
+    @Query private var settings: [UserSettings]
+
+    private var colorScheme: ColorScheme? {
+        switch settings.first?.appearanceMode {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil  // system default
+        }
+    }
+
+    var body: some View {
+        ContentView()
+            .preferredColorScheme(colorScheme)
     }
 }

@@ -149,6 +149,17 @@ struct SettingsView: View {
                                 .font(.subheadline)
                         }
                     }
+
+                    Section("Appearance") {
+                        Picker("Theme", selection: Binding(
+                            get: { s.appearanceMode ?? "dark" },
+                            set: { s.appearanceMode = $0 }
+                        )) {
+                            Text("System").tag("system")
+                            Text("Light").tag("light")
+                            Text("Dark").tag("dark")
+                        }
+                    }
                 }
 
                 Section("Program") {

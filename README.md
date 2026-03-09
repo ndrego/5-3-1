@@ -19,7 +19,7 @@ A personal iOS + watchOS app for tracking the Wendler 5/3/1 weightlifting progra
 - **Strong app import**: Import full workout history from Strong's CSV export — all exercises, not just main lifts
 - **Backup & restore**: Export all data to JSON, save to iCloud Drive or Files for safekeeping
 - **Screen stays on**: Display stays awake during active workouts
-- **Dark mode**: Full dark mode UI
+- **Appearance**: System, light, or dark theme (defaults to dark)
 - **Privacy**: No analytics, no tracking, no data leaves your device (except optional HealthKit sync)
 
 ## Tech Stack
