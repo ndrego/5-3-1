@@ -108,11 +108,49 @@ struct StrongImporter {
         dateFormatter.date(from: string)
     }
 
+    /// Parse Strong duration string like "1h 23m", "45m 30s", "1h 23m 45s"
+    private static func parseDuration(_ string: String) -> Int {
+        let lower = string.lowercased().trimmingCharacters(in: .whitespaces)
+        var totalSeconds = 0
+
+        // Match hours
+        if let hRange = lower.range(of: #"(\d+)\s*h"#, options: .regularExpression) {
+            let numStr = lower[hRange].filter(\.isNumber)
+            totalSeconds += (Int(numStr) ?? 0) * 3600
+        }
+        // Match minutes
+        if let mRange = lower.range(of: #"(\d+)\s*m"#, options: .regularExpression) {
+            let numStr = lower[mRange].filter(\.isNumber)
+            totalSeconds += (Int(numStr) ?? 0) * 60
+        }
+        // Match seconds
+        if let sRange = lower.range(of: #"(\d+)\s*s"#, options: .regularExpression) {
+            let numStr = lower[sRange].filter(\.isNumber)
+            totalSeconds += Int(numStr) ?? 0
+        }
+
+        return totalSeconds
+    }
+
+    /// Known unilateral exercise patterns
+    private static func isLikelyUnilateral(_ name: String) -> Bool {
+        let lower = name.lowercased()
+        let patterns = [
+            "single arm", "single leg", "single-arm", "single-leg",
+            "one arm", "one leg", "one-arm", "one-leg",
+            "unilateral", "bulgarian", "lunge", "split squat",
+            "dumbbell curl", "hammer curl", "dumbbell row",
+            "side plank", "side bend", "pistol squat",
+            "concentration curl"
+        ]
+        return patterns.contains(where: { lower.contains($0) })
+    }
+
     // MARK: - Import
 
     /// Import Strong CSV data into the app's data store.
-    /// Only imports sets for exercises that map to a 5/3/1 main lift.
-    /// Returns all found exercises so the user can see what was in their data.
+    /// Groups all exercises from the same session into a single CompletedWorkout.
+    /// Imports both main lifts and accessory exercises as workout history.
     static func importCSV(_ csvString: String, context: ModelContext) -> ImportResult {
         let (rows, parseErrors) = parseCSV(csvString)
 
@@ -121,63 +159,92 @@ struct StrongImporter {
         var workoutCount = 0
         var setCount = 0
 
-        // Group rows by date + exercise name to reconstruct workouts
-        struct WorkoutKey: Hashable {
-            let date: Date
-            let exerciseName: String
-        }
-
-        var grouped: [WorkoutKey: [StrongRow]] = [:]
+        // Group rows by session: same date = same workout session
+        // Strong uses the exact same timestamp for all rows in a session
+        var sessionGroups: [Date: [StrongRow]] = [:]
         for row in rows {
             allExercises.insert(row.exerciseName)
-            let key = WorkoutKey(date: row.date, exerciseName: row.exerciseName)
-            grouped[key, default: []].append(row)
+            sessionGroups[row.date, default: []].append(row)
         }
 
-        // Sort groups by set order
-        for key in grouped.keys {
-            grouped[key]?.sort { $0.setOrder < $1.setOrder }
-        }
+        // Process each session
+        for (sessionDate, sessionRows) in sessionGroups.sorted(by: { $0.key < $1.key }) {
+            // Group by exercise within the session
+            var exerciseGroups: [(name: String, rows: [StrongRow])] = []
+            var seen: [String: Int] = [:]
 
-        // Import each workout group
-        for (key, setRows) in grouped.sorted(by: { $0.key.date < $1.key.date }) {
-            guard let lift = Lift.fromStrongName(key.exerciseName) else {
-                unmapped.insert(key.exerciseName)
-                continue
+            for row in sessionRows.sorted(by: { $0.setOrder < $1.setOrder }) {
+                if let idx = seen[row.exerciseName] {
+                    exerciseGroups[idx].rows.append(row)
+                } else {
+                    seen[row.exerciseName] = exerciseGroups.count
+                    exerciseGroups.append((name: row.exerciseName, rows: [row]))
+                }
             }
 
-            let sets = setRows.map { row in
-                CompletedSet(
-                    weight: row.weight,
-                    targetReps: row.reps,
-                    actualReps: row.reps,
-                    isAMRAP: false,
-                    setType: .main
+            // Build ExercisePerformance for each exercise
+            var performances: [ExercisePerformance] = []
+            var hasMainLift = false
+            var mainLiftName = ""
+
+            for (sortOrder, group) in exerciseGroups.enumerated() {
+                let lift = Lift.fromStrongName(group.name)
+                let isUnilateral = isLikelyUnilateral(group.name)
+
+                if lift != nil {
+                    hasMainLift = true
+                    mainLiftName = lift!.displayName
+                } else {
+                    unmapped.insert(group.name)
+                }
+
+                let sets = group.rows.map { row in
+                    CompletedSet(
+                        weight: row.weight,
+                        targetReps: row.reps,
+                        actualReps: row.reps,
+                        isAMRAP: false,
+                        setType: lift != nil ? .main : .accessory
+                    )
+                }
+
+                let perf = ExercisePerformance(
+                    exerciseName: lift?.displayName ?? group.name,
+                    mainLift: lift?.rawValue,
+                    sets: sets,
+                    sortOrder: sortOrder,
+                    isUnilateral: isUnilateral
                 )
+                performances.append(perf)
+                setCount += sets.count
             }
 
-            let notes = setRows.first(where: { !$0.workoutNotes.isEmpty })?.workoutNotes ?? ""
+            // Determine workout name
+            let templateName: String
+            if hasMainLift {
+                templateName = mainLiftName
+            } else {
+                let workoutName = sessionRows.first?.workoutName ?? ""
+                templateName = workoutName.isEmpty ? "Workout" : workoutName
+            }
 
-            let perf = ExercisePerformance(
-                exerciseName: lift.displayName,
-                mainLift: lift.rawValue,
-                sets: sets,
-                sortOrder: 0
-            )
+            // Parse duration from first row
+            let durationSeconds = parseDuration(sessionRows.first?.duration ?? "")
 
-            // We don't know the original cycle/week, so mark as cycle 0
+            let notes = sessionRows.first(where: { !$0.workoutNotes.isEmpty })?.workoutNotes ?? ""
+
             let workout = CompletedWorkout(
-                date: key.date,
-                templateName: lift.displayName,
+                date: sessionDate,
+                templateName: templateName,
                 cycleNumber: 0,
                 weekNumber: 0,
-                exercisePerformances: [perf],
-                notes: notes
+                exercisePerformances: performances,
+                notes: notes,
+                durationSeconds: durationSeconds
             )
 
             context.insert(workout)
             workoutCount += 1
-            setCount += sets.count
         }
 
         return ImportResult(
@@ -210,7 +277,8 @@ struct StrongImporter {
 
             // Add with best-guess category
             let category = guessCategory(for: name)
-            context.insert(Exercise(name: name, category: category, equipmentType: guessEquipment(for: name), isCustom: false))
+            let unilateral = isLikelyUnilateral(name)
+            context.insert(Exercise(name: name, category: category, equipmentType: guessEquipment(for: name), isCustom: false, isUnilateral: unilateral))
             added.append(name)
         }
 

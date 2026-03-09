@@ -104,7 +104,7 @@ struct StrongImportView: View {
                 if !result.unmappedExercises.isEmpty {
                     Section {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Exercises not mapped to main lifts:")
+                            Text("Accessory exercises imported:")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             ForEach(Array(result.unmappedExercises.sorted()), id: \.self) { name in

@@ -8,6 +8,7 @@ struct SettingsView: View {
 
     @State private var showingTMSetup = false
     @State private var showingImport = false
+    @State private var showingBackup = false
     @State private var showingNewCycleSheet = false
 
     private var userSettings: UserSettings? { settings.first }
@@ -179,6 +180,9 @@ struct SettingsView: View {
                     Button("Import from Strong App") {
                         showingImport = true
                     }
+                    Button("Backup & Restore") {
+                        showingBackup = true
+                    }
                 }
             }
             .navigationTitle("Settings")
@@ -187,6 +191,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showingImport) {
                 StrongImportView()
+            }
+            .sheet(isPresented: $showingBackup) {
+                BackupRestoreView()
             }
             .sheet(isPresented: $showingNewCycleSheet) {
                 if let cycle = currentCycle {

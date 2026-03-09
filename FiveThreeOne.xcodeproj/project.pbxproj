@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		025945D4757D7CD0B5F4BF2B /* BackupRestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3789B8ABF127D1C712F258 /* BackupRestoreView.swift */; };
 		052886316DE040C84A086EF3 /* SetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342892DF7BB145BC5C61A846 /* SetRowView.swift */; };
 		124A2D3D7686280E9FFDB46E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA08E42318BE8236610E842 /* SettingsView.swift */; };
 		1364187D2F741593678B9593 /* TemplateWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */; };
@@ -41,6 +42,7 @@
 		D27D2A53670319676C0BDA70 /* TemplateEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452048773705C2BF75CC773C /* TemplateEditView.swift */; };
 		D3C15F1B5A6F483D609D28B8 /* WorkoutTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3393FE9AF129A9031A0F141 /* WorkoutTemplate.swift */; };
 		D45075E0FA1E1EF30A772030 /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EA6814D61250E9F23592DD /* Lift.swift */; };
+		E6E8F2A2331CDD52521F0423 /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A52D1444397B119B709FC76 /* BackupManager.swift */; };
 		E74EED874D95E9E6EA5A24AA /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B54678A56D15CD4243E9B7 /* HistoryListView.swift */; };
 		F1AB479CFDBCE4176BA21B40 /* WatchWorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 627679734B52F316E9A55257 /* WatchWorkoutManager.swift */; };
 		F22696A242FF8A8A99432EF3 /* ProgramEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EF430C5547890FEBB16A3B4 /* ProgramEngine.swift */; };
@@ -88,6 +90,7 @@
 		342892DF7BB145BC5C61A846 /* SetRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRowView.swift; sourceTree = "<group>"; };
 		3520A61ACEA04BE124C43E37 /* RestTimerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerState.swift; sourceTree = "<group>"; };
 		3548FFE34F56F4323AE1B185 /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
+		3A52D1444397B119B709FC76 /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
 		3BA08E42318BE8236610E842 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3CEC1276ADADB11C4B07AEED /* FiveThreeOne.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FiveThreeOne.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		452048773705C2BF75CC773C /* TemplateEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditView.swift; sourceTree = "<group>"; };
@@ -105,6 +108,7 @@
 		A1CC7B6053AFB7ECE8CF22EA /* AccessorySetRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessorySetRowView.swift; sourceTree = "<group>"; };
 		A355D24994B7E9A96EDE7096 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		ACC5CD132C6798CD7DB3097F /* TrainingMaxSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingMaxSetupView.swift; sourceTree = "<group>"; };
+		AF3789B8ABF127D1C712F258 /* BackupRestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift; sourceTree = "<group>"; };
 		B1EA6814D61250E9F23592DD /* Lift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lift.swift; sourceTree = "<group>"; };
 		B94AF72042394A17E3FC3361 /* RestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerView.swift; sourceTree = "<group>"; };
 		BEFA3CACFC1833116B49A3DE /* CompletedSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedSet.swift; sourceTree = "<group>"; };
@@ -187,6 +191,7 @@
 		70A2BBB04336A9B870C59DC5 /* Setup */ = {
 			isa = PBXGroup;
 			children = (
+				AF3789B8ABF127D1C712F258 /* BackupRestoreView.swift */,
 				3BA08E42318BE8236610E842 /* SettingsView.swift */,
 				ACC5CD132C6798CD7DB3097F /* TrainingMaxSetupView.swift */,
 			);
@@ -250,6 +255,7 @@
 		B9A3639238806E86D64C6CC3 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				3A52D1444397B119B709FC76 /* BackupManager.swift */,
 				EF5B09F98212E7C06D938D93 /* HeartRateManager.swift */,
 				4BE467A519D792ED441F742E /* PlateCalculator.swift */,
 				00B16D82D7CF0F5A99A88CAB /* PreviousPerformanceLookup.swift */,
@@ -419,6 +425,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				970A3EACC5C7C53F01DD8839 /* AccessorySetRowView.swift in Sources */,
+				E6E8F2A2331CDD52521F0423 /* BackupManager.swift in Sources */,
+				025945D4757D7CD0B5F4BF2B /* BackupRestoreView.swift in Sources */,
 				D0E5048E00A903C81B8F2832 /* CompletedSet.swift in Sources */,
 				7DF41D7559FBD0BE6D967BB8 /* CompletedWorkout.swift in Sources */,
 				AF77BCED810D2D390F60CFCD /* ContentView.swift in Sources */,
