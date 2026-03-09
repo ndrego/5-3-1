@@ -9,6 +9,7 @@ final class PhoneConnectivityManager: NSObject {
     // Watch-initiated actions (observed by TemplateWorkoutView)
     var watchRequestedCompleteSet = false
     var watchRequestedStopTimer = false
+    var watchReportedRepCount: Int?
 
     private var session: WCSession?
 
@@ -34,6 +35,10 @@ final class PhoneConnectivityManager: NSObject {
 
     func sendWorkoutStarted() {
         send(["type": "workoutStart"])
+    }
+
+    func sendRepCountingEnabled(_ enabled: Bool) {
+        send(["type": "repCountingEnabled", "enabled": enabled])
     }
 
     func sendWorkoutFinished() {
@@ -95,12 +100,15 @@ extension PhoneConnectivityManager: WCSessionDelegate {
 
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         let type = message["type"] as? String
+        let repCount = message["repCount"] as? Int
         Task { @MainActor in
             switch type {
             case "completeSet":
                 self.watchRequestedCompleteSet = true
             case "stopTimer":
                 self.watchRequestedStopTimer = true
+            case "repCount":
+                self.watchReportedRepCount = repCount
             default:
                 break
             }

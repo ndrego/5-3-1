@@ -34,6 +34,7 @@
 		9182240799F61B1D374BAA8D /* TrainingMaxSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC5CD132C6798CD7DB3097F /* TrainingMaxSetupView.swift */; };
 		970A3EACC5C7C53F01DD8839 /* AccessorySetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CC7B6053AFB7ECE8CF22EA /* AccessorySetRowView.swift */; };
 		A2953E28823A445160A6A649 /* WorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC9B438F744231E2C9D1B5A /* WorkoutView.swift */; };
+		A41D8A2A354CA3731B7A4DEF /* RepCountingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4D3DF9894D7652D28F05926 /* RepCountingManager.swift */; };
 		A6A18F21D138AE4FEDFFF4D8 /* HeartRateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5B09F98212E7C06D938D93 /* HeartRateManager.swift */; };
 		ACE6C40306B66AC18980B72C /* StrongImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8FE052FB06BDAED95A37379 /* StrongImporter.swift */; };
 		AF77BCED810D2D390F60CFCD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEAC4BA8FB0B58A0D6A0BCC3 /* ContentView.swift */; };
@@ -116,6 +117,7 @@
 		BEFA3CACFC1833116B49A3DE /* CompletedSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedSet.swift; sourceTree = "<group>"; };
 		C7CF49725EDCFA52F8B30B6D /* TemplateListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateListView.swift; sourceTree = "<group>"; };
 		C9B54678A56D15CD4243E9B7 /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
+		D4D3DF9894D7652D28F05926 /* RepCountingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCountingManager.swift; sourceTree = "<group>"; };
 		DE577FD8B1B84EDB075AAB8C /* FiveThreeOneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveThreeOneApp.swift; sourceTree = "<group>"; };
 		DED8FCDBE3E01F5CAC0F6B0F /* CompletedWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedWorkout.swift; sourceTree = "<group>"; };
 		E40E82BFB0327F6EAF318C1A /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
@@ -290,6 +292,7 @@
 				284CAB02879259FE36883AAD /* Assets.xcassets */,
 				2ADAE2D0E19BDA6343C20FC8 /* FiveThreeOneWatch.entitlements */,
 				3197C68B90AD54986FDB9AC3 /* FiveThreeOneWatchApp.swift */,
+				D4D3DF9894D7652D28F05926 /* RepCountingManager.swift */,
 				E40E82BFB0327F6EAF318C1A /* WatchConnectivityManager.swift */,
 				627679734B52F316E9A55257 /* WatchWorkoutManager.swift */,
 				1DD765BA02AFCA39359BE44F /* Views */,
@@ -469,6 +472,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FEB7E4B80AF7E25045F1EFA2 /* FiveThreeOneWatchApp.swift in Sources */,
+				A41D8A2A354CA3731B7A4DEF /* RepCountingManager.swift in Sources */,
 				29A582EAE6A0853AD03A3F06 /* WatchConnectivityManager.swift in Sources */,
 				230643B5A9143AA28050C77B /* WatchHomeView.swift in Sources */,
 				F1AB479CFDBCE4176BA21B40 /* WatchWorkoutManager.swift in Sources */,
@@ -529,6 +533,7 @@
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = "531 Strength";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "531 Strength reads your heart rate during workouts to show recovery status.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "531 Strength uses motion data to count your reps during sets.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ndrego.FiveThreeOne;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -713,6 +718,7 @@
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = "531 Strength";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "531 Strength reads your heart rate during workouts to show recovery status.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "531 Strength uses motion data to count your reps during sets.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ndrego.FiveThreeOne;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

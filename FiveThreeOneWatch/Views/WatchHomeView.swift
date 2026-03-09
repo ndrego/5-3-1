@@ -3,6 +3,7 @@ import SwiftUI
 struct WatchHomeView: View {
     var connectivity: WatchConnectivityManager
     var workoutManager: WatchWorkoutManager
+    var repCountingManager: RepCountingManager
 
     var body: some View {
         Group {
@@ -25,7 +26,7 @@ struct WatchHomeView: View {
                 .font(.system(size: 36))
                 .foregroundStyle(.blue)
 
-            Text("5/3/1")
+            Text("531")
                 .font(.headline)
 
             if connectivity.isPhoneReachable {
@@ -107,6 +108,14 @@ struct WatchHomeView: View {
                 Text("\(workoutManager.currentTargetReps)\(workoutManager.currentIsAMRAP ? "+" : "") reps")
                     .font(.body)
                     .fontWeight(.medium)
+                if repCountingManager.isActive {
+                    Text("·")
+                        .foregroundStyle(.secondary)
+                    Text("\(repCountingManager.repCount)")
+                        .font(.body)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.green)
+                }
             }
 
             // Progress

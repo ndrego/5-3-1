@@ -6,6 +6,8 @@ import WatchConnectivity
 final class WatchConnectivityManager: NSObject {
     var isPhoneReachable = false
     var workoutManager: WatchWorkoutManager?
+    var repCountingManager: RepCountingManager?
+    var repCountingEnabled = false
 
     private var session: WCSession?
 
@@ -23,6 +25,10 @@ final class WatchConnectivityManager: NSObject {
 
     func sendStopTimer() {
         send(["type": "stopTimer"])
+    }
+
+    func sendRepCount(_ count: Int) {
+        send(["type": "repCount", "repCount": count])
     }
 
     private func send(_ message: [String: Any]) {
@@ -60,6 +66,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
         let reps = message["reps"] as? Int
         let isAMRAP = message["isAMRAP"] as? Bool
         let setType = message["setType"] as? String
+        let enabled = message["enabled"] as? Bool
 
         Task { @MainActor in
             self.handleMessage(
@@ -73,7 +80,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
                 targetReps: targetReps,
                 reps: reps,
                 isAMRAP: isAMRAP,
-                setType: setType
+                setType: setType,
+                enabled: enabled
             )
         }
     }
@@ -90,7 +98,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
         targetReps: Int?,
         reps: Int?,
         isAMRAP: Bool?,
-        setType: String?
+        setType: String?,
+        enabled: Bool?
     ) {
         guard let type else { return }
 
@@ -99,6 +108,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
             let total = totalSeconds ?? 180
             let effectiveRecovery = (recoveryHR == nil || recoveryHR == 0) ? nil : recoveryHR
             workoutManager?.startTimer(seconds: total, recoveryHR: effectiveRecovery)
+            // Stop rep counting during rest
+            _ = repCountingManager?.stopCounting()
 
         case "timerStop":
             workoutManager?.stopTimer()
@@ -109,6 +120,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
         case "workoutFinish":
             workoutManager?.workoutActive = false
             workoutManager?.stopTimer()
+            _ = repCountingManager?.stopCounting()
 
         case "currentSet":
             workoutManager?.updateCurrentSet(
@@ -120,6 +132,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
                 isAMRAP: isAMRAP ?? false,
                 setType: setType ?? "main"
             )
+            // Start rep counting for this set
+            if repCountingEnabled, let name = exerciseName {
+                repCountingManager?.onRepCounted = { [weak self] count in
+                    self?.sendRepCount(count)
+                }
+                repCountingManager?.startCounting(exerciseName: name)
+            }
 
         case "setComplete":
             workoutManager?.markSetCompleted(
@@ -130,6 +149,10 @@ extension WatchConnectivityManager: WCSessionDelegate {
                 reps: reps ?? 0,
                 setType: setType ?? "main"
             )
+            _ = repCountingManager?.stopCounting()
+
+        case "repCountingEnabled":
+            repCountingEnabled = enabled ?? false
 
         default:
             break

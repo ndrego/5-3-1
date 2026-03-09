@@ -79,6 +79,7 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: "531 Strength"
         INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.ndrego.FiveThreeOne
         INFOPLIST_KEY_NSHealthShareUsageDescription: "531 Strength reads your heart rate during workouts to show recovery status."
+        INFOPLIST_KEY_NSMotionUsageDescription: "531 Strength uses motion data to count your reps during sets."
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
         SUPPORTED_PLATFORMS: "watchos watchsimulator"
         TARGETED_DEVICE_FAMILY: "4"

@@ -71,6 +71,7 @@ struct TemplateWorkoutView: View {
                             workoutStarted = true
                             UIApplication.shared.isIdleTimerDisabled = true
                             phoneConnectivity.sendWorkoutStarted()
+                            phoneConnectivity.sendRepCountingEnabled(userSettings?.repCountingEnabled ?? false)
                             sendWatchContext()
                         } label: {
                             Label("Start Workout", systemImage: "play.fill")
@@ -172,6 +173,11 @@ struct TemplateWorkoutView: View {
             guard phoneConnectivity.watchRequestedCompleteSet else { return }
             phoneConnectivity.watchRequestedCompleteSet = false
             completeNextSet()
+        }
+        .onChange(of: phoneConnectivity.watchReportedRepCount) {
+            guard let count = phoneConnectivity.watchReportedRepCount else { return }
+            phoneConnectivity.watchReportedRepCount = nil
+            updateCurrentSetReps(count)
         }
         .onDisappear {
             heartRateManager.stopMonitoring()
@@ -809,6 +815,18 @@ struct TemplateWorkoutView: View {
                         setRestSeconds: exerciseStates[i].sets[j].restSeconds,
                         setType: exerciseStates[i].sets[j].setType
                     )
+                    return
+                }
+            }
+        }
+    }
+
+    /// Updates the current incomplete set's reps from watch accelerometer count.
+    private func updateCurrentSetReps(_ count: Int) {
+        for i in exerciseStates.indices {
+            for j in exerciseStates[i].sets.indices {
+                if !exerciseStates[i].sets[j].isComplete {
+                    exerciseStates[i].sets[j].actualReps = count
                     return
                 }
             }

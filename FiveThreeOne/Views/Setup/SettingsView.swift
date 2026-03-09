@@ -160,6 +160,17 @@ struct SettingsView: View {
                             Text("Dark").tag("dark")
                         }
                     }
+
+                    Section {
+                        Toggle("Auto Rep Counting", isOn: Binding(
+                            get: { s.repCountingEnabled ?? false },
+                            set: { s.repCountingEnabled = $0 }
+                        ))
+                    } header: {
+                        Text("Apple Watch")
+                    } footer: {
+                        Text("Uses the watch accelerometer to detect and count reps during sets.")
+                    }
                 }
 
                 Section("Program") {
