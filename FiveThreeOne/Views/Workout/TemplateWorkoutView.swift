@@ -584,6 +584,20 @@ struct TemplateWorkoutView: View {
         ForEach(Array(state.sets.indices), id: \.self) { index in
             mainSetRow(for: exerciseState.sets[index], setIndex: index, state: state)
         }
+
+        Button {
+            let lastSet = state.sets.last
+            let newSet = CompletedSet(
+                weight: lastSet?.weight ?? 0,
+                targetReps: lastSet?.targetReps ?? 1,
+                isAMRAP: false,
+                setType: lastSet?.setType ?? .main
+            )
+            exerciseState.wrappedValue.sets.append(newSet)
+        } label: {
+            Label("Add Set", systemImage: "plus.circle")
+                .font(.subheadline)
+        }
     }
 
     private func mainSetRow(for set: Binding<CompletedSet>, setIndex: Int, state: ExerciseState) -> some View {

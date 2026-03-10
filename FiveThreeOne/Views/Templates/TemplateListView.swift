@@ -5,15 +5,29 @@ struct TemplateListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \WorkoutTemplate.sortOrder) private var templates: [WorkoutTemplate]
     @Query(sort: \Cycle.number, order: .reverse) private var cycles: [Cycle]
+    @Query(sort: \CompletedWorkout.date, order: .reverse) private var workouts: [CompletedWorkout]
     @Query private var settings: [UserSettings]
 
     @State private var selectedWeek: Int = 1
+    @State private var weekInitialized = false
     @State private var showingNewTemplate = false
     @State private var selectedTemplate: WorkoutTemplate?
     @State private var editingTemplate: WorkoutTemplate?
 
     private var currentCycle: Cycle? {
         cycles.first(where: { !$0.isComplete }) ?? cycles.first
+    }
+
+    /// Determine the next week to train based on completed workouts in the current cycle.
+    private var suggestedWeek: Int {
+        guard let cycle = currentCycle else { return 1 }
+        let cycleWorkouts = workouts.filter { $0.cycleNumber == cycle.number }
+        let completedWeeks = Set(cycleWorkouts.map { $0.weekNumber })
+        // Find the first week (1-4) not yet completed, or stay on 4 if all done
+        for week in 1...6 {
+            if !completedWeeks.contains(week) { return week }
+        }
+        return 4
     }
 
     var body: some View {
@@ -106,6 +120,10 @@ struct TemplateListView: View {
                 if templates.isEmpty {
                     WorkoutTemplate.seedDefaults(in: modelContext)
                 }
+                if !weekInitialized {
+                    selectedWeek = suggestedWeek
+                    weekInitialized = true
+                }
             }
         }
     }
@@ -120,12 +138,25 @@ struct TemplateListView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Picker("Week", selection: $selectedWeek) {
-                ForEach(1...4, id: \.self) { week in
-                    Text(ProgramEngine.weekLabel(week)).tag(week)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(1...6, id: \.self) { week in
+                        Button {
+                            selectedWeek = week
+                        } label: {
+                            Text(ProgramEngine.weekLabel(week))
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(selectedWeek == week ? Color.accentColor : Color(.tertiarySystemFill))
+                                .foregroundStyle(selectedWeek == week ? .white : .primary)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
-            .pickerStyle(.segmented)
         }
         .padding()
     }

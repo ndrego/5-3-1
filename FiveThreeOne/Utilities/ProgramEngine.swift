@@ -16,20 +16,24 @@ struct ProgramEngine {
 
     // MARK: - Percentages
 
-    /// Main working set percentages per week (3 sets per week)
+    /// Main working set percentages per week
     private static let mainPercentages: [[Double]] = [
-        [0.65, 0.75, 0.85],  // Week 1: 5/5/5+
-        [0.70, 0.80, 0.90],  // Week 2: 3/3/3+
-        [0.75, 0.85, 0.95],  // Week 3: 5/3/1+
-        [0.40, 0.50, 0.60],  // Week 4: Deload
+        [0.65, 0.75, 0.85],                    // Week 1: 5/5/5+
+        [0.70, 0.80, 0.90],                    // Week 2: 3/3/3+
+        [0.75, 0.85, 0.95],                    // Week 3: 5/3/1+
+        [0.40, 0.50, 0.60],                    // Week 4: Deload
+        [0.70, 0.80, 0.90, 1.00],              // Week 5: TM Test
+        [0.50, 0.60, 0.70, 0.80, 0.90, 1.00],  // Week 6: 1RM Test
     ]
 
     /// Target reps per set per week
     private static let mainReps: [[Int]] = [
-        [5, 5, 5],   // Week 1
-        [3, 3, 3],   // Week 2
-        [5, 3, 1],   // Week 3
-        [5, 5, 5],   // Week 4
+        [5, 5, 5],             // Week 1
+        [3, 3, 3],             // Week 2
+        [5, 3, 1],             // Week 3
+        [5, 5, 5],             // Week 4
+        [5, 3, 1, 3],          // Week 5: TM Test — work up to TM for 3-5 reps
+        [5, 3, 3, 1, 1, 1],    // Week 6: 1RM Test — work up to true max singles
     ]
 
     // MARK: - Warmup Sets
@@ -64,14 +68,15 @@ struct ProgramEngine {
         let percentages = mainPercentages[weekIndex]
         let reps = mainReps[weekIndex]
         let isDeload = week == 4
-        let useAMRAP = variant.hasAMRAP && !isDeload
+        let isTestWeek = week == 5 || week == 6
+        let useAMRAP = variant.hasAMRAP && !isDeload && !isTestWeek
 
-        // For 5s PRO, all sets are 5 reps
-        let effectiveReps: [Int] = variant == .fivesPro ? [5, 5, 5] : reps
+        // For 5s PRO, all sets are 5 reps (not for test weeks)
+        let effectiveReps: [Int] = (variant == .fivesPro && !isTestWeek) ? Array(repeating: 5, count: reps.count) : reps
 
-        return (0..<3).map { i in
+        return (0..<percentages.count).map { i in
             let weight = roundWeight(trainingMax * percentages[i], to: roundTo)
-            let isTopSet = (i == 2) && useAMRAP
+            let isTopSet = (i == percentages.count - 1) && (useAMRAP || isTestWeek)
             return PlannedSet(
                 setNumber: i + 1,
                 weight: weight,
@@ -91,6 +96,9 @@ struct ProgramEngine {
         variant: ProgramVariant,
         roundTo: Double = 5.0
     ) -> [PlannedSet] {
+        // No supplemental work on deload or test weeks
+        if week >= 4 { return [] }
+
         let weekIndex = clampedWeekIndex(week)
         let percentages = mainPercentages[weekIndex]
 
@@ -207,7 +215,7 @@ struct ProgramEngine {
     // MARK: - Helpers
 
     private static func clampedWeekIndex(_ week: Int) -> Int {
-        max(0, min(3, week - 1))
+        max(0, min(5, week - 1))
     }
 
     private static func roundWeight(_ weight: Double, to nearest: Double) -> Double {
@@ -221,6 +229,8 @@ struct ProgramEngine {
         case 2: return "3/3/3+"
         case 3: return "5/3/1+"
         case 4: return "Deload"
+        case 5: return "TM Test"
+        case 6: return "1RM Test"
         default: return "Week \(week)"
         }
     }
