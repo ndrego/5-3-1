@@ -9,7 +9,7 @@ struct CompletedSet: Codable, Identifiable, Hashable {
     var setType: SetType
     var averageHR: Double?  // Average heart rate during this set
     var hrSamples: [Double]?  // Per-sample HR readings during this set
-    var estimatedRPE: Double?  // HR-based RPE estimate (6-10 scale)
+    var estimatedRPE: Double?  // HR-based RPE estimate (1-10 scale)
     var restSeconds: Int?   // Custom rest duration after this set (nil = use default)
 
     init(

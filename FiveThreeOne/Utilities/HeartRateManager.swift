@@ -157,17 +157,17 @@ final class HeartRateManager {
         return (average: avg, samples: setHRSamples)
     }
 
-    /// Estimate RPE (6-10 scale) from heart rate as percentage of max HR.
+    /// Estimate RPE (1-10 scale) from heart rate as percentage of max HR.
     /// Uses age-predicted max HR (220 - age).
     static func estimateRPE(heartRate: Double, age: Int) -> Double {
         let maxHR = Double(220 - age)
-        guard maxHR > 0 else { return 6 }
+        guard maxHR > 0 else { return 1 }
         let pctMax = heartRate / maxHR
 
-        // Map HR% to RPE 6-10 scale
-        // <60% → 6, 60-70% → 6-7, 70-80% → 7-8, 80-90% → 8-9, 90%+ → 9-10
-        let rpe = 6.0 + (pctMax - 0.5) * 10.0
-        return min(10, max(6, rpe))
+        // Map HR% to RPE 1-10 scale
+        // ~40% → 1, 50% → 2, 60% → 4, 70% → 6, 80% → 8, 90%+ → 10
+        let rpe = (pctMax - 0.35) / 0.065
+        return min(10, max(1, rpe))
     }
 
     /// Session average HR.
