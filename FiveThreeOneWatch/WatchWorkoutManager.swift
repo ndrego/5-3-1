@@ -73,13 +73,13 @@ final class WatchWorkoutManager {
     }
 
     /// Stop the HKWorkoutSession when the workout finishes.
-    func stopWorkoutSession() {
+    func stopWorkoutSession(averageEffort: Double? = nil) {
         hrPollTask?.cancel()
         hrPollTask = nil
         let helper = sessionHelper
         sessionHelper = nil
         currentHR = 0
-        helper?.stop()
+        helper?.stop(averageEffort: averageEffort)
     }
 
     /// Poll the workout builder for latest HR every 2 seconds.
@@ -253,10 +253,16 @@ final class WorkoutSessionHelper: NSObject, HKWorkoutSessionDelegate, HKLiveWork
         }
     }
 
-    /// Synchronous stop — call from main thread.
-    func stop() {
+    /// Stop the workout, optionally saving an effort score (1-10 RPE mapped to Apple's 1-10 scale).
+    func stop(averageEffort: Double? = nil) {
         guard let session, let builder else { return }
         session.end()
+
+        // Save effort sample before finishing if available
+        if let effort = averageEffort {
+            addEffortSample(effort: effort, builder: builder)
+        }
+
         builder.endCollection(withEnd: .now) { [weak self] success, error in
             self?.builder?.finishWorkout { workout, error in
                 if let error {
@@ -266,6 +272,28 @@ final class WorkoutSessionHelper: NSObject, HKWorkoutSessionDelegate, HKLiveWork
         }
         self.session = nil
         self.builder = nil
+    }
+
+    private func addEffortSample(effort: Double, builder: HKLiveWorkoutBuilder) {
+        if #available(watchOS 11.0, *) {
+            let type = HKQuantityType(.workoutEffortScore)
+            let quantity = HKQuantity(unit: .appleEffortScore(), doubleValue: effort)
+            let sample = HKQuantitySample(
+                type: type,
+                quantity: quantity,
+                start: builder.startDate ?? .now,
+                end: .now
+            )
+            builder.add([sample]) { success, error in
+                if let error {
+                    print("Failed to add effort sample: \(error)")
+                } else {
+                    print("[Workout] Saved effort score: \(String(format: "%.1f", effort))")
+                }
+            }
+        } else {
+            print("[Workout] Effort score requires watchOS 11+, skipping")
+        }
     }
 
     /// Thread-safe read of the latest HR.

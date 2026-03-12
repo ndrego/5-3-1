@@ -1390,7 +1390,12 @@ struct TemplateWorkoutView: View {
         restTimer.stop()
         heartRateManager.stopMonitoring()
         UIApplication.shared.isIdleTimerDisabled = false
-        phoneConnectivity.sendWorkoutFinished()
+
+        // Compute average RPE across all completed sets for HealthKit effort
+        let allRPEs = exerciseStates.flatMap { $0.sets }
+            .compactMap(\.estimatedRPE)
+        let averageEffort = allRPEs.isEmpty ? nil : allRPEs.reduce(0, +) / Double(allRPEs.count)
+        phoneConnectivity.sendWorkoutFinished(averageEffort: averageEffort)
 
         // Save to HealthKit
         let startTime = workoutStartTime ?? .now

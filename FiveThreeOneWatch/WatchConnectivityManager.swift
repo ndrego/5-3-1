@@ -99,8 +99,8 @@ final class WatchConnectivityManager {
             startWorkout()
 
         case "workoutFinish":
-            stopWorkout()
-            repCountingManager?.stopAccelerometer()
+            // Handled above in delegate helper with effort score
+            break
 
         case "currentSet":
             currentExerciseName = exerciseName
@@ -169,10 +169,10 @@ final class WatchConnectivityManager {
         workoutManager?.startWorkoutSession()
     }
 
-    func stopWorkout() {
+    func stopWorkout(averageEffort: Double? = nil) {
         workoutManager?.workoutActive = false
         workoutManager?.stopTimer()
-        workoutManager?.stopWorkoutSession()
+        workoutManager?.stopWorkoutSession(averageEffort: averageEffort)
         repCountingManager?.stopAccelerometer()
     }
 
@@ -257,6 +257,16 @@ final class WCSessionDelegateHelper: NSObject, WCSessionDelegate, @unchecked Sen
             let profileKey = message["profileKey"] as? String ?? ""
             Task { @MainActor [weak self] in
                 self?.manager?.handleCalibrate(profileKey: profileKey)
+            }
+            return
+        }
+
+        // Handle workoutFinish with effort score
+        if type == "workoutFinish" {
+            let averageEffort = message["averageEffort"] as? Double
+            Task { @MainActor [weak self] in
+                self?.manager?.stopWorkout(averageEffort: averageEffort)
+                self?.manager?.repCountingManager?.stopAccelerometer()
             }
             return
         }

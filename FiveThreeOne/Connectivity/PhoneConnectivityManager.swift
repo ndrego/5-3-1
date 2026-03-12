@@ -72,8 +72,12 @@ final class PhoneConnectivityManager: NSObject {
         send(["type": "calibrate", "profileKey": profileKey])
     }
 
-    func sendWorkoutFinished() {
-        send(["type": "workoutFinish"])
+    func sendWorkoutFinished(averageEffort: Double? = nil) {
+        var msg: [String: Any] = ["type": "workoutFinish"]
+        if let averageEffort {
+            msg["averageEffort"] = averageEffort
+        }
+        send(msg)
         updateContext(["workoutActive": false])
         // Also use transferUserInfo as guaranteed delivery in case sendMessage was dropped
         session?.transferUserInfo(["type": "workoutFinish"])
