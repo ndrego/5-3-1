@@ -2,7 +2,7 @@ import Foundation
 import HealthKit
 import WatchKit
 
-/// Manages rest timer, HR monitoring, and haptics on the watch.
+/// Manages rest timer, HR monitoring via HKWorkoutSession, and haptics on the watch.
 @MainActor @Observable
 final class WatchWorkoutManager {
     var workoutActive = false
@@ -12,6 +12,10 @@ final class WatchWorkoutManager {
     var timerTotal: Int = 0
     var recovered = false
     var recoveryTargetHR: Int?
+    var onTimerCompleted: (() -> Void)?
+
+    // Callback for sending HR to the phone
+    var onHeartRateUpdate: ((Double) -> Void)?
 
     // Current exercise context
     var currentExercise: String = ""
@@ -23,10 +27,9 @@ final class WatchWorkoutManager {
     var currentSetType: String = "main"
     var setsCompleted: Int = 0
 
-    private let healthStore = HKHealthStore()
-    private var hrQuery: HKAnchoredObjectQuery?
-    private var timer: Timer?
-    private var simulationTimer: Timer?
+    private var sessionHelper: WorkoutSessionHelper?
+    private var hrPollTask: Task<Void, Never>?
+    private var restTimerTask: Task<Void, Never>?
 
     // MARK: - Heart Rate
 
@@ -36,53 +39,63 @@ final class WatchWorkoutManager {
         return
         #else
         guard HKHealthStore.isHealthDataAvailable() else { return }
+        let healthStore = HKHealthStore()
         let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate)!
+        let activeEnergy = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
         do {
-            try await healthStore.requestAuthorization(toShare: [], read: [hrType])
-            startHRMonitoring()
-        } catch {}
+            try await healthStore.requestAuthorization(
+                toShare: [HKWorkoutType.workoutType(), activeEnergy],
+                read: [hrType, activeEnergy]
+            )
+        } catch {
+            print("Watch HR authorization failed: \(error)")
+        }
         #endif
     }
 
-    func startHRMonitoring() {
-        guard let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
-        stopHRMonitoring()
+    /// Start an HKWorkoutSession to enable continuous heart rate streaming.
+    func startWorkoutSession() {
+        #if DEBUG && targetEnvironment(simulator)
+        startSimulation()
+        return
+        #endif
 
-        let predicate = HKQuery.predicateForSamples(withStart: .now, end: nil, options: .strictStartDate)
-        let query = HKAnchoredObjectQuery(
-            type: hrType,
-            predicate: predicate,
-            anchor: nil,
-            limit: HKObjectQueryNoLimit
-        ) { [weak self] _, samples, _, _, _ in
-            Task { @MainActor in
-                self?.processSamples(samples)
-            }
+        // If there's already a session running, stop it first
+        if let existing = sessionHelper {
+            existing.stop()
+            sessionHelper = nil
         }
-        query.updateHandler = { [weak self] _, samples, _, _, _ in
-            Task { @MainActor in
-                self?.processSamples(samples)
-            }
-        }
-        healthStore.execute(query)
-        hrQuery = query
+
+        let helper = WorkoutSessionHelper()
+        self.sessionHelper = helper
+        helper.start()
+        startHRPolling()
     }
 
-    func stopHRMonitoring() {
-        if let query = hrQuery {
-            healthStore.stop(query)
-        }
-        hrQuery = nil
-        simulationTimer?.invalidate()
-        simulationTimer = nil
+    /// Stop the HKWorkoutSession when the workout finishes.
+    func stopWorkoutSession() {
+        hrPollTask?.cancel()
+        hrPollTask = nil
+        let helper = sessionHelper
+        sessionHelper = nil
+        currentHR = 0
+        helper?.stop()
     }
 
-    private func processSamples(_ samples: [HKSample]?) {
-        guard let samples = samples as? [HKQuantitySample] else { return }
-        for sample in samples {
-            let bpm = sample.quantity.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
-            currentHR = bpm
-            checkRecovery()
+    /// Poll the workout builder for latest HR every 2 seconds.
+    private func startHRPolling() {
+        hrPollTask?.cancel()
+        hrPollTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { break }
+                let bpm = sessionHelper?.latestHeartRate() ?? 0
+                if bpm > 0 {
+                    currentHR = bpm
+                    onHeartRateUpdate?(bpm)
+                    checkRecovery()
+                }
+            }
         }
     }
 
@@ -96,21 +109,26 @@ final class WatchWorkoutManager {
         recovered = false
         timerRunning = true
 
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                guard let self else { return }
-                if self.timerRemaining > 0 {
-                    self.timerRemaining -= 1
-                } else {
-                    self.timerCompleted()
-                }
+        restTimerTask = Task {
+            while !Task.isCancelled && timerRemaining > 0 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { break }
+                timerRemaining -= 1
+            }
+            if !Task.isCancelled && timerRemaining <= 0 {
+                timerCompleted()
             }
         }
     }
 
+    func adjustTimer(remaining: Int, total: Int) {
+        timerTotal = total
+        timerRemaining = remaining
+    }
+
     func stopTimer() {
-        timer?.invalidate()
-        timer = nil
+        restTimerTask?.cancel()
+        restTimerTask = nil
         timerRunning = false
         timerRemaining = 0
         recovered = false
@@ -118,8 +136,10 @@ final class WatchWorkoutManager {
     }
 
     private func timerCompleted() {
-        WKInterfaceDevice.current().play(.success)
+        print("[Timer] Timer completed, playing haptic")
+        WKInterfaceDevice.current().play(.notification)
         stopTimer()
+        onTimerCompleted?()
     }
 
     private func checkRecovery() {
@@ -172,17 +192,114 @@ final class WatchWorkoutManager {
     // MARK: - Simulation (DEBUG only)
 
     #if DEBUG
+    private var simulationTask: Task<Void, Never>?
+
     private func startSimulation() {
-        stopHRMonitoring()
-        simulationTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                let base: Double = self.timerRunning ? 130 : 85
+        simulationTask?.cancel()
+        simulationTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { break }
+                let base: Double = timerRunning ? 130 : 85
                 let noise = Double.random(in: -8...8)
-                self.currentHR = base + noise
-                self.checkRecovery()
+                let bpm = base + noise
+                currentHR = bpm
+                onHeartRateUpdate?(bpm)
+                checkRecovery()
             }
         }
     }
     #endif
+}
+
+// MARK: - Workout Session Helper (non-MainActor, handles HealthKit delegates)
+
+/// Separate class to own the HKWorkoutSession and its delegates,
+/// avoiding conflicts between @MainActor @Observable and HealthKit's threading.
+final class WorkoutSessionHelper: NSObject, HKWorkoutSessionDelegate, HKLiveWorkoutBuilderDelegate, @unchecked Sendable {
+    private let healthStore = HKHealthStore()
+    private var session: HKWorkoutSession?
+    private var builder: HKLiveWorkoutBuilder?
+
+    /// Latest HR value, updated from HealthKit delegate callbacks on their own queue.
+    private var _latestHR: Double = 0
+    private let hrLock = NSLock()
+
+    /// Synchronous start — call from main thread. HealthKit on watchOS expects main thread.
+    func start() {
+        let config = HKWorkoutConfiguration()
+        config.activityType = .traditionalStrengthTraining
+        config.locationType = .indoor
+
+        do {
+            let session = try HKWorkoutSession(healthStore: healthStore, configuration: config)
+            let builder = session.associatedWorkoutBuilder()
+            builder.dataSource = HKLiveWorkoutDataSource(healthStore: healthStore, workoutConfiguration: config)
+
+            session.delegate = self
+            builder.delegate = self
+
+            self.session = session
+            self.builder = builder
+
+            session.startActivity(with: .now)
+            builder.beginCollection(withStart: .now) { success, error in
+                if let error {
+                    print("Builder begin collection error: \(error)")
+                }
+            }
+        } catch {
+            print("Failed to start workout session: \(error)")
+        }
+    }
+
+    /// Synchronous stop — call from main thread.
+    func stop() {
+        guard let session, let builder else { return }
+        session.end()
+        builder.endCollection(withEnd: .now) { [weak self] success, error in
+            self?.builder?.finishWorkout { workout, error in
+                if let error {
+                    print("Finish workout error: \(error)")
+                }
+            }
+        }
+        self.session = nil
+        self.builder = nil
+    }
+
+    /// Thread-safe read of the latest HR.
+    func latestHeartRate() -> Double {
+        hrLock.lock()
+        let val = _latestHR
+        hrLock.unlock()
+        return val
+    }
+
+    // MARK: - HKWorkoutSessionDelegate
+
+    nonisolated func workoutSession(_ workoutSession: HKWorkoutSession, didChangeTo toState: HKWorkoutSessionState, from fromState: HKWorkoutSessionState, date: Date) {
+    }
+
+    nonisolated func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
+        print("Workout session failed: \(error.localizedDescription)")
+    }
+
+    // MARK: - HKLiveWorkoutBuilderDelegate
+
+    nonisolated func workoutBuilder(_ workoutBuilder: HKLiveWorkoutBuilder, didCollectDataOf collectedTypes: Set<HKSampleType>) {
+        let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate)!
+        guard collectedTypes.contains(hrType) else { return }
+
+        if let stats = workoutBuilder.statistics(for: hrType),
+           let latest = stats.mostRecentQuantity() {
+            let bpm = latest.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
+            hrLock.lock()
+            _latestHR = bpm
+            hrLock.unlock()
+        }
+    }
+
+    nonisolated func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {
+    }
 }

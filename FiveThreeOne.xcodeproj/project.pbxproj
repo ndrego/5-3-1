@@ -93,6 +93,7 @@
 		00B16D82D7CF0F5A99A88CAB /* PreviousPerformanceLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviousPerformanceLookup.swift; sourceTree = "<group>"; };
 		0247C0C120E576E7E0290C60 /* Cycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cycle.swift; sourceTree = "<group>"; };
 		08369B15D0D20319E0EACBFC /* PhoneConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneConnectivityManager.swift; sourceTree = "<group>"; };
+		09436DC2E6C636A1EC407EBE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0C50280FC64462F470CE51B2 /* ExercisePerformance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePerformance.swift; sourceTree = "<group>"; };
 		127668896D621C1033626435 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		12E9858407A7B51A5D75ACEF /* ExerciseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseDetailView.swift; sourceTree = "<group>"; };
@@ -325,6 +326,7 @@
 				284CAB02879259FE36883AAD /* Assets.xcassets */,
 				2ADAE2D0E19BDA6343C20FC8 /* FiveThreeOneWatch.entitlements */,
 				3197C68B90AD54986FDB9AC3 /* FiveThreeOneWatchApp.swift */,
+				09436DC2E6C636A1EC407EBE /* Info.plist */,
 				9150FB2613AAB2AEF582064B /* PrivacyInfo.xcprivacy */,
 				D4D3DF9894D7652D28F05926 /* RepCountingManager.swift */,
 				E40E82BFB0327F6EAF318C1A /* WatchConnectivityManager.swift */,
@@ -592,6 +594,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FiveThreeOne/FiveThreeOne.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
@@ -640,11 +643,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FiveThreeOneWatch/FiveThreeOneWatch.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FiveThreeOneWatch/Info.plist;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = "531 Strength";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "531 Strength reads your heart rate during workouts to show recovery status.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "531 Strength saves your workout sessions to Apple Health.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "531 Strength uses motion data to count your reps during sets.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ndrego.FiveThreeOne;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -789,6 +795,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FiveThreeOne/FiveThreeOne.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
@@ -817,11 +824,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FiveThreeOneWatch/FiveThreeOneWatch.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FiveThreeOneWatch/Info.plist;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = "531 Strength";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "531 Strength reads your heart rate during workouts to show recovery status.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "531 Strength saves your workout sessions to Apple Health.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "531 Strength uses motion data to count your reps during sets.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ndrego.FiveThreeOne;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

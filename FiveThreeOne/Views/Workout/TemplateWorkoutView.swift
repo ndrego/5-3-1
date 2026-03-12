@@ -213,6 +213,8 @@ struct TemplateWorkoutView: View {
                 heartRateManager.startMonitoring()
             }
             #endif
+            // Start tracking HR samples immediately so the first set has data
+            heartRateManager.markSetStart()
         }
         .onChange(of: phoneConnectivity.watchHeartRateUpdateCount) {
             let bpm = phoneConnectivity.watchHeartRate

@@ -17,6 +17,7 @@ struct FiveThreeOneWatchApp: App {
                 connectivityManager.activate()
                 connectivityManager.workoutManager = workoutManager
                 connectivityManager.repCountingManager = repCountingManager
+                repCountingManager.requestMotionAuthorization()
             }
         }
     }

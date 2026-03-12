@@ -24,12 +24,10 @@ targets:
           - "Preview Content"
       - path: FiveThreeOne/Preview Content
         buildPhase: sources
-    # entitlements:
-    #   path: FiveThreeOne/FiveThreeOne.entitlements
-    #   properties:
-    #     com.apple.developer.healthkit: true
-    #     com.apple.developer.healthkit.access:
-    #       - health-records
+    entitlements:
+      path: FiveThreeOne/FiveThreeOne.entitlements
+      properties:
+        com.apple.developer.healthkit: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ndrego.FiveThreeOne
@@ -77,11 +75,10 @@ targets:
     platform: watchOS
     sources:
       - path: FiveThreeOneWatch
-    # entitlements:
-    #   path: FiveThreeOneWatch/FiveThreeOneWatch.entitlements
-    #   properties:
-    #     com.apple.developer.healthkit: true
-    #     com.apple.developer.healthkit.access: []
+    entitlements:
+      path: FiveThreeOneWatch/FiveThreeOneWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ndrego.FiveThreeOne.watch
@@ -95,7 +92,9 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: "531 Strength"
         INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.ndrego.FiveThreeOne
         INFOPLIST_KEY_NSHealthShareUsageDescription: "531 Strength reads your heart rate during workouts to show recovery status."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "531 Strength saves your workout sessions to Apple Health."
         INFOPLIST_KEY_NSMotionUsageDescription: "531 Strength uses motion data to count your reps during sets."
+        INFOPLIST_FILE: FiveThreeOneWatch/Info.plist
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
         SUPPORTED_PLATFORMS: "watchos watchsimulator"
         TARGETED_DEVICE_FAMILY: "4"

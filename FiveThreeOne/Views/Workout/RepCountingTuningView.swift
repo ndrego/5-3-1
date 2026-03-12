@@ -54,8 +54,8 @@ struct RepCountingTuningView: View {
                             }
                             Slider(
                                 value: sensitivityBinding(for: profile.key),
-                                in: 0.3...3.0,
-                                step: 0.1
+                                in: 0.3...1.7,
+                                step: 0.05
                             )
                         }
 
@@ -70,7 +70,7 @@ struct RepCountingTuningView: View {
                             }
                             Slider(
                                 value: tempoBinding(for: profile.key, default: profile.defaultTempo),
-                                in: 0.5...4.0,
+                                in: 0.5...2.5,
                                 step: 0.1
                             )
                         }

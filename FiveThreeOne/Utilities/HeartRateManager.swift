@@ -211,7 +211,8 @@ final class HeartRateManager {
         }
     }
 
-    private func recordBPM(_ bpm: Double) {
+    /// Record a heart rate reading from any source (HealthKit query or watch connectivity).
+    func recordBPM(_ bpm: Double) {
         currentHR = bpm
         allSessionSamples.append(bpm)
 

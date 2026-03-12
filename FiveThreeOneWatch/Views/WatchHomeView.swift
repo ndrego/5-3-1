@@ -49,6 +49,8 @@ struct WatchHomeView: View {
             mainTab
             // Tab 2: Heart rate
             heartRateTab
+            // Tab 3: End workout
+            endWorkoutTab
         }
         .tabViewStyle(.verticalPage)
     }
@@ -257,6 +259,27 @@ struct WatchHomeView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - End Workout
+
+    private var endWorkoutTab: some View {
+        VStack(spacing: 12) {
+            Text("End Workout?")
+                .font(.headline)
+
+            Button(role: .destructive) {
+                workoutManager.workoutActive = false
+                workoutManager.stopTimer()
+                workoutManager.stopWorkoutSession()
+                connectivity.sendStopTimer()
+            } label: {
+                Label("End", systemImage: "xmark.circle.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.red)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
