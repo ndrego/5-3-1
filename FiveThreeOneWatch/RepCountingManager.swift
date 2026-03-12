@@ -143,7 +143,7 @@ final class PeakDetector: @unchecked Sendable {
     private var threshold: Double
     private var lowThreshold: Double
     private var minInterval: TimeInterval
-    private let smoothingAlpha: Double = 0.3
+    private let smoothingAlpha: Double = 0.45
 
     private var smoothedValue: Double = 0
     private var lastPeakTime: TimeInterval = 0
@@ -353,18 +353,18 @@ enum LiftMotionProfile: CaseIterable {
 
     var accelerationThreshold: Double {
         switch self {
-        case .squat: return 0.4
-        case .bench: return 0.3
-        case .deadlift: return 0.5
-        case .overheadPress: return 0.4
-        case .row: return 0.35
-        case .curl: return 0.2
-        case .pullUp: return 0.4
-        case .extension_: return 0.2
-        case .raiseFly: return 0.2
-        case .lunge: return 0.4
-        case .core: return 0.25
-        case .other: return 0.3
+        case .squat: return 0.50
+        case .bench: return 0.40
+        case .deadlift: return 0.65
+        case .overheadPress: return 0.50
+        case .row: return 0.45
+        case .curl: return 0.28
+        case .pullUp: return 0.50
+        case .extension_: return 0.25
+        case .raiseFly: return 0.28
+        case .lunge: return 0.50
+        case .core: return 0.32
+        case .other: return 0.40
         }
     }
 

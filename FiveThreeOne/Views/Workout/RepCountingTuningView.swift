@@ -18,18 +18,18 @@ struct RepCountingTuningView: View {
     }
 
     private let profiles: [ProfileTuning] = [
-        .init(key: "squat", name: "Squat", defaultThreshold: 0.4, defaultTempo: 1.5),
-        .init(key: "bench", name: "Bench", defaultThreshold: 0.3, defaultTempo: 1.2),
-        .init(key: "deadlift", name: "Deadlift", defaultThreshold: 0.5, defaultTempo: 2.0),
-        .init(key: "ohp", name: "OHP", defaultThreshold: 0.4, defaultTempo: 1.5),
-        .init(key: "row", name: "Row", defaultThreshold: 0.35, defaultTempo: 1.2),
-        .init(key: "curl", name: "Curl", defaultThreshold: 0.2, defaultTempo: 1.0),
-        .init(key: "pullup", name: "Pull-up / Pulldown", defaultThreshold: 0.4, defaultTempo: 1.5),
-        .init(key: "extension", name: "Extension / Pushdown", defaultThreshold: 0.2, defaultTempo: 0.8),
-        .init(key: "raise", name: "Raise / Fly", defaultThreshold: 0.2, defaultTempo: 1.0),
-        .init(key: "lunge", name: "Lunge / Split Squat", defaultThreshold: 0.4, defaultTempo: 1.5),
-        .init(key: "core", name: "Core", defaultThreshold: 0.25, defaultTempo: 0.8),
-        .init(key: "other", name: "Other", defaultThreshold: 0.3, defaultTempo: 1.0),
+        .init(key: "squat", name: "Squat", defaultThreshold: 0.50, defaultTempo: 1.5),
+        .init(key: "bench", name: "Bench", defaultThreshold: 0.40, defaultTempo: 1.2),
+        .init(key: "deadlift", name: "Deadlift", defaultThreshold: 0.65, defaultTempo: 2.0),
+        .init(key: "ohp", name: "OHP", defaultThreshold: 0.50, defaultTempo: 1.5),
+        .init(key: "row", name: "Row", defaultThreshold: 0.45, defaultTempo: 1.2),
+        .init(key: "curl", name: "Curl", defaultThreshold: 0.28, defaultTempo: 1.0),
+        .init(key: "pullup", name: "Pull-up / Pulldown", defaultThreshold: 0.50, defaultTempo: 1.5),
+        .init(key: "extension", name: "Extension / Pushdown", defaultThreshold: 0.25, defaultTempo: 0.8),
+        .init(key: "raise", name: "Raise / Fly", defaultThreshold: 0.28, defaultTempo: 1.0),
+        .init(key: "lunge", name: "Lunge / Split Squat", defaultThreshold: 0.50, defaultTempo: 1.5),
+        .init(key: "core", name: "Core", defaultThreshold: 0.32, defaultTempo: 0.8),
+        .init(key: "other", name: "Other", defaultThreshold: 0.40, defaultTempo: 1.0),
     ]
 
     var body: some View {
