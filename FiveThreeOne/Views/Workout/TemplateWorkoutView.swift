@@ -23,11 +23,15 @@ struct TemplateWorkoutView: View {
     @State private var showingSupersetPicker = false
     @State private var supersetSourceIndex: Int?
     @State private var heartRateManager = HeartRateManager()
-    @State private var phoneConnectivity = PhoneConnectivityManager()
+    private var phoneConnectivity: PhoneConnectivityManager { .shared }
     @State private var showPlatesForSet: Set<UUID> = []
     @State private var showRepTuning = false
     @State private var selectedExerciseForDetail: String?
     @State private var showDiscardConfirmation = false
+    @State private var detectedRepCounts: [UUID: Int] = [:]
+    @State private var activeTimerSetID: UUID?
+    @State private var timerSecondsRemaining: Int = 0
+    @State private var exerciseTimerTask: Task<Void, Never>?
 
     private var userSettings: UserSettings? { settings.first }
     private var roundTo: Double { userSettings?.roundTo ?? 5.0 }
@@ -196,7 +200,6 @@ struct TemplateWorkoutView: View {
             guard !initialized else { return }
             initialized = true
             initializeExercises()
-            phoneConnectivity.activate()
         }
         .task {
             if heartRateManager.isAvailable {
@@ -210,6 +213,18 @@ struct TemplateWorkoutView: View {
                 heartRateManager.startMonitoring()
             }
             #endif
+        }
+        .onChange(of: phoneConnectivity.watchHeartRateUpdateCount) {
+            let bpm = phoneConnectivity.watchHeartRate
+            if bpm > 0 {
+                heartRateManager.recordBPM(bpm)
+            }
+        }
+        .onChange(of: phoneConnectivity.isWatchReachable) { _, reachable in
+            if reachable && workoutStarted {
+                phoneConnectivity.sendWorkoutStarted()
+                sendWatchContext()
+            }
         }
         .onChange(of: restTimer.isRunning) { _, isRunning in
             if !isRunning {
@@ -393,15 +408,29 @@ struct TemplateWorkoutView: View {
                 }
             }
 
-            // Unlink button
-            Button {
-                for idx in group.indices {
-                    exerciseStates[idx].supersetGroup = nil
+            HStack {
+                // Add exercise to this superset
+                Button {
+                    supersetSourceIndex = group.indices.first
+                    showingSupersetPicker = true
+                } label: {
+                    Label("Add to superset", systemImage: "plus.circle")
+                        .font(.caption)
+                        .foregroundStyle(.purple)
                 }
-            } label: {
-                Label("Unlink Superset", systemImage: "link.badge.plus")
-                    .font(.caption)
-                    .foregroundStyle(.red)
+
+                Spacer()
+
+                // Unlink button
+                Button {
+                    for idx in group.indices {
+                        exerciseStates[idx].supersetGroup = nil
+                    }
+                } label: {
+                    Label("Unlink", systemImage: "link.badge.plus")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
             }
         } header: {
             let firstIdx = group.indices.first!
@@ -426,12 +455,15 @@ struct TemplateWorkoutView: View {
     }
 
     private func supersetRow(exerciseIndex: Int, setIndex: Int, label: String, state: ExerciseState, isLastInRound: Bool) -> some View {
-        SupersetRowView(
+        let setID = exerciseStates[exerciseIndex].sets[setIndex].id
+        return SupersetRowView(
             setBinding: $exerciseStates[exerciseIndex].sets[setIndex],
             label: "\(label)\(setIndex + 1)",
             exerciseName: state.exerciseName,
             isMainLift: state.isMainLift,
             isAMRAP: exerciseStates[exerciseIndex].sets[setIndex].isAMRAP,
+            isTimed: state.isTimed,
+            isLastInRound: isLastInRound,
             restOptions: Self.restOptions,
             restLabel: restLabel,
             onComplete: {
@@ -439,6 +471,17 @@ struct TemplateWorkoutView: View {
                     let set = exerciseStates[exerciseIndex].sets[setIndex]
                     startRest(setRestSeconds: set.restSeconds, setType: state.isMainLift ? .main : .accessory)
                 }
+            },
+            onUnmark: {
+                sendWatchContext()
+            },
+            isTimerActive: activeTimerSetID == setID,
+            timerSecondsRemaining: activeTimerSetID == setID ? timerSecondsRemaining : 0,
+            onStartTimer: {
+                startExerciseTimer(set: $exerciseStates[exerciseIndex].sets[setIndex])
+            },
+            onStopTimer: {
+                stopExerciseTimer()
             }
         )
     }
@@ -535,24 +578,53 @@ struct TemplateWorkoutView: View {
 
     // MARK: - Superset Picker
 
+    private func supersetPickerCandidates() -> (standalone: [Int], groupReps: [(index: Int, group: Int, names: String)]) {
+        let sourceIdx = supersetSourceIndex ?? 0
+        let sourceGroup = exerciseStates[sourceIdx].supersetGroup
+        let candidates = exerciseStates.indices.filter { $0 != sourceIdx }
+
+        let standalone = candidates.filter { exerciseStates[$0].supersetGroup == nil }
+
+        var seenGroups = Set<Int>()
+        var groupReps: [(index: Int, group: Int, names: String)] = []
+        for idx in candidates {
+            guard let g = exerciseStates[idx].supersetGroup, g != sourceGroup else { continue }
+            guard seenGroups.insert(g).inserted else { continue }
+            let names = exerciseStates.filter { $0.supersetGroup == g }.map(\.exerciseName).joined(separator: " + ")
+            groupReps.append((index: idx, group: g, names: names))
+        }
+        return (standalone, groupReps)
+    }
+
     private var supersetPickerSheet: some View {
-        let candidates = exerciseStates.indices.filter { $0 != supersetSourceIndex }
+        let sourceIdx = supersetSourceIndex ?? 0
+        let (standalone, groupReps) = supersetPickerCandidates()
+
         return NavigationStack {
             List {
-                ForEach(candidates, id: \.self) { index in
-                    let state = exerciseStates[index]
-                    Button {
-                        linkSuperset(sourceIndex: supersetSourceIndex!, targetIndex: index)
-                        showingSupersetPicker = false
-                    } label: {
-                        HStack {
-                            Text(state.exerciseName)
-                            Spacer()
-                            if let sg = state.supersetGroup {
-                                Text("Superset \(sg)")
-                                    .font(.caption)
-                                    .foregroundStyle(.purple)
+                if !groupReps.isEmpty {
+                    Section("Add to Existing Superset") {
+                        ForEach(groupReps, id: \.group) { rep in
+                            Button {
+                                linkSuperset(sourceIndex: sourceIdx, targetIndex: rep.index)
+                                showingSupersetPicker = false
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(rep.names)
+                                        .font(.subheadline)
+                                }
                             }
+                        }
+                    }
+                }
+
+                Section(groupReps.isEmpty ? "Superset With" : "Create New Superset") {
+                    ForEach(standalone, id: \.self) { index in
+                        Button {
+                            linkSuperset(sourceIndex: sourceIdx, targetIndex: index)
+                            showingSupersetPicker = false
+                        } label: {
+                            Text(exerciseStates[index].exerciseName)
                         }
                     }
                 }
@@ -719,18 +791,29 @@ struct TemplateWorkoutView: View {
             }
             .buttonStyle(.borderless)
 
-            Text("\(set.wrappedValue.isComplete ? set.wrappedValue.actualReps : set.wrappedValue.targetReps)")
-                .font(.title2)
-                .fontWeight(.bold)
-                .monospacedDigit()
-                .frame(minWidth: 36)
-                .foregroundStyle(set.wrappedValue.isComplete ? .primary : .tertiary)
+            VStack(spacing: 2) {
+                Text("\(set.wrappedValue.isComplete ? set.wrappedValue.actualReps : set.wrappedValue.targetReps)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .monospacedDigit()
+                    .frame(minWidth: 36)
+                    .foregroundStyle(set.wrappedValue.isComplete ? .primary : .tertiary)
+
+                if !set.wrappedValue.isComplete, let detected = detectedRepCounts[set.wrappedValue.id], detected > 0 {
+                    Text("\(detected) detected")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             Button {
                 if set.wrappedValue.isComplete {
                     set.wrappedValue.actualReps = 0
+                    sendWatchContext()
                 } else {
-                    set.wrappedValue.actualReps = set.wrappedValue.targetReps
+                    let detected = detectedRepCounts[set.wrappedValue.id]
+                    set.wrappedValue.actualReps = detected ?? set.wrappedValue.targetReps
+                    detectedRepCounts.removeValue(forKey: set.wrappedValue.id)
                     if triggerRest {
                         startRest(setRestSeconds: set.wrappedValue.restSeconds, setType: set.wrappedValue.setType)
                     }
@@ -754,7 +837,8 @@ struct TemplateWorkoutView: View {
                 setNumber: index + 1,
                 set: exerciseState.sets[index],
                 previousSet: index < state.previousSets.count ? state.previousSets[index] : nil,
-                isBarbell: state.isBarbell
+                isBarbell: state.isBarbell,
+                isTimed: state.isTimed
             )
             .onChange(of: exerciseState.sets[index].wrappedValue.actualReps) { oldVal, newVal in
                 if oldVal == 0 && newVal > 0 {
@@ -776,9 +860,10 @@ struct TemplateWorkoutView: View {
             let prevSet = state.previousSets.count > state.sets.count
                 ? state.previousSets[state.sets.count]
                 : state.sets.last
+            let defaultTarget = state.isTimed ? 30 : 10
             let newSet = CompletedSet(
-                weight: prevSet?.weight ?? 0,
-                targetReps: prevSet?.actualReps ?? 10,
+                weight: state.isTimed ? 0 : (prevSet?.weight ?? 0),
+                targetReps: prevSet?.actualReps ?? defaultTarget,
                 setType: .accessory
             )
             exerciseState.wrappedValue.sets.append(newSet)
@@ -788,7 +873,7 @@ struct TemplateWorkoutView: View {
         }
     }
 
-    private func accessorySetRow(setNumber: Int, set: Binding<CompletedSet>, previousSet: CompletedSet?, isBarbell: Bool = false) -> some View {
+    private func accessorySetRow(setNumber: Int, set: Binding<CompletedSet>, previousSet: CompletedSet?, isBarbell: Bool = false, isTimed: Bool = false) -> some View {
         VStack(spacing: 4) {
             HStack(spacing: 12) {
                 Text("\(setNumber)")
@@ -797,41 +882,48 @@ struct TemplateWorkoutView: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 20)
 
-                // Weight — pre-filled from previous, editable
-                WeightField(value: set.weight)
-                    .padding(4)
-                    .background(Color(.tertiarySystemFill))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                if !isTimed {
+                    // Weight — pre-filled from previous, editable
+                    WeightField(value: set.weight)
+                        .padding(4)
+                        .background(Color(.tertiarySystemFill))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
 
-                Text("lbs")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    Text("lbs")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
 
-                // Reps
+                // Reps or seconds
                 RepsField(value: set.targetReps)
                     .padding(4)
                     .background(Color(.tertiarySystemFill))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 
-                Text("reps")
+                Text(isTimed ? "sec" : "reps")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
 
                 Spacer()
 
-                // Tap to confirm: copies targetReps → actualReps
-                Button {
-                    if set.wrappedValue.isComplete {
-                        set.wrappedValue.actualReps = 0
-                    } else {
-                        set.wrappedValue.actualReps = set.wrappedValue.targetReps
+                if isTimed {
+                    timedSetButton(set: set)
+                } else {
+                    // Tap to confirm: copies targetReps → actualReps
+                    Button {
+                        if set.wrappedValue.isComplete {
+                            set.wrappedValue.actualReps = 0
+                            sendWatchContext()
+                        } else {
+                            set.wrappedValue.actualReps = set.wrappedValue.targetReps
+                        }
+                    } label: {
+                        Image(systemName: set.wrappedValue.isComplete ? "checkmark.circle.fill" : "circle")
+                            .font(.title2)
+                            .foregroundStyle(set.wrappedValue.isComplete ? .green : .secondary)
                     }
-                } label: {
-                    Image(systemName: set.wrappedValue.isComplete ? "checkmark.circle.fill" : "circle")
-                        .font(.title2)
-                        .foregroundStyle(set.wrappedValue.isComplete ? .green : .secondary)
+                    .frame(width: 44, height: 44)
                 }
-                .frame(width: 44, height: 44)
             }
 
             // Plate breakdown for barbell accessories — tap to toggle
@@ -864,6 +956,90 @@ struct TemplateWorkoutView: View {
             }
         }
         .listRowBackground(set.wrappedValue.isComplete ? Color.green.opacity(0.08) : nil)
+    }
+
+    // MARK: - Exercise Timer (Plank, etc.)
+
+    @ViewBuilder
+    private func timedSetButton(set: Binding<CompletedSet>) -> some View {
+        let setID = set.wrappedValue.id
+        let isTimerActive = activeTimerSetID == setID
+
+        if set.wrappedValue.isComplete {
+            // Already done — tap to undo
+            Button {
+                set.wrappedValue.actualReps = 0
+                sendWatchContext()
+            } label: {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.green)
+            }
+            .frame(width: 44, height: 44)
+        } else if isTimerActive {
+            // Timer running — show countdown, tap to cancel
+            Button {
+                stopExerciseTimer()
+            } label: {
+                Text(formatExerciseTimer(timerSecondsRemaining))
+                    .font(.body.monospacedDigit())
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.orange)
+            }
+            .frame(minWidth: 54, minHeight: 44)
+        } else {
+            // Not started — tap to start countdown
+            Button {
+                startExerciseTimer(set: set)
+            } label: {
+                Image(systemName: "play.circle")
+                    .font(.title2)
+                    .foregroundStyle(.orange)
+            }
+            .frame(width: 44, height: 44)
+        }
+    }
+
+    private func startExerciseTimer(set: Binding<CompletedSet>) {
+        stopExerciseTimer()
+        let seconds = set.wrappedValue.targetReps
+        guard seconds > 0 else { return }
+        activeTimerSetID = set.wrappedValue.id
+        timerSecondsRemaining = seconds
+
+        // Capture the set ID to match later
+        let setID = set.wrappedValue.id
+        exerciseTimerTask = Task {
+            while !Task.isCancelled && timerSecondsRemaining > 0 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { break }
+                timerSecondsRemaining -= 1
+            }
+            if !Task.isCancelled && timerSecondsRemaining <= 0 {
+                // Timer finished — complete the set
+                activeTimerSetID = nil
+                // Find and complete the set by ID
+                for i in exerciseStates.indices {
+                    if let j = exerciseStates[i].sets.firstIndex(where: { $0.id == setID }) {
+                        exerciseStates[i].sets[j].actualReps = exerciseStates[i].sets[j].targetReps
+                        startRest(setRestSeconds: exerciseStates[i].sets[j].restSeconds, setType: .accessory)
+                        break
+                    }
+                }
+            }
+        }
+    }
+
+    private func stopExerciseTimer() {
+        exerciseTimerTask?.cancel()
+        exerciseTimerTask = nil
+        activeTimerSetID = nil
+    }
+
+    private func formatExerciseTimer(_ seconds: Int) -> String {
+        let m = seconds / 60
+        let s = seconds % 60
+        return m > 0 ? String(format: "%d:%02d", m, s) : "\(s)s"
     }
 
     // MARK: - Rest Timer
@@ -931,7 +1107,8 @@ struct TemplateWorkoutView: View {
                     weight: set.weight,
                     targetReps: set.targetReps,
                     isAMRAP: set.isAMRAP,
-                    setType: set.setType.rawValue
+                    setType: set.setType.rawValue,
+                    repCountingEnabled: userSettings?.repCountingEnabled ?? false
                 )
 
                 // Also send completion progress
@@ -953,7 +1130,10 @@ struct TemplateWorkoutView: View {
         for i in exerciseStates.indices {
             for j in exerciseStates[i].sets.indices {
                 if !exerciseStates[i].sets[j].isComplete {
-                    exerciseStates[i].sets[j].actualReps = exerciseStates[i].sets[j].targetReps
+                    let setId = exerciseStates[i].sets[j].id
+                    let detected = detectedRepCounts[setId]
+                    exerciseStates[i].sets[j].actualReps = detected ?? exerciseStates[i].sets[j].targetReps
+                    detectedRepCounts.removeValue(forKey: setId)
                     startRest(
                         setRestSeconds: exerciseStates[i].sets[j].restSeconds,
                         setType: exerciseStates[i].sets[j].setType
@@ -987,12 +1167,12 @@ struct TemplateWorkoutView: View {
         }
     }
 
-    /// Updates the current incomplete set's reps from watch accelerometer count.
+    /// Updates the detected rep count from the watch accelerometer (display-only, does not complete the set).
     private func updateCurrentSetReps(_ count: Int) {
         for i in exerciseStates.indices {
             for j in exerciseStates[i].sets.indices {
                 if !exerciseStates[i].sets[j].isComplete {
-                    exerciseStates[i].sets[j].actualReps = count
+                    detectedRepCounts[exerciseStates[i].sets[j].id] = count
                     return
                 }
             }
@@ -1028,6 +1208,7 @@ struct TemplateWorkoutView: View {
                 let unilateral = exerciseByName[entry.exerciseName]?.isUnilateral ?? false
 
                 let equipment = exerciseByName[entry.exerciseName]?.equipmentType ?? "barbell"
+                let timed = exerciseByName[entry.exerciseName]?.isTimed ?? false
 
                 var state = ExerciseState(
                     id: entry.id,
@@ -1039,7 +1220,8 @@ struct TemplateWorkoutView: View {
                     previousBestSummary: previous?.bestSetSummary,
                     supersetGroup: entry.supersetGroup,
                     isUnilateral: unilateral,
-                    equipmentType: equipment
+                    equipmentType: equipment,
+                    isTimed: timed
                 )
 
                 if let lift = entry.lift, let cycle {
@@ -1068,12 +1250,21 @@ struct TemplateWorkoutView: View {
                         )
                     }
                 } else {
+                    let defaultTarget = timed ? 30 : 10
                     let setCount = max(previous?.sets.count ?? 3, 3)
                     state.sets = (0..<setCount).map { i in
                         let prev = i < (previous?.sets.count ?? 0) ? previous?.sets[i] : nil
+                        let target: Int
+                        if timed {
+                            // Use previous targetReps if it looks like seconds (>=15), otherwise default
+                            let prevTarget = prev?.targetReps ?? 0
+                            target = prevTarget >= 15 ? prevTarget : defaultTarget
+                        } else {
+                            target = prev?.actualReps ?? defaultTarget
+                        }
                         return CompletedSet(
-                            weight: prev?.weight ?? 0,
-                            targetReps: prev?.actualReps ?? 10,
+                            weight: timed ? 0 : (prev?.weight ?? 0),
+                            targetReps: target,
                             setType: .accessory
                         )
                     }
@@ -1285,6 +1476,7 @@ struct ExerciseState: Identifiable {
     var supersetGroup: Int?
     var isUnilateral: Bool = false
     var equipmentType: String = "barbell"
+    var isTimed: Bool = false
 
     var isMainLift: Bool { mainLift != nil }
     var isBarbell: Bool { equipmentType == "barbell" }
@@ -1444,6 +1636,12 @@ struct WorkoutBottomBar: View {
             // Rest timer (only when active)
             if restTimer.isRunning {
                 RestTimerView(timer: restTimer, currentHR: heartRateManager.currentHR)
+                    .onChange(of: restTimer.totalSeconds) {
+                        PhoneConnectivityManager.shared.sendTimerAdjusted(
+                            remainingSeconds: restTimer.remainingSeconds,
+                            totalSeconds: restTimer.totalSeconds
+                        )
+                    }
             }
         }
         .padding(.horizontal)
@@ -1488,9 +1686,17 @@ struct SupersetRowView: View {
     let exerciseName: String
     let isMainLift: Bool
     let isAMRAP: Bool
+    let isTimed: Bool
+    let isLastInRound: Bool
     let restOptions: [Int]
     let restLabel: (Int) -> String
     let onComplete: () -> Void
+    var onUnmark: (() -> Void)?
+    // Timer state for timed exercises (passed from parent)
+    var isTimerActive: Bool = false
+    var timerSecondsRemaining: Int = 0
+    var onStartTimer: (() -> Void)?
+    var onStopTimer: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 8) {
@@ -1506,14 +1712,16 @@ struct SupersetRowView: View {
                 .lineLimit(1)
                 .frame(width: 80, alignment: .leading)
 
-            WeightField(value: $setBinding.weight, width: 55)
-                .padding(4)
-                .background(Color(.tertiarySystemFill))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+            if !isTimed {
+                WeightField(value: $setBinding.weight, width: 55)
+                    .padding(4)
+                    .background(Color(.tertiarySystemFill))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
 
             if isMainLift {
                 Spacer()
-                supersetRestMenu
+                if isLastInRound { supersetRestMenu }
                 supersetRepStepper
             } else {
                 RepsField(value: $setBinding.targetReps, width: 35)
@@ -1521,22 +1729,32 @@ struct SupersetRowView: View {
                     .background(Color(.tertiarySystemFill))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 
+                if isTimed {
+                    Text("sec")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+
                 Spacer()
 
-                supersetRestMenu
+                if isLastInRound { supersetRestMenu }
 
-                Button {
-                    let wasComplete = setBinding.isComplete
-                    if wasComplete {
-                        setBinding.actualReps = 0
-                    } else {
-                        setBinding.actualReps = setBinding.targetReps
-                        onComplete()
+                if isTimed {
+                    timedButton
+                } else {
+                    Button {
+                        if setBinding.isComplete {
+                            setBinding.actualReps = 0
+                            onUnmark?()
+                        } else {
+                            setBinding.actualReps = setBinding.targetReps
+                            onComplete()
+                        }
+                    } label: {
+                        Image(systemName: setBinding.isComplete ? "checkmark.circle.fill" : "circle")
+                            .font(.title3)
+                            .foregroundStyle(setBinding.isComplete ? .green : .secondary)
                     }
-                } label: {
-                    Image(systemName: setBinding.isComplete ? "checkmark.circle.fill" : "circle")
-                        .font(.title3)
-                        .foregroundStyle(setBinding.isComplete ? .green : .secondary)
                 }
             }
         }
@@ -1548,6 +1766,40 @@ struct SupersetRowView: View {
                 }
             }
         )
+    }
+
+    @ViewBuilder
+    private var timedButton: some View {
+        if setBinding.isComplete {
+            Button {
+                setBinding.actualReps = 0
+                onUnmark?()
+            } label: {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(.green)
+            }
+        } else if isTimerActive {
+            Button {
+                onStopTimer?()
+            } label: {
+                let m = timerSecondsRemaining / 60
+                let s = timerSecondsRemaining % 60
+                Text(m > 0 ? String(format: "%d:%02d", m, s) : "\(s)s")
+                    .font(.caption.monospacedDigit())
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.orange)
+            }
+            .frame(minWidth: 44)
+        } else {
+            Button {
+                onStartTimer?()
+            } label: {
+                Image(systemName: "play.circle")
+                    .font(.title3)
+                    .foregroundStyle(.orange)
+            }
+        }
     }
 
     private var supersetRestMenu: some View {
@@ -1602,6 +1854,7 @@ struct SupersetRowView: View {
             Button {
                 if setBinding.isComplete {
                     setBinding.actualReps = 0
+                    onUnmark?()
                 } else {
                     setBinding.actualReps = setBinding.targetReps
                     onComplete()

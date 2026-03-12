@@ -15,6 +15,9 @@ struct ContentView: View {
 }
 
 struct MainTabView: View {
+    @Environment(\.modelContext) private var modelContext
+    private var connectivity: PhoneConnectivityManager { .shared }
+
     var body: some View {
         TabView {
             TemplateListView()
@@ -36,6 +39,11 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Settings", systemImage: "gear")
                 }
+        }
+        .onAppear {
+            connectivity.activate()
+            connectivity.clearWorkoutState()
+            Exercise.seedDefaults(in: modelContext)
         }
     }
 }

@@ -91,21 +91,8 @@ struct TemplateEditView: View {
                             Spacer()
 
                             // Superset link/unlink
-                            if let group = entries[index].supersetGroup {
-                                Button {
-                                    entries[index].supersetGroup = nil
-                                    // If only one remains in group, unlink it too
-                                    let remaining = entries.indices.filter { entries[$0].supersetGroup == group }
-                                    if remaining.count == 1 {
-                                        entries[remaining[0]].supersetGroup = nil
-                                    }
-                                } label: {
-                                    Image(systemName: "link.badge.plus")
-                                        .font(.caption)
-                                        .foregroundStyle(supersetColor(for: group))
-                                }
-                                .buttonStyle(.plain)
-                            } else if supersetLinkingIndex == index {
+                            if supersetLinkingIndex == index {
+                                // This exercise is the linking source — show cancel
                                 Button {
                                     supersetLinkingIndex = nil
                                 } label: {
@@ -115,26 +102,60 @@ struct TemplateEditView: View {
                                 }
                                 .buttonStyle(.plain)
                             } else if let sourceIdx = supersetLinkingIndex {
-                                Button {
-                                    let group = entries[sourceIdx].supersetGroup ?? nextSupersetGroup
-                                    entries[sourceIdx].supersetGroup = group
-                                    entries[index].supersetGroup = group
-                                    supersetLinkingIndex = nil
-                                } label: {
-                                    Image(systemName: "link")
-                                        .font(.caption)
-                                        .foregroundStyle(.purple)
+                                // Another exercise is being linked — tap to join/create superset
+                                let sourceGroup = entries[sourceIdx].supersetGroup
+                                let targetGroup = entries[index].supersetGroup
+                                // Don't link to exercises already in the same group
+                                if sourceGroup == nil || targetGroup == nil || sourceGroup != targetGroup {
+                                    Button {
+                                        // Use the target's group, or source's group, or create new
+                                        let group = targetGroup ?? sourceGroup ?? nextSupersetGroup
+                                        entries[sourceIdx].supersetGroup = group
+                                        entries[index].supersetGroup = group
+                                        // If merging two different groups, move all of source's old group
+                                        if let oldGroup = sourceGroup, oldGroup != group {
+                                            for i in entries.indices {
+                                                if entries[i].supersetGroup == oldGroup {
+                                                    entries[i].supersetGroup = group
+                                                }
+                                            }
+                                        }
+                                        supersetLinkingIndex = nil
+                                    } label: {
+                                        Image(systemName: "link")
+                                            .font(.caption)
+                                            .foregroundStyle(.purple)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                             } else {
-                                Button {
-                                    supersetLinkingIndex = index
-                                } label: {
-                                    Image(systemName: "link")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                HStack(spacing: 8) {
+                                    // Unlink button (only if in a group)
+                                    if let group = entries[index].supersetGroup {
+                                        Button {
+                                            entries[index].supersetGroup = nil
+                                            let remaining = entries.indices.filter { entries[$0].supersetGroup == group }
+                                            if remaining.count == 1 {
+                                                entries[remaining[0]].supersetGroup = nil
+                                            }
+                                        } label: {
+                                            Image(systemName: "link.badge.plus")
+                                                .font(.caption)
+                                                .foregroundStyle(supersetColor(for: group))
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+
+                                    // Start linking (add to superset or create new)
+                                    Button {
+                                        supersetLinkingIndex = index
+                                    } label: {
+                                        Image(systemName: entries[index].supersetGroup != nil ? "plus.circle" : "link")
+                                            .font(.caption)
+                                            .foregroundStyle(entries[index].supersetGroup != nil ? .purple : .secondary)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                             }
 
                             Button {
