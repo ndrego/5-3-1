@@ -38,6 +38,23 @@ final class WatchConnectivityManager {
         delegateHelper?.send(["type": "heartRate", "bpm": bpm])
     }
 
+    func sendCalibrationData(profileKey: String, magnitudes: [Double], timestamps: [Double]) {
+        delegateHelper?.send([
+            "type": "calibrationData",
+            "profileKey": profileKey,
+            "magnitudes": magnitudes,
+            "timestamps": timestamps
+        ])
+    }
+
+    func handleCalibrate(profileKey: String) {
+        print("[WC] Starting calibration for profile: \(profileKey)")
+        repCountingManager?.onCalibrationSamples = { [weak self] magnitudes, timestamps in
+            self?.sendCalibrationData(profileKey: profileKey, magnitudes: magnitudes, timestamps: timestamps)
+        }
+        repCountingManager?.startCalibration()
+    }
+
     // MARK: - Message Handling (called from delegate helper on MainActor)
 
     func handleMessage(
@@ -234,6 +251,15 @@ final class WCSessionDelegateHelper: NSObject, WCSessionDelegate, @unchecked Sen
         let tempo = message["tempo"] as? [String: Double]
 
         guard let type else { return }
+
+        // Handle calibrate separately — needs its own profileKey field
+        if type == "calibrate" {
+            let profileKey = message["profileKey"] as? String ?? ""
+            Task { @MainActor [weak self] in
+                self?.manager?.handleCalibrate(profileKey: profileKey)
+            }
+            return
+        }
 
         Task { @MainActor [weak self] in
             // Update rep counting from currentSet message so it's set before handleMessage checks it

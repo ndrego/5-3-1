@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var showingImport = false
     @State private var showingBackup = false
     @State private var showingNewCycleSheet = false
+    @State private var showRepTuning = false
 
     private var userSettings: UserSettings? { settings.first }
     private var currentCycle: Cycle? { cycles.first(where: { !$0.isComplete }) ?? cycles.first }
@@ -166,6 +167,19 @@ struct SettingsView: View {
                             get: { s.repCountingEnabled ?? false },
                             set: { s.repCountingEnabled = $0 }
                         ))
+                        if s.repCountingEnabled ?? false {
+                            Button {
+                                showRepTuning = true
+                            } label: {
+                                HStack {
+                                    Text("Tuning & Calibration")
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(.tertiary)
+                                }
+                            }
+                        }
                     } header: {
                         Text("Apple Watch")
                     } footer: {
@@ -223,6 +237,11 @@ struct SettingsView: View {
                         startNewCycle(increments: increments)
                     }
                     .presentationDetents([.medium])
+                }
+            }
+            .sheet(isPresented: $showRepTuning) {
+                RepCountingTuningView { sensitivity, tempo in
+                    PhoneConnectivityManager.shared.sendRepTuning(sensitivity: sensitivity, tempo: tempo)
                 }
             }
         }

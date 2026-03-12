@@ -14,6 +14,18 @@ final class RepCountingManager {
     var sensitivityOverrides: [String: Double] = [:]  // profile key -> multiplier (1.0 = default)
     var tempoOverrides: [String: Double] = [:]        // profile key -> min seconds between reps
 
+    // Calibration
+    enum CalibrationPhase: Equatable {
+        case idle
+        case countdown(Int)
+        case recording
+        case sending
+    }
+    var calibrationPhase: CalibrationPhase = .idle
+    var onCalibrationSamples: ((_ magnitudes: [Double], _ timestamps: [Double]) -> Void)?
+    private var calibrationRecorder: CalibrationRecorder?
+    private var calibrationTask: Task<Void, Never>?
+
     private var peakDetector: PeakDetector?
     private var motionHelper: MotionHelper?
 
@@ -119,6 +131,71 @@ final class RepCountingManager {
         repCount = 0
     }
 
+    // MARK: - Calibration
+
+    func startCalibration() {
+        guard calibrationPhase == .idle else { return }
+        print("[Calibration] Starting calibration sequence")
+        // Stop any existing rep counting
+        motionHelper?.stop()
+        motionHelper = nil
+        peakDetector = nil
+        isActive = false
+
+        calibrationTask = Task {
+            for i in stride(from: 3, through: 1, by: -1) {
+                calibrationPhase = .countdown(i)
+                WKInterfaceDevice.current().play(.click)
+                try? await Task.sleep(for: .seconds(1))
+            }
+
+            calibrationPhase = .recording
+            WKInterfaceDevice.current().play(.start)
+
+            let recorder = CalibrationRecorder()
+            self.calibrationRecorder = recorder
+            recorder.start()
+
+            // Record up to 20 seconds — user can tap Done to finish early
+            try? await Task.sleep(for: .seconds(20))
+
+            // If still recording (wasn't finished early), send now
+            if calibrationPhase == .recording {
+                sendCalibrationData()
+            }
+        }
+    }
+
+    /// Called when the user taps Done on the watch during recording.
+    func finishCalibration() {
+        guard calibrationPhase == .recording else { return }
+        calibrationTask?.cancel()
+        sendCalibrationData()
+    }
+
+    private func sendCalibrationData() {
+        calibrationRecorder?.stop()
+        calibrationPhase = .sending
+
+        let (magnitudes, timestamps) = calibrationRecorder?.getSamples() ?? ([], [])
+        print("[Calibration] Recorded \(magnitudes.count) samples, sending to phone")
+
+        onCalibrationSamples?(magnitudes, timestamps)
+
+        WKInterfaceDevice.current().play(.success)
+        calibrationRecorder = nil
+        calibrationTask = nil
+        calibrationPhase = .idle
+    }
+
+    func cancelCalibration() {
+        calibrationTask?.cancel()
+        calibrationRecorder?.stop()
+        calibrationRecorder = nil
+        calibrationTask = nil
+        calibrationPhase = .idle
+    }
+
     // MARK: - Simulation
 
     #if DEBUG && targetEnvironment(simulator)
@@ -208,7 +285,7 @@ final class PeakDetector: @unchecked Sendable {
 /// Uses device motion at 50Hz for gravity-removed acceleration via sensor fusion.
 final class MotionHelper: @unchecked Sendable {
     // Apple requires only ONE CMMotionManager per app
-    nonisolated(unsafe) private static let motionManager = CMMotionManager()
+    nonisolated(unsafe) static let sharedMotionManager = CMMotionManager()
     private let motionQueue: OperationQueue = {
         let q = OperationQueue()
         q.maxConcurrentOperationCount = 1
@@ -225,7 +302,7 @@ final class MotionHelper: @unchecked Sendable {
     }
 
     func start() {
-        let mm = Self.motionManager
+        let mm = Self.sharedMotionManager
 
         // Stop any prior updates on the shared manager
         mm.stopDeviceMotionUpdates()
@@ -285,8 +362,8 @@ final class MotionHelper: @unchecked Sendable {
     }
 
     func stop() {
-        Self.motionManager.stopDeviceMotionUpdates()
-        Self.motionManager.stopAccelerometerUpdates()
+        Self.sharedMotionManager.stopDeviceMotionUpdates()
+        Self.sharedMotionManager.stopAccelerometerUpdates()
     }
 }
 
@@ -416,5 +493,64 @@ enum LiftMotionProfile: CaseIterable {
             return .bench
         }
         return .other
+    }
+}
+
+// MARK: - Calibration Recorder (non-MainActor)
+
+/// Records raw acceleration magnitudes for calibration analysis on the phone.
+final class CalibrationRecorder: @unchecked Sendable {
+    private let motionQueue: OperationQueue = {
+        let q = OperationQueue()
+        q.maxConcurrentOperationCount = 1
+        q.qualityOfService = .userInitiated
+        return q
+    }()
+    private let lock = NSLock()
+    private var _magnitudes: [Double] = []
+    private var _timestamps: [Double] = []
+
+    func getSamples() -> (magnitudes: [Double], timestamps: [Double]) {
+        lock.lock()
+        defer { lock.unlock() }
+        return (_magnitudes, _timestamps)
+    }
+
+    func start() {
+        let mm = MotionHelper.sharedMotionManager
+        mm.stopDeviceMotionUpdates()
+        mm.stopAccelerometerUpdates()
+
+        if mm.isDeviceMotionAvailable {
+            mm.deviceMotionUpdateInterval = 1.0 / 50.0
+            print("[Calibration] Starting device motion recording at 50Hz")
+            mm.startDeviceMotionUpdates(to: motionQueue) { [weak self] data, error in
+                guard let self, let data, error == nil else { return }
+                let ua = data.userAcceleration
+                let magnitude = sqrt(ua.x * ua.x + ua.y * ua.y + ua.z * ua.z)
+                self.lock.lock()
+                self._magnitudes.append(magnitude)
+                self._timestamps.append(data.timestamp)
+                self.lock.unlock()
+            }
+        } else if mm.isAccelerometerAvailable {
+            mm.accelerometerUpdateInterval = 1.0 / 50.0
+            print("[Calibration] Starting accelerometer recording at 50Hz (fallback)")
+            mm.startAccelerometerUpdates(to: motionQueue) { [weak self] data, error in
+                guard let self, let data, error == nil else { return }
+                let accel = data.acceleration
+                let rawMag = sqrt(accel.x * accel.x + accel.y * accel.y + accel.z * accel.z)
+                let magnitude = abs(rawMag - 1.0)
+                self.lock.lock()
+                self._magnitudes.append(magnitude)
+                self._timestamps.append(data.timestamp)
+                self.lock.unlock()
+            }
+        }
+    }
+
+    func stop() {
+        MotionHelper.sharedMotionManager.stopDeviceMotionUpdates()
+        MotionHelper.sharedMotionManager.stopAccelerometerUpdates()
     }
 }

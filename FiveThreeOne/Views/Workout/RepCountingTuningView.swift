@@ -8,6 +8,11 @@ struct RepCountingTuningView: View {
     let onTuningChanged: (_ sensitivity: [String: Double], _ tempo: [String: Double]) -> Void
 
     private var userSettings: UserSettings? { settings.first }
+    private let phoneConnectivity = PhoneConnectivityManager.shared
+
+    @State private var calibratingKey: String?
+    @State private var lastCalibratedKey: String?
+    @State private var calibrationStatus: String?
 
     private struct ProfileTuning: Identifiable {
         let key: String
@@ -74,6 +79,24 @@ struct RepCountingTuningView: View {
                                 step: 0.1
                             )
                         }
+
+                        Button {
+                            startCalibration(for: profile)
+                        } label: {
+                            HStack {
+                                Label("Calibrate", systemImage: "waveform")
+                                Spacer()
+                                if calibratingKey == profile.key {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                } else if lastCalibratedKey == profile.key, let calibrationStatus {
+                                    Text(calibrationStatus)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .disabled(calibratingKey != nil)
                     }
                 }
 
@@ -93,7 +116,53 @@ struct RepCountingTuningView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .onChange(of: phoneConnectivity.calibrationDataReceivedCount) {
+                processCalibrationData()
+            }
         }
+    }
+
+    private func startCalibration(for profile: ProfileTuning) {
+        calibratingKey = profile.key
+        lastCalibratedKey = nil
+        calibrationStatus = nil
+        phoneConnectivity.sendCalibrate(profileKey: profile.key)
+    }
+
+    private func processCalibrationData() {
+        guard let key = phoneConnectivity.calibrationProfileKey,
+              let magnitudes = phoneConnectivity.calibrationMagnitudes,
+              let timestamps = phoneConnectivity.calibrationTimestamps else { return }
+
+        guard let profile = profiles.first(where: { $0.key == key }) else { return }
+
+        if let result = CalibrationAnalyzer.analyze(
+            magnitudes: magnitudes,
+            timestamps: timestamps,
+            baseThreshold: profile.defaultThreshold,
+            baseTempo: profile.defaultTempo
+        ) {
+            if userSettings?.repSensitivity == nil {
+                userSettings?.repSensitivity = [:]
+            }
+            if userSettings?.repTempo == nil {
+                userSettings?.repTempo = [:]
+            }
+            userSettings?.repSensitivity?[key] = result.sensitivityMultiplier
+            userSettings?.repTempo?[key] = result.tempo
+            calibrationStatus = "\(result.peaksFound) reps detected"
+            sendTuning()
+        } else {
+            calibrationStatus = "Could not detect reps"
+        }
+
+        lastCalibratedKey = key
+        calibratingKey = nil
+
+        // Clear received data
+        phoneConnectivity.calibrationProfileKey = nil
+        phoneConnectivity.calibrationMagnitudes = nil
+        phoneConnectivity.calibrationTimestamps = nil
     }
 
     // MARK: - Helpers

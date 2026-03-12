@@ -13,9 +13,59 @@ struct WatchHomeView: View {
                 waitingView
             }
         }
+        .overlay {
+            if repCountingManager.calibrationPhase != .idle {
+                calibrationOverlay
+            }
+        }
         .task {
             await workoutManager.requestHRAuthorization()
         }
+    }
+
+    // MARK: - Calibration Overlay
+
+    private var calibrationOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.9)
+            VStack(spacing: 12) {
+                switch repCountingManager.calibrationPhase {
+                case .idle:
+                    EmptyView()
+                case .countdown(let n):
+                    Text("\(n)")
+                        .font(.system(size: 60, weight: .bold, design: .rounded))
+                        .foregroundStyle(.yellow)
+                    Text("Get ready...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                case .recording:
+                    Image(systemName: "waveform")
+                        .font(.title)
+                        .foregroundStyle(.green)
+                    Text("Do 3 reps now")
+                        .font(.headline)
+                        .foregroundStyle(.green)
+                    Text("at normal pace")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Button {
+                        repCountingManager.finishCalibration()
+                    } label: {
+                        Text("Done")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+                case .sending:
+                    ProgressView()
+                    Text("Sending data...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .ignoresSafeArea()
     }
 
     // MARK: - Waiting

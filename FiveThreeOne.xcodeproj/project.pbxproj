@@ -15,6 +15,7 @@
 		1364187D2F741593678B9593 /* TemplateWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */; };
 		20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB2E2E170599DCA54721387 /* PreviewData.swift */; };
 		21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE467A519D792ED441F742E /* PlateCalculator.swift */; };
+		227FD27E1CE65EEA80E3A3AE /* CalibrationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8509E7A820AF565D128DAB36 /* CalibrationAnalyzer.swift */; };
 		230643B5A9143AA28050C77B /* WatchHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A24EB0B7C4C3A70DA0FF949 /* WatchHomeView.swift */; };
 		29A582EAE6A0853AD03A3F06 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40E82BFB0327F6EAF318C1A /* WatchConnectivityManager.swift */; };
 		2C8579C905B99A76D513AE9E /* TemplateListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CF49725EDCFA52F8B30B6D /* TemplateListView.swift */; };
@@ -122,6 +123,7 @@
 		7EF430C5547890FEBB16A3B4 /* ProgramEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramEngine.swift; sourceTree = "<group>"; };
 		82F0A1C31E0BDF2E0528B288 /* StrongImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongImportView.swift; sourceTree = "<group>"; };
 		84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateWorkoutView.swift; sourceTree = "<group>"; };
+		8509E7A820AF565D128DAB36 /* CalibrationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationAnalyzer.swift; sourceTree = "<group>"; };
 		8AB28C01FBAFE98AAC30FACB /* ScreenshotTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ScreenshotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8EE430402E11A12C53BCB6D2 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		9150FB2613AAB2AEF582064B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -294,6 +296,7 @@
 			isa = PBXGroup;
 			children = (
 				3A52D1444397B119B709FC76 /* BackupManager.swift */,
+				8509E7A820AF565D128DAB36 /* CalibrationAnalyzer.swift */,
 				2173EE38B16F9B9F345C5575 /* DemoDataSeeder.swift */,
 				EF5B09F98212E7C06D938D93 /* HeartRateManager.swift */,
 				4BE467A519D792ED441F742E /* PlateCalculator.swift */,
@@ -495,6 +498,7 @@
 				970A3EACC5C7C53F01DD8839 /* AccessorySetRowView.swift in Sources */,
 				E6E8F2A2331CDD52521F0423 /* BackupManager.swift in Sources */,
 				025945D4757D7CD0B5F4BF2B /* BackupRestoreView.swift in Sources */,
+				227FD27E1CE65EEA80E3A3AE /* CalibrationAnalyzer.swift in Sources */,
 				D0E5048E00A903C81B8F2832 /* CompletedSet.swift in Sources */,
 				7DF41D7559FBD0BE6D967BB8 /* CompletedWorkout.swift in Sources */,
 				AF77BCED810D2D390F60CFCD /* ContentView.swift in Sources */,

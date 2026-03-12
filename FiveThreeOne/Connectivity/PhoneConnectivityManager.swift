@@ -15,6 +15,12 @@ final class PhoneConnectivityManager: NSObject {
     var watchHeartRate: Double = 0
     var watchHeartRateUpdateCount: Int = 0
 
+    // Calibration data received from watch
+    var calibrationProfileKey: String?
+    var calibrationMagnitudes: [Double]?
+    var calibrationTimestamps: [Double]?
+    var calibrationDataReceivedCount: Int = 0
+
     private var session: WCSession?
 
     func activate() {
@@ -60,6 +66,10 @@ final class PhoneConnectivityManager: NSObject {
 
     func sendRepTuning(sensitivity: [String: Double], tempo: [String: Double]) {
         send(["type": "repTuning", "sensitivity": sensitivity, "tempo": tempo])
+    }
+
+    func sendCalibrate(profileKey: String) {
+        send(["type": "calibrate", "profileKey": profileKey])
     }
 
     func sendWorkoutFinished() {
@@ -139,6 +149,9 @@ extension PhoneConnectivityManager: WCSessionDelegate {
         let type = message["type"] as? String
         let repCount = message["repCount"] as? Int
         let bpm = message["bpm"] as? Double
+        let profileKey = message["profileKey"] as? String
+        let magnitudes = message["magnitudes"] as? [Double]
+        let timestamps = message["timestamps"] as? [Double]
         Task { @MainActor in
             switch type {
             case "completeSet":
@@ -152,6 +165,11 @@ extension PhoneConnectivityManager: WCSessionDelegate {
                     self.watchHeartRate = bpm
                     self.watchHeartRateUpdateCount += 1
                 }
+            case "calibrationData":
+                self.calibrationProfileKey = profileKey
+                self.calibrationMagnitudes = magnitudes
+                self.calibrationTimestamps = timestamps
+                self.calibrationDataReceivedCount += 1
             default:
                 break
             }
