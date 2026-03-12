@@ -386,25 +386,81 @@ struct TemplateWorkoutView: View {
 
     // MARK: - Superset Section (interleaved)
 
+    /// Build the list of (exerciseIndex, setIndex) pairs for each round in a superset,
+    /// handling sub-groups that alternate across rounds.
+    private func supersetRounds(for group: ExerciseSectionGroup) -> [[(exerciseIndex: Int, setIndex: Int)]] {
+        let states = group.indices.map { exerciseStates[$0] }
+        let hasSubGroups = states.contains { $0.supersetSubGroup != nil }
+
+        if !hasSubGroups {
+            // Standard: all exercises every round
+            let maxSets = states.map { $0.sets.count }.max() ?? 0
+            return (0..<maxSets).map { setIndex in
+                group.indices.compactMap { idx in
+                    let state = exerciseStates[idx]
+                    guard setIndex < state.sets.count else { return nil }
+                    return (exerciseIndex: idx, setIndex: setIndex)
+                }
+            }
+        }
+
+        // Sub-group mode: exercises with nil sub-group appear every round,
+        // numbered sub-groups alternate
+        let everyRound = group.indices.filter { exerciseStates[$0].supersetSubGroup == nil }
+        let subGroupKeys = Array(Set(group.indices.compactMap { exerciseStates[$0].supersetSubGroup })).sorted()
+        guard !subGroupKeys.isEmpty else {
+            // All nil sub-groups — fall back to standard
+            let maxSets = states.map { $0.sets.count }.max() ?? 0
+            return (0..<maxSets).map { setIndex in
+                group.indices.compactMap { idx in
+                    guard setIndex < exerciseStates[idx].sets.count else { return nil }
+                    return (exerciseIndex: idx, setIndex: setIndex)
+                }
+            }
+        }
+
+        let maxSets = states.map { $0.sets.count }.max() ?? 0
+        var setCounters: [Int: Int] = [:] // exerciseIndex -> next set index
+        for idx in group.indices { setCounters[idx] = 0 }
+
+        var rounds: [[(exerciseIndex: Int, setIndex: Int)]] = []
+        for round in 0..<maxSets {
+            let activeKey = subGroupKeys[round % subGroupKeys.count]
+            let activeIndices = group.indices.filter { exerciseStates[$0].supersetSubGroup == activeKey }
+            let roundIndices = everyRound + activeIndices
+
+            var roundEntries: [(exerciseIndex: Int, setIndex: Int)] = []
+            for idx in roundIndices {
+                let setIdx = setCounters[idx] ?? 0
+                guard setIdx < exerciseStates[idx].sets.count else { continue }
+                roundEntries.append((exerciseIndex: idx, setIndex: setIdx))
+                setCounters[idx] = setIdx + 1
+            }
+            if !roundEntries.isEmpty {
+                rounds.append(roundEntries)
+            }
+        }
+        return rounds
+    }
+
     @ViewBuilder
     private func supersetSection(for group: ExerciseSectionGroup) -> some View {
         let states = group.indices.map { exerciseStates[$0] }
         let names = states.map { $0.exerciseName }.joined(separator: " + ")
-        let maxSets = states.map { $0.sets.count }.max() ?? 0
+        let rounds = supersetRounds(for: group)
 
         Section {
-            ForEach(0..<maxSets, id: \.self) { setIndex in
-                ForEach(Array(group.indices.enumerated()), id: \.offset) { offset, exerciseIdx in
-                    let state = exerciseStates[exerciseIdx]
-                    if setIndex < state.sets.count {
-                        supersetRow(
-                            exerciseIndex: exerciseIdx,
-                            setIndex: setIndex,
-                            label: supersetLabel(offset: offset),
-                            state: state,
-                            isLastInRound: offset == group.indices.count - 1
-                        )
-                    }
+            ForEach(Array(rounds.enumerated()), id: \.offset) { roundIdx, entries in
+                ForEach(Array(entries.enumerated()), id: \.offset) { entryIdx, entry in
+                    let state = exerciseStates[entry.exerciseIndex]
+                    let labelOffset = group.indices.firstIndex(of: entry.exerciseIndex) ?? 0
+                    supersetRow(
+                        exerciseIndex: entry.exerciseIndex,
+                        setIndex: entry.setIndex,
+                        label: supersetLabel(offset: labelOffset),
+                        state: state,
+                        isLastInRound: entryIdx == entries.count - 1
+                    )
                 }
             }
 
@@ -1221,7 +1277,8 @@ struct TemplateWorkoutView: View {
                     supersetGroup: entry.supersetGroup,
                     isUnilateral: unilateral,
                     equipmentType: equipment,
-                    isTimed: timed
+                    isTimed: timed,
+                    supersetSubGroup: entry.supersetSubGroup
                 )
 
                 if let lift = entry.lift, let cycle {
@@ -1251,7 +1308,8 @@ struct TemplateWorkoutView: View {
                     }
                 } else {
                     let defaultTarget = timed ? 30 : 10
-                    let setCount = max(previous?.sets.count ?? 3, 3)
+                    let templateSets = entry.defaultSets
+                    let setCount = templateSets ?? max(previous?.sets.count ?? 3, 3)
                     state.sets = (0..<setCount).map { i in
                         let prev = i < (previous?.sets.count ?? 0) ? previous?.sets[i] : nil
                         let target: Int
@@ -1454,6 +1512,7 @@ struct TemplateWorkoutView: View {
             for i in updatedEntries.indices {
                 if let state = exerciseStates.first(where: { $0.id == updatedEntries[i].id }) {
                     updatedEntries[i].supersetGroup = state.supersetGroup
+                    updatedEntries[i].supersetSubGroup = state.supersetSubGroup
                 }
             }
         }
@@ -1477,6 +1536,7 @@ struct ExerciseState: Identifiable {
     var isUnilateral: Bool = false
     var equipmentType: String = "barbell"
     var isTimed: Bool = false
+    var supersetSubGroup: Int? = nil
 
     var isMainLift: Bool { mainLift != nil }
     var isBarbell: Bool { equipmentType == "barbell" }

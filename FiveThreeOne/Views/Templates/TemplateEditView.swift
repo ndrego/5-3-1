@@ -25,6 +25,46 @@ struct TemplateEditView: View {
         Self.supersetColors[(group - 1) % Self.supersetColors.count]
     }
 
+    /// Returns true if exercises in a superset group have different set counts.
+    private func supersetHasMixedSets(group: Int) -> Bool {
+        let members = entries.filter { $0.supersetGroup == group }
+        let setCounts = Set(members.map { $0.defaultSets ?? 3 })
+        return setCounts.count > 1
+    }
+
+    @ViewBuilder
+    private func subGroupPicker(for index: Int) -> some View {
+        let current = entries[index].supersetSubGroup
+        Menu {
+            Button {
+                entries[index].supersetSubGroup = nil
+            } label: {
+                HStack {
+                    Text("Every round")
+                    if current == nil { Image(systemName: "checkmark") }
+                }
+            }
+            ForEach(1...3, id: \.self) { sg in
+                Button {
+                    entries[index].supersetSubGroup = sg
+                } label: {
+                    HStack {
+                        Text("Sub-group \(sg)")
+                        if current == sg { Image(systemName: "checkmark") }
+                    }
+                }
+            }
+        } label: {
+            Text(current.map { "Sub \($0)" } ?? "All")
+                .font(.caption2)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(current != nil ? Color.orange.opacity(0.2) : Color(.tertiarySystemFill))
+                .foregroundStyle(current != nil ? .orange : .secondary)
+                .clipShape(Capsule())
+        }
+    }
+
     var body: some View {
         List {
             Section("Template Name") {
@@ -84,11 +124,47 @@ struct TemplateEditView: View {
                                         Text("Superset \(group)")
                                             .font(.caption)
                                             .foregroundStyle(supersetColor(for: group))
+
+                                        if supersetHasMixedSets(group: group) {
+                                            subGroupPicker(for: index)
+                                        }
                                     }
                                 }
                             }
 
                             Spacer()
+
+                            // Set count stepper (accessories only)
+                            if !entries[index].isMainLift {
+                                HStack(spacing: 4) {
+                                    Button {
+                                        let current = entries[index].defaultSets ?? 3
+                                        if current > 1 {
+                                            entries[index].defaultSets = current - 1
+                                        }
+                                    } label: {
+                                        Image(systemName: "minus.circle")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Text("\(entries[index].defaultSets ?? 3)")
+                                        .font(.caption)
+                                        .monospacedDigit()
+                                        .frame(minWidth: 16)
+
+                                    Button {
+                                        let current = entries[index].defaultSets ?? 3
+                                        entries[index].defaultSets = current + 1
+                                    } label: {
+                                        Image(systemName: "plus.circle")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
 
                             // Superset link/unlink
                             if supersetLinkingIndex == index {

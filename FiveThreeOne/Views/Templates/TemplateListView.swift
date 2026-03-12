@@ -65,6 +65,11 @@ struct TemplateListView: View {
                                 } label: {
                                     Label("Edit Template", systemImage: "pencil")
                                 }
+                                Button {
+                                    duplicateTemplate(template)
+                                } label: {
+                                    Label("Duplicate", systemImage: "doc.on.doc")
+                                }
                                 Button(role: .destructive) {
                                     modelContext.delete(template)
                                 } label: {
@@ -126,6 +131,26 @@ struct TemplateListView: View {
                 }
             }
         }
+    }
+
+    private func duplicateTemplate(_ template: WorkoutTemplate) {
+        let entries = template.exerciseEntries.map { entry in
+            TemplateExerciseEntry(
+                exerciseName: entry.exerciseName,
+                mainLift: entry.mainLift,
+                sortOrder: entry.sortOrder,
+                supersetGroup: entry.supersetGroup,
+                defaultSets: entry.defaultSets,
+                supersetSubGroup: entry.supersetSubGroup
+            )
+        }
+        let copy = WorkoutTemplate(
+            name: "\(template.name) (Copy)",
+            sortOrder: templates.count,
+            exerciseEntries: entries
+        )
+        modelContext.insert(copy)
+        editingTemplate = copy
     }
 
     // MARK: - Week Picker
