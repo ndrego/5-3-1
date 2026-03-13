@@ -45,6 +45,15 @@ struct TemplateWorkoutView: View {
                 Section("Drag to Reorder") {
                     ForEach($exerciseStates) { $state in
                         HStack {
+                            if state.supersetGroup != nil {
+                                Image(systemName: "link")
+                                    .font(.caption2)
+                                    .foregroundStyle(.purple)
+                                Text("\(supersetLabel(offset: supersetGroupOffset(for: state)))")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.purple)
+                            }
                             VStack(alignment: .leading) {
                                 Text(state.exerciseName)
                                     .font(.body)
@@ -434,7 +443,7 @@ struct TemplateWorkoutView: View {
         for round in 0..<maxSets {
             let activeKey = subGroupKeys[round % subGroupKeys.count]
             let activeIndices = group.indices.filter { exerciseStates[$0].supersetSubGroup == activeKey }
-            let roundIndices = everyRound + activeIndices
+            let roundIndices = (everyRound + activeIndices).sorted()
 
             var roundEntries: [(exerciseIndex: Int, setIndex: Int)] = []
             for idx in roundIndices {
@@ -509,6 +518,13 @@ struct TemplateWorkoutView: View {
                 }
             }
         }
+    }
+
+    private func supersetGroupOffset(for state: ExerciseState) -> Int {
+        guard let group = state.supersetGroup,
+              let stateIdx = exerciseStates.firstIndex(where: { $0.id == state.id }) else { return 0 }
+        let groupIndices = exerciseStates.indices.filter { exerciseStates[$0].supersetGroup == group }
+        return groupIndices.firstIndex(of: stateIdx) ?? 0
     }
 
     private func supersetLabel(offset: Int) -> String {
@@ -1085,7 +1101,10 @@ struct TemplateWorkoutView: View {
                 for i in exerciseStates.indices {
                     if let j = exerciseStates[i].sets.firstIndex(where: { $0.id == setID }) {
                         exerciseStates[i].sets[j].actualReps = exerciseStates[i].sets[j].targetReps
-                        startRest(setRestSeconds: exerciseStates[i].sets[j].restSeconds, setType: .accessory)
+                        // Only start rest if not in a superset, or if last in superset round
+                        if shouldStartRestAfterSet(exerciseIndex: i, setIndex: j) {
+                            startRest(setRestSeconds: exerciseStates[i].sets[j].restSeconds, setType: .accessory)
+                        }
                         break
                     }
                 }
@@ -1097,6 +1116,23 @@ struct TemplateWorkoutView: View {
         exerciseTimerTask?.cancel()
         exerciseTimerTask = nil
         activeTimerSetID = nil
+    }
+
+    /// Returns true if rest should start after completing this set.
+    /// For standalone exercises, always true. For superset exercises, only if last in its round.
+    private func shouldStartRestAfterSet(exerciseIndex: Int, setIndex: Int) -> Bool {
+        guard let group = exerciseStates[exerciseIndex].supersetGroup else { return true }
+        // Find which superset section group this belongs to
+        for sectionGroup in exerciseSectionGroups where sectionGroup.supersetGroup == group {
+            let rounds = supersetRounds(for: sectionGroup)
+            for round in rounds {
+                guard let entryIdx = round.firstIndex(where: {
+                    $0.exerciseIndex == exerciseIndex && $0.setIndex == setIndex
+                }) else { continue }
+                return entryIdx == round.count - 1
+            }
+        }
+        return true
     }
 
     private func formatExerciseTimer(_ seconds: Int) -> String {
