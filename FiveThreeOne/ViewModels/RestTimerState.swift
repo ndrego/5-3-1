@@ -9,6 +9,7 @@ final class RestTimerState {
     var remainingSeconds: Int = 0
     var recovered = false
     var recoveryTargetHR: Int?
+    var completedNaturally = false
 
     private var timer: Timer?
 
@@ -24,6 +25,7 @@ final class RestTimerState {
             if self.remainingSeconds > 0 {
                 self.remainingSeconds -= 1
             } else {
+                self.completedNaturally = true
                 self.playAlert()
                 self.stop()
             }

@@ -230,7 +230,12 @@ struct TemplateWorkoutView: View {
         }
         .onChange(of: restTimer.isRunning) { _, isRunning in
             if !isRunning {
-                phoneConnectivity.sendTimerStopped()
+                if restTimer.completedNaturally {
+                    restTimer.completedNaturally = false
+                    phoneConnectivity.sendTimerCompleted()
+                } else {
+                    phoneConnectivity.sendTimerStopped()
+                }
             }
         }
         .onChange(of: phoneConnectivity.watchRequestedStopTimer) {
@@ -1946,6 +1951,7 @@ struct WeightField: View {
     var font: Font = .body
 
     @State private var text: String = ""
+    @State private var isEditing = false
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -1957,17 +1963,23 @@ struct WeightField: View {
             .textFieldStyle(.plain)
             .frame(width: width)
             .focused($isFocused)
-            .onAppear { text = formatValue(value) }
+            .onAppear {
+                if !isEditing {
+                    text = formatValue(value)
+                }
+            }
             .onChange(of: value) { _, newVal in
-                if !isFocused {
+                if !isEditing {
                     text = formatValue(newVal)
                 }
             }
             .onChange(of: isFocused) { _, focused in
-                if !focused {
-                    // Commit on blur
+                if focused {
+                    isEditing = true
+                } else {
                     value = Double(text) ?? 0
                     text = formatValue(value)
+                    isEditing = false
                 }
             }
     }

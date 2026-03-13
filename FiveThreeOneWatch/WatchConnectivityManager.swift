@@ -84,8 +84,14 @@ final class WatchConnectivityManager {
 
         case "timerStop":
             workoutManager?.stopTimer()
-            // Restart rep counting after rest — currentSet arrives before timerStart,
-            // so counting was stopped by timerStart and needs to resume here.
+            // Restart rep counting after rest
+            if repCountingEnabled, let name = currentExerciseName {
+                startRepCounting(exerciseName: name)
+            }
+
+        case "timerCompleted":
+            workoutManager?.timerCompletedFromPhone()
+            // Restart rep counting after rest
             if repCountingEnabled, let name = currentExerciseName {
                 startRepCounting(exerciseName: name)
             }

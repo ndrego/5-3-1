@@ -43,6 +43,10 @@ final class PhoneConnectivityManager: NSObject {
         send(["type": "timerStop"])
     }
 
+    func sendTimerCompleted() {
+        send(["type": "timerCompleted"])
+    }
+
     func sendTimerAdjusted(remainingSeconds: Int, totalSeconds: Int) {
         send([
             "type": "timerAdjust",

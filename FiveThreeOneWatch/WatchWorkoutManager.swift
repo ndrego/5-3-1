@@ -135,6 +135,13 @@ final class WatchWorkoutManager {
         recoveryTargetHR = nil
     }
 
+    /// Phone timer completed naturally — play haptic then stop.
+    func timerCompletedFromPhone() {
+        WKInterfaceDevice.current().play(.notification)
+        stopTimer()
+        onTimerCompleted?()
+    }
+
     private func timerCompleted() {
         print("[Timer] Timer completed, playing haptic")
         WKInterfaceDevice.current().play(.notification)
