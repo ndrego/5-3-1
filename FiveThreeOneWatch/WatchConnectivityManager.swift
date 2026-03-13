@@ -69,6 +69,7 @@ final class WatchConnectivityManager {
         targetReps: Int?,
         reps: Int?,
         isAMRAP: Bool?,
+        isTimed: Bool?,
         setType: String?,
         enabled: Bool?,
         sensitivity: [String: Double]?,
@@ -117,7 +118,8 @@ final class WatchConnectivityManager {
                 weight: weight ?? 0,
                 targetReps: targetReps ?? 0,
                 isAMRAP: isAMRAP ?? false,
-                setType: setType ?? "main"
+                setType: setType ?? "main",
+                isTimed: isTimed ?? false
             )
             // Start rep counting — isActive on RepCountingManager gates whether
             // reps are actually reported. timerStart sets isActive=false via stopCounting(),
@@ -125,6 +127,8 @@ final class WatchConnectivityManager {
             if repCountingEnabled, let name = exerciseName {
                 startRepCounting(exerciseName: name)
                 print("[WC] currentSet: started rep counting for \(name), isActive=\(repCountingManager?.isActive ?? false)")
+            } else {
+                _ = repCountingManager?.stopCounting()
             }
 
         case "setComplete":
@@ -250,6 +254,7 @@ final class WCSessionDelegateHelper: NSObject, WCSessionDelegate, @unchecked Sen
         let targetReps = message["targetReps"] as? Int
         let reps = message["reps"] as? Int
         let isAMRAP = message["isAMRAP"] as? Bool
+        let isTimed = message["isTimed"] as? Bool
         let setType = message["setType"] as? String
         let msgRepCountingEnabled = message["repCountingEnabled"] as? Bool
         let enabled = message["enabled"] as? Bool
@@ -294,6 +299,7 @@ final class WCSessionDelegateHelper: NSObject, WCSessionDelegate, @unchecked Sen
                 targetReps: targetReps,
                 reps: reps,
                 isAMRAP: isAMRAP,
+                isTimed: isTimed,
                 setType: setType,
                 enabled: enabled,
                 sensitivity: sensitivity,

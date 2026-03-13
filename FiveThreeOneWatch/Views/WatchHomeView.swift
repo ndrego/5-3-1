@@ -157,7 +157,7 @@ struct WatchHomeView: View {
             }
 
             HStack(spacing: 4) {
-                Text("\(workoutManager.currentTargetReps)\(workoutManager.currentIsAMRAP ? "+" : "") reps")
+                Text("\(workoutManager.currentTargetReps)\(workoutManager.currentIsAMRAP ? "+" : "") \(workoutManager.currentIsTimed ? "sec" : "reps")")
                     .font(.body)
                     .fontWeight(.medium)
                 if repCountingManager.isActive {

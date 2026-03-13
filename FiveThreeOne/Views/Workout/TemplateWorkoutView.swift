@@ -1086,6 +1086,22 @@ struct TemplateWorkoutView: View {
         activeTimerSetID = set.wrappedValue.id
         timerSecondsRemaining = seconds
 
+        // Tell the watch about this timed exercise (and stop rep counting)
+        if let state = exerciseStates.first(where: { $0.sets.contains(where: { $0.id == set.wrappedValue.id }) }) {
+            let setIndex = state.sets.firstIndex(where: { $0.id == set.wrappedValue.id }) ?? 0
+            phoneConnectivity.sendCurrentExercise(
+                name: state.exerciseName,
+                setNumber: setIndex + 1,
+                totalSets: state.sets.count,
+                weight: set.wrappedValue.weight,
+                targetReps: set.wrappedValue.targetReps,
+                isAMRAP: false,
+                setType: set.wrappedValue.setType.rawValue,
+                isTimed: true,
+                repCountingEnabled: false
+            )
+        }
+
         // Capture the set ID to match later
         let setID = set.wrappedValue.id
         exerciseTimerTask = Task {
@@ -1097,6 +1113,9 @@ struct TemplateWorkoutView: View {
             if !Task.isCancelled && timerSecondsRemaining <= 0 {
                 // Timer finished — complete the set
                 activeTimerSetID = nil
+                if userSettings?.repCountingEnabled ?? false {
+                    phoneConnectivity.sendRepCountingEnabled(true)
+                }
                 // Find and complete the set by ID
                 for i in exerciseStates.indices {
                     if let j = exerciseStates[i].sets.firstIndex(where: { $0.id == setID }) {
@@ -1116,6 +1135,9 @@ struct TemplateWorkoutView: View {
         exerciseTimerTask?.cancel()
         exerciseTimerTask = nil
         activeTimerSetID = nil
+        if userSettings?.repCountingEnabled ?? false {
+            phoneConnectivity.sendRepCountingEnabled(true)
+        }
     }
 
     /// Returns true if rest should start after completing this set.
@@ -1207,7 +1229,8 @@ struct TemplateWorkoutView: View {
                     targetReps: set.targetReps,
                     isAMRAP: set.isAMRAP,
                     setType: set.setType.rawValue,
-                    repCountingEnabled: userSettings?.repCountingEnabled ?? false
+                    isTimed: state.isTimed,
+                    repCountingEnabled: !state.isTimed && (userSettings?.repCountingEnabled ?? false)
                 )
 
                 // Also send completion progress

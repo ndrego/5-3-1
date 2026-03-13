@@ -24,6 +24,7 @@ final class WatchWorkoutManager {
     var currentWeight: Double = 0
     var currentTargetReps: Int = 0
     var currentIsAMRAP = false
+    var currentIsTimed = false
     var currentSetType: String = "main"
     var setsCompleted: Int = 0
 
@@ -159,13 +160,14 @@ final class WatchWorkoutManager {
 
     // MARK: - Exercise Context
 
-    func updateCurrentSet(exercise: String, setNumber: Int, totalSets: Int, weight: Double, targetReps: Int, isAMRAP: Bool, setType: String) {
+    func updateCurrentSet(exercise: String, setNumber: Int, totalSets: Int, weight: Double, targetReps: Int, isAMRAP: Bool, setType: String, isTimed: Bool = false) {
         currentExercise = exercise
         currentSetNumber = setNumber
         currentTotalSets = totalSets
         currentWeight = weight
         currentTargetReps = targetReps
         currentIsAMRAP = isAMRAP
+        currentIsTimed = isTimed
         currentSetType = setType
     }
 

@@ -99,7 +99,7 @@ final class PhoneConnectivityManager: NSObject {
         ])
     }
 
-    func sendCurrentExercise(name: String, setNumber: Int, totalSets: Int, weight: Double, targetReps: Int, isAMRAP: Bool, setType: String, repCountingEnabled: Bool = false) {
+    func sendCurrentExercise(name: String, setNumber: Int, totalSets: Int, weight: Double, targetReps: Int, isAMRAP: Bool, setType: String, isTimed: Bool = false, repCountingEnabled: Bool = false) {
         send([
             "type": "currentSet",
             "exerciseName": name,
@@ -109,6 +109,7 @@ final class PhoneConnectivityManager: NSObject {
             "targetReps": targetReps,
             "isAMRAP": isAMRAP,
             "setType": setType,
+            "isTimed": isTimed,
             "repCountingEnabled": repCountingEnabled
         ])
     }
