@@ -28,6 +28,11 @@ final class WatchWorkoutManager {
     var currentSetType: String = "main"
     var setsCompleted: Int = 0
 
+    // Exercise timer (for timed exercises like planks)
+    var exerciseTimerRunning = false
+    var exerciseTimerRemaining: Int = 0
+    private var exerciseTimerTask: Task<Void, Never>?
+
     private var sessionHelper: WorkoutSessionHelper?
     private var hrPollTask: Task<Void, Never>?
     private var restTimerTask: Task<Void, Never>?
@@ -169,6 +174,30 @@ final class WatchWorkoutManager {
         currentIsAMRAP = isAMRAP
         currentIsTimed = isTimed
         currentSetType = setType
+    }
+
+    func startExerciseTimer(seconds: Int) {
+        stopExerciseTimer()
+        exerciseTimerRemaining = seconds
+        exerciseTimerRunning = true
+        exerciseTimerTask = Task {
+            while !Task.isCancelled && exerciseTimerRemaining > 0 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { break }
+                exerciseTimerRemaining -= 1
+            }
+            if !Task.isCancelled {
+                exerciseTimerRunning = false
+                WKInterfaceDevice.current().play(.notification)
+            }
+        }
+    }
+
+    func stopExerciseTimer() {
+        exerciseTimerTask?.cancel()
+        exerciseTimerTask = nil
+        exerciseTimerRunning = false
+        exerciseTimerRemaining = 0
     }
 
     func markSetCompleted(exercise: String, setNumber: Int, totalSets: Int, weight: Double, reps: Int, setType: String) {

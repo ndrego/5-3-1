@@ -23,7 +23,7 @@ final class WatchConnectivityManager {
     }
 
     func sendCompleteSet() {
-        delegateHelper?.send(["type": "completeSet"])
+        delegateHelper?.send(["type": "completeSet", "exerciseName": currentExerciseName ?? ""])
     }
 
     func sendStopTimer() {
@@ -77,6 +77,12 @@ final class WatchConnectivityManager {
     ) {
         print("[WC] handleMessage type=\(type)")
         switch type {
+        case "exerciseTimerStart":
+            workoutManager?.startExerciseTimer(seconds: totalSeconds ?? 30)
+
+        case "exerciseTimerStop":
+            workoutManager?.stopExerciseTimer()
+
         case "timerStart":
             let total = totalSeconds ?? 180
             let effectiveRecovery = (recoveryHR == nil || recoveryHR == 0) ? nil : recoveryHR

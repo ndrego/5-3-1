@@ -9,7 +9,7 @@ final class PhoneConnectivityManager: NSObject {
     var isWatchReachable = false
 
     // Watch-initiated actions (observed by TemplateWorkoutView)
-    var watchRequestedCompleteSet = false
+    var watchRequestedCompleteSet: String? = nil
     var watchRequestedStopTimer = false
     var watchReportedRepCount: Int?
     var watchHeartRate: Double = 0
@@ -124,6 +124,14 @@ final class PhoneConnectivityManager: NSObject {
         }
     }
 
+    func sendExerciseTimerStarted(seconds: Int) {
+        send(["type": "exerciseTimerStart", "totalSeconds": seconds])
+    }
+
+    func sendExerciseTimerStopped() {
+        send(["type": "exerciseTimerStop"])
+    }
+
     private func updateContext(_ context: [String: Any]) {
         guard let session else { return }
         do {
@@ -161,10 +169,11 @@ extension PhoneConnectivityManager: WCSessionDelegate {
         let profileKey = message["profileKey"] as? String
         let magnitudes = message["magnitudes"] as? [Double]
         let timestamps = message["timestamps"] as? [Double]
+        let completeSetExercise = message["exerciseName"] as? String
         Task { @MainActor in
             switch type {
             case "completeSet":
-                self.watchRequestedCompleteSet = true
+                self.watchRequestedCompleteSet = completeSetExercise ?? ""
             case "stopTimer":
                 self.watchRequestedStopTimer = true
             case "repCount":

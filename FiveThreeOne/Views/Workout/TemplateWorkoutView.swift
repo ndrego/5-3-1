@@ -253,9 +253,9 @@ struct TemplateWorkoutView: View {
             restTimer.stop()
         }
         .onChange(of: phoneConnectivity.watchRequestedCompleteSet) {
-            guard phoneConnectivity.watchRequestedCompleteSet else { return }
-            phoneConnectivity.watchRequestedCompleteSet = false
-            completeNextSet()
+            guard let exerciseName = phoneConnectivity.watchRequestedCompleteSet else { return }
+            phoneConnectivity.watchRequestedCompleteSet = nil
+            completeNextSet(forExercise: exerciseName)
         }
         .onChange(of: phoneConnectivity.watchReportedRepCount) {
             guard let count = phoneConnectivity.watchReportedRepCount else { return }
@@ -550,6 +550,7 @@ struct TemplateWorkoutView: View {
                     let set = exerciseStates[exerciseIndex].sets[setIndex]
                     startRest(setRestSeconds: set.restSeconds, setType: state.isMainLift ? .main : .accessory)
                 }
+                sendNextInRound(afterExerciseIndex: exerciseIndex, setIndex: setIndex)
             },
             onUnmark: {
                 sendWatchContext()
@@ -1087,6 +1088,7 @@ struct TemplateWorkoutView: View {
         timerSecondsRemaining = seconds
 
         // Tell the watch about this timed exercise (and stop rep counting)
+        phoneConnectivity.sendExerciseTimerStarted(seconds: seconds)
         if let state = exerciseStates.first(where: { $0.sets.contains(where: { $0.id == set.wrappedValue.id }) }) {
             let setIndex = state.sets.firstIndex(where: { $0.id == set.wrappedValue.id }) ?? 0
             phoneConnectivity.sendCurrentExercise(
@@ -1124,6 +1126,7 @@ struct TemplateWorkoutView: View {
                         if shouldStartRestAfterSet(exerciseIndex: i, setIndex: j) {
                             startRest(setRestSeconds: exerciseStates[i].sets[j].restSeconds, setType: .accessory)
                         }
+                        sendNextInRound(afterExerciseIndex: i, setIndex: j)
                         break
                     }
                 }
@@ -1134,6 +1137,7 @@ struct TemplateWorkoutView: View {
     private func stopExerciseTimer() {
         exerciseTimerTask?.cancel()
         exerciseTimerTask = nil
+        phoneConnectivity.sendExerciseTimerStopped()
         activeTimerSetID = nil
         if userSettings?.repCountingEnabled ?? false {
             phoneConnectivity.sendRepCountingEnabled(true)
@@ -1155,6 +1159,48 @@ struct TemplateWorkoutView: View {
             }
         }
         return true
+    }
+
+    /// Sends the next incomplete exercise in the same superset round to the watch.
+    /// Falls back to generic sendWatchContext() for standalone exercises or if round is done.
+    private func sendNextInRound(afterExerciseIndex: Int, setIndex: Int) {
+        guard let group = exerciseStates[afterExerciseIndex].supersetGroup else {
+            sendWatchContext()
+            return
+        }
+        for sectionGroup in exerciseSectionGroups where sectionGroup.supersetGroup == group {
+            let rounds = supersetRounds(for: sectionGroup)
+            for (roundIdx, round) in rounds.enumerated() {
+                guard let currentIdx = round.firstIndex(where: {
+                    $0.exerciseIndex == afterExerciseIndex && $0.setIndex == setIndex
+                }) else { continue }
+                // Look for the next incomplete entry in this round
+                for nextIdx in (currentIdx + 1)..<round.count {
+                    let entry = round[nextIdx]
+                    let state = exerciseStates[entry.exerciseIndex]
+                    let set = state.sets[entry.setIndex]
+                    if !set.isComplete {
+                        sendWatchExercise(state: state, setIndex: entry.setIndex)
+                        return
+                    }
+                }
+                // Round done — check subsequent rounds in this superset
+                for laterRound in rounds[(roundIdx + 1)...] {
+                    for entry in laterRound {
+                        let state = exerciseStates[entry.exerciseIndex]
+                        let set = state.sets[entry.setIndex]
+                        if !set.isComplete {
+                            sendWatchExercise(state: state, setIndex: entry.setIndex)
+                            return
+                        }
+                    }
+                }
+                // Entire superset done — fall through
+                sendWatchContext()
+                return
+            }
+        }
+        sendWatchContext()
     }
 
     private func formatExerciseTimer(_ seconds: Int) -> String {
@@ -1215,55 +1261,73 @@ struct TemplateWorkoutView: View {
     }
 
     private func sendWatchContext() {
-        // Find the next incomplete set to tell the watch what's coming
-        for state in exerciseStates {
-            let completedCount = state.sets.filter(\.isComplete).count
-            if completedCount < state.sets.count {
-                let nextIndex = completedCount
-                let set = state.sets[nextIndex]
-                phoneConnectivity.sendCurrentExercise(
-                    name: state.exerciseName,
-                    setNumber: nextIndex + 1,
-                    totalSets: state.sets.count,
-                    weight: set.weight,
-                    targetReps: set.targetReps,
-                    isAMRAP: set.isAMRAP,
-                    setType: set.setType.rawValue,
-                    isTimed: state.isTimed,
-                    repCountingEnabled: !state.isTimed && (userSettings?.repCountingEnabled ?? false)
-                )
-
-                // Also send completion progress
-                phoneConnectivity.sendSetCompleted(
-                    exerciseName: state.exerciseName,
-                    setNumber: completedCount,
-                    totalSets: state.sets.count,
-                    weight: set.weight,
-                    reps: set.targetReps,
-                    setType: set.setType.rawValue
-                )
-                return
-            }
-        }
-    }
-
-    /// Complete the next incomplete set (triggered from watch)
-    private func completeNextSet() {
-        for i in exerciseStates.indices {
-            for j in exerciseStates[i].sets.indices {
-                if !exerciseStates[i].sets[j].isComplete {
-                    let setId = exerciseStates[i].sets[j].id
-                    let detected = detectedRepCounts[setId]
-                    exerciseStates[i].sets[j].actualReps = detected ?? exerciseStates[i].sets[j].targetReps
-                    detectedRepCounts.removeValue(forKey: setId)
-                    startRest(
-                        setRestSeconds: exerciseStates[i].sets[j].restSeconds,
-                        setType: exerciseStates[i].sets[j].setType
-                    )
+        // Find the next incomplete set, respecting superset round order
+        for group in exerciseSectionGroups {
+            if group.indices.count > 1 {
+                // Superset: find the first incomplete entry across rounds
+                let rounds = supersetRounds(for: group)
+                for round in rounds {
+                    for entry in round {
+                        let state = exerciseStates[entry.exerciseIndex]
+                        let set = state.sets[entry.setIndex]
+                        guard !set.isComplete else { continue }
+                        sendWatchExercise(state: state, setIndex: entry.setIndex)
+                        return
+                    }
+                }
+            } else if let idx = group.indices.first {
+                // Standalone exercise
+                let state = exerciseStates[idx]
+                let completedCount = state.sets.filter(\.isComplete).count
+                if completedCount < state.sets.count {
+                    sendWatchExercise(state: state, setIndex: completedCount)
                     return
                 }
             }
         }
+    }
+
+    private func sendWatchExercise(state: ExerciseState, setIndex: Int) {
+        let set = state.sets[setIndex]
+        phoneConnectivity.sendCurrentExercise(
+            name: state.exerciseName,
+            setNumber: setIndex + 1,
+            totalSets: state.sets.count,
+            weight: set.weight,
+            targetReps: set.targetReps,
+            isAMRAP: set.isAMRAP,
+            setType: set.setType.rawValue,
+            isTimed: state.isTimed,
+            repCountingEnabled: !state.isTimed && (userSettings?.repCountingEnabled ?? false)
+        )
+        let completedCount = state.sets.filter(\.isComplete).count
+        phoneConnectivity.sendSetCompleted(
+            exerciseName: state.exerciseName,
+            setNumber: completedCount,
+            totalSets: state.sets.count,
+            weight: set.weight,
+            reps: set.targetReps,
+            setType: set.setType.rawValue
+        )
+    }
+
+    /// Complete the next incomplete set for the given exercise (triggered from watch).
+    private func completeNextSet(forExercise name: String) {
+        // Find the exercise by name and complete its next incomplete set
+        guard let i = exerciseStates.firstIndex(where: { $0.exerciseName == name }) else {
+            return
+        }
+        guard let j = exerciseStates[i].sets.firstIndex(where: { !$0.isComplete }) else {
+            return
+        }
+        let setId = exerciseStates[i].sets[j].id
+        let detected = detectedRepCounts[setId]
+        exerciseStates[i].sets[j].actualReps = detected ?? exerciseStates[i].sets[j].targetReps
+        detectedRepCounts.removeValue(forKey: setId)
+        if shouldStartRestAfterSet(exerciseIndex: i, setIndex: j) {
+            startRest(setRestSeconds: exerciseStates[i].sets[j].restSeconds, setType: exerciseStates[i].sets[j].setType)
+        }
+        sendNextInRound(afterExerciseIndex: i, setIndex: j)
     }
 
     private func rpeColor(_ rpe: Double) -> Color {

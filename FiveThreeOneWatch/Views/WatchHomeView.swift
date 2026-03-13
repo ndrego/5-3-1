@@ -156,17 +156,25 @@ struct WatchHomeView: View {
                     .fontWeight(.bold)
             }
 
-            HStack(spacing: 4) {
-                Text("\(workoutManager.currentTargetReps)\(workoutManager.currentIsAMRAP ? "+" : "") \(workoutManager.currentIsTimed ? "sec" : "reps")")
-                    .font(.body)
-                    .fontWeight(.medium)
-                if repCountingManager.isActive {
-                    Text("·")
-                        .foregroundStyle(.secondary)
-                    Text("\(repCountingManager.repCount)")
+            if workoutManager.exerciseTimerRunning {
+                Text("\(workoutManager.exerciseTimerRemaining)s")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.orange)
+                    .monospacedDigit()
+            } else {
+                HStack(spacing: 4) {
+                    Text("\(workoutManager.currentTargetReps)\(workoutManager.currentIsAMRAP ? "+" : "") \(workoutManager.currentIsTimed ? "sec" : "reps")")
                         .font(.body)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.green)
+                        .fontWeight(.medium)
+                    if repCountingManager.isActive {
+                        Text("·")
+                            .foregroundStyle(.secondary)
+                        Text("\(repCountingManager.repCount)")
+                            .font(.body)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.green)
+                    }
                 }
             }
 
