@@ -187,15 +187,30 @@ struct WatchHomeView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // Complete set button
-            Button {
-                connectivity.sendCompleteSet()
-            } label: {
-                Label("Done", systemImage: "checkmark.circle.fill")
-                    .font(.caption)
+            // Action buttons
+            HStack(spacing: 12) {
+                // Start rep counting (only if enabled and not already active)
+                if connectivity.repCountingEnabled && !workoutManager.currentIsTimed && !repCountingManager.isActive {
+                    Button {
+                        connectivity.startRepCounting()
+                    } label: {
+                        Label("Start", systemImage: "figure.strengthtraining.traditional")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+                }
+
+                // Complete set button
+                Button {
+                    connectivity.sendCompleteSet()
+                } label: {
+                    Label("Done", systemImage: "checkmark.circle.fill")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
 
             // Inline HR
             if workoutManager.currentHR > 0 {

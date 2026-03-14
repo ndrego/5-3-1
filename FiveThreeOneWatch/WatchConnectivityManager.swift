@@ -91,17 +91,9 @@ final class WatchConnectivityManager {
 
         case "timerStop":
             workoutManager?.stopTimer()
-            // Restart rep counting after rest
-            if repCountingEnabled, let name = currentExerciseName {
-                startRepCounting(exerciseName: name)
-            }
 
         case "timerCompleted":
             workoutManager?.timerCompletedFromPhone()
-            // Restart rep counting after rest
-            if repCountingEnabled, let name = currentExerciseName {
-                startRepCounting(exerciseName: name)
-            }
 
         case "timerAdjust":
             if let remaining = remainingSeconds, let total = totalSeconds {
@@ -127,15 +119,9 @@ final class WatchConnectivityManager {
                 setType: setType ?? "main",
                 isTimed: isTimed ?? false
             )
-            // Start rep counting — isActive on RepCountingManager gates whether
-            // reps are actually reported. timerStart sets isActive=false via stopCounting(),
-            // and the next currentSet (after rest) sets isActive=true via startCounting().
-            if repCountingEnabled, let name = exerciseName {
-                startRepCounting(exerciseName: name)
-                print("[WC] currentSet: started rep counting for \(name), isActive=\(repCountingManager?.isActive ?? false)")
-            } else {
-                _ = repCountingManager?.stopCounting()
-            }
+            // Don't auto-start rep counting — user taps Start on watch.
+            // Just stop any active counting from the previous set.
+            _ = repCountingManager?.stopCounting()
 
         case "setComplete":
             workoutManager?.markSetCompleted(
@@ -165,11 +151,12 @@ final class WatchConnectivityManager {
         }
     }
 
-    private func startRepCounting(exerciseName: String) {
+    func startRepCounting() {
+        guard repCountingEnabled, let name = currentExerciseName else { return }
         repCountingManager?.onRepCounted = { [weak self] count in
             self?.sendRepCount(count)
         }
-        repCountingManager?.startCounting(exerciseName: exerciseName)
+        repCountingManager?.startCounting(exerciseName: name)
     }
 
     func startWorkout() {
