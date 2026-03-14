@@ -4,6 +4,7 @@ struct WatchHomeView: View {
     var connectivity: WatchConnectivityManager
     var workoutManager: WatchWorkoutManager
     var repCountingManager: RepCountingManager
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     var body: some View {
         Group {
@@ -18,6 +19,7 @@ struct WatchHomeView: View {
                 calibrationOverlay
             }
         }
+        .opacity(isLuminanceReduced ? 0.6 : 1.0)
         .task {
             await workoutManager.requestHRAuthorization()
         }

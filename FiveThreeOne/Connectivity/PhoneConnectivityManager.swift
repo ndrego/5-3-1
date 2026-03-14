@@ -72,8 +72,35 @@ final class PhoneConnectivityManager: NSObject {
         send(["type": "repTuning", "sensitivity": sensitivity, "tempo": tempo])
     }
 
+    private var calibrationRetryTask: Task<Void, Never>?
+
     func sendCalibrate(profileKey: String) {
-        send(["type": "calibrate", "profileKey": profileKey])
+        calibrationRetryTask?.cancel()
+        let message: [String: Any] = ["type": "calibrate", "profileKey": profileKey]
+
+        // If reachable now, send immediately
+        if session?.isReachable == true {
+            send(message)
+            return
+        }
+
+        // Otherwise retry every 2 seconds until reachable or 30 second timeout
+        calibrationRetryTask = Task {
+            for _ in 0..<15 {
+                try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { return }
+                if self.session?.isReachable == true {
+                    self.send(message)
+                    return
+                }
+            }
+            print("WC calibrate: gave up after 30s — watch never became reachable")
+        }
+    }
+
+    func cancelCalibrationRetry() {
+        calibrationRetryTask?.cancel()
+        calibrationRetryTask = nil
     }
 
     func sendWorkoutFinished(averageEffort: Double? = nil) {

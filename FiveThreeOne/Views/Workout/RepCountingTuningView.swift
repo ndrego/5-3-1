@@ -13,6 +13,7 @@ struct RepCountingTuningView: View {
     @State private var calibratingKey: String?
     @State private var lastCalibratedKey: String?
     @State private var calibrationStatus: String?
+    @State private var calibrationTimeoutTask: Task<Void, Never>?
 
     private struct ProfileTuning: Identifiable {
         let key: String
@@ -127,14 +128,40 @@ struct RepCountingTuningView: View {
         lastCalibratedKey = nil
         calibrationStatus = nil
         phoneConnectivity.sendCalibrate(profileKey: profile.key)
+
+        // Timeout after 30 seconds in case watch never responds
+        calibrationTimeoutTask?.cancel()
+        calibrationTimeoutTask = Task {
+            try? await Task.sleep(for: .seconds(30))
+            guard !Task.isCancelled, calibratingKey != nil else { return }
+            phoneConnectivity.cancelCalibrationRetry()
+            lastCalibratedKey = profile.key
+            calibrationStatus = phoneConnectivity.isWatchReachable ? "Timed out — try again" : "Watch not connected"
+            calibratingKey = nil
+        }
     }
 
     private func processCalibrationData() {
+        calibrationTimeoutTask?.cancel()
+        calibrationTimeoutTask = nil
+
         guard let key = phoneConnectivity.calibrationProfileKey,
               let magnitudes = phoneConnectivity.calibrationMagnitudes,
               let timestamps = phoneConnectivity.calibrationTimestamps else { return }
 
-        guard let profile = profiles.first(where: { $0.key == key }) else { return }
+        // Always clear calibrating state so the button isn't stuck disabled
+        defer {
+            lastCalibratedKey = key
+            calibratingKey = nil
+            phoneConnectivity.calibrationProfileKey = nil
+            phoneConnectivity.calibrationMagnitudes = nil
+            phoneConnectivity.calibrationTimestamps = nil
+        }
+
+        guard let profile = profiles.first(where: { $0.key == key }) else {
+            calibrationStatus = "Unknown exercise profile"
+            return
+        }
 
         if let result = CalibrationAnalyzer.analyze(
             magnitudes: magnitudes,
@@ -155,14 +182,6 @@ struct RepCountingTuningView: View {
         } else {
             calibrationStatus = "Could not detect reps"
         }
-
-        lastCalibratedKey = key
-        calibratingKey = nil
-
-        // Clear received data
-        phoneConnectivity.calibrationProfileKey = nil
-        phoneConnectivity.calibrationMagnitudes = nil
-        phoneConnectivity.calibrationTimestamps = nil
     }
 
     // MARK: - Helpers
