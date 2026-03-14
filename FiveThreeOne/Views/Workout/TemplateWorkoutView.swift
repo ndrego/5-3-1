@@ -163,6 +163,14 @@ struct TemplateWorkoutView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(workoutStarted)
         .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+            }
+        }
         .confirmationDialog("Workout in Progress", isPresented: $showDiscardConfirmation) {
             Button("Discard Workout", role: .destructive) {
                 UIApplication.shared.isIdleTimerDisabled = false
@@ -1681,7 +1689,12 @@ struct ExerciseState: Identifiable {
 // MARK: - Exercise Section Group
 
 struct ExerciseSectionGroup: Identifiable {
-    let id = UUID()
+    var id: String {
+        if let supersetGroup {
+            return "superset-\(supersetGroup)"
+        }
+        return "solo-\(indices.first ?? 0)"
+    }
     let indices: [Int]
     let supersetGroup: Int?
 }
