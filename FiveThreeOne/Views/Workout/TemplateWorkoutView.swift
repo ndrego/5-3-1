@@ -87,6 +87,7 @@ struct TemplateWorkoutView: View {
                             workoutStarted = true
                             UIApplication.shared.isIdleTimerDisabled = true
                             phoneConnectivity.sendWorkoutStarted()
+                            heartRateManager.markSetStart()
                             let repEnabled = userSettings?.repCountingEnabled ?? false
                             phoneConnectivity.sendRepCountingEnabled(repEnabled)
                             if repEnabled {
@@ -257,6 +258,8 @@ struct TemplateWorkoutView: View {
                 } else {
                     phoneConnectivity.sendTimerStopped()
                 }
+                // Ensure HR tracking is active for the next set (without clearing existing samples)
+                heartRateManager.ensureSetTracking()
             }
         }
         .onChange(of: phoneConnectivity.watchRequestedStopTimer) {

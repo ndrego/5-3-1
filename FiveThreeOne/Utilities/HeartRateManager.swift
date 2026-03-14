@@ -146,15 +146,29 @@ final class HeartRateManager {
         setHRSamples = []
     }
 
+    /// Ensure set tracking is active without clearing existing samples.
+    func ensureSetTracking() {
+        if setStartTime == nil {
+            setStartTime = .now
+        }
+    }
+
     /// Call when a set ends. Returns average HR and all samples during the set.
+    /// Falls back to current HR if no samples were collected during the set interval.
     func markSetEnd() -> (average: Double, samples: [Double])? {
         defer {
             setStartTime = nil
             setHRSamples = []
         }
-        guard !setHRSamples.isEmpty else { return nil }
-        let avg = setHRSamples.reduce(0, +) / Double(setHRSamples.count)
-        return (average: avg, samples: setHRSamples)
+        if !setHRSamples.isEmpty {
+            let avg = setHRSamples.reduce(0, +) / Double(setHRSamples.count)
+            return (average: avg, samples: setHRSamples)
+        }
+        // Fallback: use current HR if available (e.g. watch HR arrived but no samples in this interval)
+        if currentHR > 0 {
+            return (average: currentHR, samples: [currentHR])
+        }
+        return nil
     }
 
     /// Estimate RPE (1-10 scale) from heart rate as percentage of max HR.
