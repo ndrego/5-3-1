@@ -214,6 +214,10 @@ struct TemplateWorkoutView: View {
             }
         }
         .onAppear {
+            // Re-assert screen-on after sheets dismiss (onDisappear fires for sheets)
+            if workoutStarted {
+                UIApplication.shared.isIdleTimerDisabled = true
+            }
             guard !initialized else { return }
             initialized = true
             initializeExercises()
@@ -994,6 +998,9 @@ struct TemplateWorkoutView: View {
 
                 Spacer()
 
+                // Per-set rest picker
+                setRestPicker(for: set, setType: .accessory)
+
                 if isTimed {
                     timedSetButton(set: set)
                 } else {
@@ -1012,6 +1019,29 @@ struct TemplateWorkoutView: View {
                     }
                     .frame(width: 44, height: 44)
                 }
+            }
+
+            // HR + RPE after set completion
+            if set.wrappedValue.isComplete, let avgHR = set.wrappedValue.averageHR {
+                HStack(spacing: 8) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.red)
+                        Text("\(Int(avgHR))")
+                            .font(.caption2)
+                            .monospacedDigit()
+                    }
+                    if let rpe = set.wrappedValue.estimatedRPE {
+                        Text("RPE \(String(format: "%.1f", rpe))")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundStyle(rpeColor(rpe))
+                    }
+                }
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 32)
             }
 
             // Plate breakdown for barbell accessories — tap to toggle

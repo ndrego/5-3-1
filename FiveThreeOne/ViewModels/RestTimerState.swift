@@ -2,7 +2,7 @@ import Foundation
 import AudioToolbox
 import UIKit
 
-@Observable
+@MainActor @Observable
 final class RestTimerState {
     var isRunning = false
     var totalSeconds: Int = 180
