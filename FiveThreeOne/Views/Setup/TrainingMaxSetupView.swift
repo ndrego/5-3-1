@@ -4,6 +4,8 @@ import SwiftData
 struct TrainingMaxSetupView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var settings: [UserSettings]
+    @Query(sort: \Cycle.number, order: .reverse) private var cycles: [Cycle]
 
     var isOnboarding: Bool = false
 
@@ -17,6 +19,7 @@ struct TrainingMaxSetupView: View {
     @State private var useOneRepMax = true
     @State private var useSamePercent = true
     @State private var globalPercent: Double = 90
+    @State private var initialized = false
 
     var body: some View {
         NavigationStack {
@@ -31,6 +34,33 @@ struct TrainingMaxSetupView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle(isOnboarding ? "Welcome to 531" : "Training Maxes")
+            .onAppear {
+                guard !initialized, !isOnboarding else { return }
+                initialized = true
+                // Load existing training maxes and percentages
+                if let cycle = cycles.first {
+                    selectedVariant = cycle.programVariant
+                    for lift in Lift.allCases {
+                        let tm = cycle.trainingMax(for: lift)
+                        if tm > 0 {
+                            liftInputs[lift] = "\(Int(tm))"
+                        }
+                    }
+                    // When editing, default to entering TM directly since we have TMs
+                    useOneRepMax = false
+                }
+                if let userSettings = settings.first {
+                    for lift in Lift.allCases {
+                        let pct = userSettings.tmPercentage(for: lift)
+                        liftTMPercents[lift] = pct * 100
+                    }
+                    let allSame = Set(liftTMPercents.values).count <= 1
+                    useSamePercent = allSame
+                    if allSame, let first = liftTMPercents.values.first {
+                        globalPercent = first
+                    }
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
@@ -199,17 +229,21 @@ struct TrainingMaxSetupView: View {
             tmPercentages[lift.rawValue] = pct / 100.0
         }
 
+        let nextNumber = (cycles.first?.number ?? 0) + 1
         let cycle = Cycle(
-            number: 1,
+            number: isOnboarding ? 1 : nextNumber,
             trainingMaxes: trainingMaxes,
             variant: selectedVariant
         )
         modelContext.insert(cycle)
 
         if isOnboarding {
-            let settings = UserSettings(trainingMaxPercentages: tmPercentages)
-            modelContext.insert(settings)
+            let newSettings = UserSettings(trainingMaxPercentages: tmPercentages)
+            modelContext.insert(newSettings)
             Exercise.seedDefaults(in: modelContext)
+        } else if let existing = settings.first {
+            // Update existing settings with new TM percentages
+            existing.trainingMaxPercentages = tmPercentages
         }
 
         dismiss()

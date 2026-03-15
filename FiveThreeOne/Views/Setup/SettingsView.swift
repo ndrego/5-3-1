@@ -201,6 +201,20 @@ struct SettingsView: View {
                             Text(cycle.programVariant.displayName)
                                 .foregroundStyle(.secondary)
                         }
+                        ForEach(Lift.allCases) { lift in
+                            let tm = cycle.trainingMax(for: lift)
+                            let tmPct = userSettings?.tmPercentage(for: lift) ?? 0.9
+                            HStack {
+                                Text(lift.displayName)
+                                Spacer()
+                                Text("TM \(Int(tm))")
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                                Text("(\(Int(tmPct * 100))%)")
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
                     }
 
                     Button("Edit Training Maxes") {

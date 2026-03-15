@@ -20,14 +20,15 @@ struct TemplateWorkoutView: View {
     @State private var isReordering = false
     @State private var showingSaveTemplateSheet = false
     @State private var templateChanges = TemplateChanges()
-    @State private var showingSupersetPicker = false
-    @State private var supersetSourceIndex: Int?
+    @State private var supersetSource: SupersetSource?
     @State private var heartRateManager = HeartRateManager()
     private var phoneConnectivity: PhoneConnectivityManager { .shared }
     @State private var showPlatesForSet: Set<UUID> = []
     @State private var showRepTuning = false
     @State private var selectedExerciseForDetail: String?
     @State private var showDiscardConfirmation = false
+    @State private var showRemoveExerciseConfirmation = false
+    @State private var exerciseToRemoveIndex: Int?
     @State private var detectedRepCounts: [UUID: Int] = [:]
     @State private var activeTimerSetID: UUID?
     @State private var timerSecondsRemaining: Int = 0
@@ -182,6 +183,23 @@ struct TemplateWorkoutView: View {
         } message: {
             Text("You have a workout in progress. Are you sure you want to leave? Your progress will be lost.")
         }
+        .confirmationDialog("Remove Exercise", isPresented: $showRemoveExerciseConfirmation) {
+            Button("Remove", role: .destructive) {
+                if let idx = exerciseToRemoveIndex, idx < exerciseStates.count {
+                    withAnimation {
+                        exerciseStates.remove(at: idx)
+                    }
+                }
+                exerciseToRemoveIndex = nil
+            }
+            Button("Cancel", role: .cancel) {
+                exerciseToRemoveIndex = nil
+            }
+        } message: {
+            if let idx = exerciseToRemoveIndex, idx < exerciseStates.count {
+                Text("Remove \(exerciseStates[idx].exerciseName) from this workout?")
+            }
+        }
         .toolbar {
             if workoutStarted {
                 ToolbarItem(placement: .topBarLeading) {
@@ -281,19 +299,14 @@ struct TemplateWorkoutView: View {
             heartRateManager.stopMonitoring()
             UIApplication.shared.isIdleTimerDisabled = false
         }
-        .sheet(isPresented: Binding(
-            get: { selectedExerciseForDetail != nil },
-            set: { if !$0 { selectedExerciseForDetail = nil } }
-        )) {
-            if let name = selectedExerciseForDetail {
-                NavigationStack {
-                    ExerciseDetailView(exerciseName: name)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Done") { selectedExerciseForDetail = nil }
-                            }
+        .sheet(item: $selectedExerciseForDetail) { name in
+            NavigationStack {
+                ExerciseDetailView(exerciseName: name)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Done") { selectedExerciseForDetail = nil }
                         }
-                }
+                    }
             }
         }
         .sheet(isPresented: $showRepTuning) {
@@ -301,8 +314,8 @@ struct TemplateWorkoutView: View {
                 phoneConnectivity.sendRepTuning(sensitivity: sensitivity, tempo: tempo)
             }
         }
-        .sheet(isPresented: $showingSupersetPicker) {
-            supersetPickerSheet
+        .sheet(item: $supersetSource) { source in
+            supersetPickerSheet(sourceIndex: source.index)
                 .presentationDetents([.medium])
         }
         .sheet(isPresented: $showingSaveTemplateSheet) {
@@ -383,35 +396,64 @@ struct TemplateWorkoutView: View {
                 accessoryRows(for: exerciseState)
             }
 
-            HStack {
-                // Superset link button
+            // Action row: Add Set | Superset | Remove
+            HStack(spacing: 16) {
                 Button {
-                    supersetSourceIndex = index
-                    showingSupersetPicker = true
+                    addSet(for: exerciseState)
                 } label: {
-                    Label("Superset with...", systemImage: "link")
-                        .font(.caption)
-                        .foregroundStyle(.purple)
+                    Label("Add Set", systemImage: "plus.circle")
                 }
+                .buttonStyle(.borderless)
 
                 Spacer()
 
-                // Remove exercise button (not for main lifts)
+                Button {
+                    supersetSource = SupersetSource(index: index)
+                } label: {
+                    Label("Superset", systemImage: "link")
+                        .foregroundStyle(.purple)
+                }
+                .buttonStyle(.borderless)
+
                 if !state.isMainLift {
-                    Button(role: .destructive) {
-                        let idx = index
-                        withAnimation {
-                            _ = exerciseStates.remove(at: idx)
-                        }
+                    Button {
+                        exerciseToRemoveIndex = index
+                        showRemoveExerciseConfirmation = true
                     } label: {
                         Label("Remove", systemImage: "trash")
-                            .font(.caption)
                             .foregroundStyle(.red)
                     }
+                    .buttonStyle(.borderless)
                 }
             }
+            .font(.caption)
         } header: {
             exerciseSectionHeader(for: $exerciseStates[index])
+        }
+    }
+
+    private func addSet(for exerciseState: Binding<ExerciseState>) {
+        let state = exerciseState.wrappedValue
+        if state.isMainLift {
+            let lastSet = state.sets.last
+            let newSet = CompletedSet(
+                weight: lastSet?.weight ?? 0,
+                targetReps: lastSet?.targetReps ?? 1,
+                isAMRAP: false,
+                setType: lastSet?.setType ?? .main
+            )
+            exerciseState.wrappedValue.sets.append(newSet)
+        } else {
+            let prevSet = state.previousSets.count > state.sets.count
+                ? state.previousSets[state.sets.count]
+                : state.sets.last
+            let defaultTarget = state.isTimed ? 30 : 10
+            let newSet = CompletedSet(
+                weight: state.isTimed ? 0 : (prevSet?.weight ?? 0),
+                targetReps: prevSet?.actualReps ?? defaultTarget,
+                setType: .accessory
+            )
+            exerciseState.wrappedValue.sets.append(newSet)
         }
     }
 
@@ -492,14 +534,24 @@ struct TemplateWorkoutView: View {
                         state: state,
                         isLastInRound: entryIdx == entries.count - 1
                     )
+                    .swipeActions(edge: .trailing) {
+                        if exerciseStates[entry.exerciseIndex].sets.count > 1 {
+                            Button(role: .destructive) {
+                                exerciseStates[entry.exerciseIndex].sets.remove(at: entry.setIndex)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
                 }
             }
 
             HStack {
                 // Add exercise to this superset
                 Button {
-                    supersetSourceIndex = group.indices.first
-                    showingSupersetPicker = true
+                    if let first = group.indices.first {
+                        supersetSource = SupersetSource(index: first)
+                    }
                 } label: {
                     Label("Add to superset", systemImage: "plus.circle")
                         .font(.caption)
@@ -673,10 +725,9 @@ struct TemplateWorkoutView: View {
 
     // MARK: - Superset Picker
 
-    private func supersetPickerCandidates() -> (standalone: [Int], groupReps: [(index: Int, group: Int, names: String)]) {
-        let sourceIdx = supersetSourceIndex ?? 0
-        let sourceGroup = exerciseStates[sourceIdx].supersetGroup
-        let candidates = exerciseStates.indices.filter { $0 != sourceIdx }
+    private func supersetPickerCandidates(sourceIndex: Int) -> (standalone: [Int], groupReps: [(index: Int, group: Int, names: String)]) {
+        let sourceGroup = exerciseStates[sourceIndex].supersetGroup
+        let candidates = exerciseStates.indices.filter { $0 != sourceIndex }
 
         let standalone = candidates.filter { exerciseStates[$0].supersetGroup == nil }
 
@@ -691,9 +742,8 @@ struct TemplateWorkoutView: View {
         return (standalone, groupReps)
     }
 
-    private var supersetPickerSheet: some View {
-        let sourceIdx = supersetSourceIndex ?? 0
-        let (standalone, groupReps) = supersetPickerCandidates()
+    private func supersetPickerSheet(sourceIndex: Int) -> some View {
+        let (standalone, groupReps) = supersetPickerCandidates(sourceIndex: sourceIndex)
 
         return NavigationStack {
             List {
@@ -701,8 +751,8 @@ struct TemplateWorkoutView: View {
                     Section("Add to Existing Superset") {
                         ForEach(groupReps, id: \.group) { rep in
                             Button {
-                                linkSuperset(sourceIndex: sourceIdx, targetIndex: rep.index)
-                                showingSupersetPicker = false
+                                linkSuperset(sourceIndex: sourceIndex, targetIndex: rep.index)
+                                supersetSource = nil
                             } label: {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(rep.names)
@@ -716,8 +766,8 @@ struct TemplateWorkoutView: View {
                 Section(groupReps.isEmpty ? "Superset With" : "Create New Superset") {
                     ForEach(standalone, id: \.self) { index in
                         Button {
-                            linkSuperset(sourceIndex: sourceIdx, targetIndex: index)
-                            showingSupersetPicker = false
+                            linkSuperset(sourceIndex: sourceIndex, targetIndex: index)
+                            supersetSource = nil
                         } label: {
                             Text(exerciseStates[index].exerciseName)
                         }
@@ -728,7 +778,7 @@ struct TemplateWorkoutView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { showingSupersetPicker = false }
+                    Button("Cancel") { supersetSource = nil }
                 }
             }
         }
@@ -750,21 +800,17 @@ struct TemplateWorkoutView: View {
         let state = exerciseState.wrappedValue
         ForEach(Array(state.sets.indices), id: \.self) { index in
             mainSetRow(for: exerciseState.sets[index], setIndex: index, state: state)
+                .swipeActions(edge: .trailing) {
+                    if state.sets.count > 1 {
+                        Button(role: .destructive) {
+                            exerciseState.wrappedValue.sets.remove(at: index)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
         }
 
-        Button {
-            let lastSet = state.sets.last
-            let newSet = CompletedSet(
-                weight: lastSet?.weight ?? 0,
-                targetReps: lastSet?.targetReps ?? 1,
-                isAMRAP: false,
-                setType: lastSet?.setType ?? .main
-            )
-            exerciseState.wrappedValue.sets.append(newSet)
-        } label: {
-            Label("Add Set", systemImage: "plus.circle")
-                .font(.subheadline)
-        }
     }
 
     private func mainSetRow(for set: Binding<CompletedSet>, setIndex: Int, state: ExerciseState) -> some View {
@@ -875,17 +921,24 @@ struct TemplateWorkoutView: View {
 
     private func mainRepInput(for set: Binding<CompletedSet>, triggerRest: Bool = true) -> some View {
         HStack(spacing: 8) {
+            // Minus button — always decrements reps (floor 0)
             Button {
-                if set.wrappedValue.actualReps > 0 {
-                    set.wrappedValue.actualReps -= 1
+                let current = set.wrappedValue.isComplete ? set.wrappedValue.actualReps : set.wrappedValue.targetReps
+                if current > 0 {
+                    if set.wrappedValue.isComplete {
+                        set.wrappedValue.actualReps = max(current - 1, 1)
+                    } else {
+                        set.wrappedValue.targetReps = max(current - 1, 1)
+                    }
                 }
             } label: {
                 Image(systemName: "minus.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(set.wrappedValue.actualReps > 0 ? .primary : .quaternary)
+                    .foregroundStyle(.primary)
             }
             .buttonStyle(.borderless)
 
+            // Reps display
             VStack(spacing: 2) {
                 Text("\(set.wrappedValue.isComplete ? set.wrappedValue.actualReps : set.wrappedValue.targetReps)")
                     .font(.title2)
@@ -901,11 +954,28 @@ struct TemplateWorkoutView: View {
                 }
             }
 
+            // Plus button — always increments reps
             Button {
                 if set.wrappedValue.isComplete {
+                    set.wrappedValue.actualReps += 1
+                } else {
+                    set.wrappedValue.targetReps += 1
+                }
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.primary)
+            }
+            .buttonStyle(.borderless)
+
+            // Complete/undo button — separate toggle
+            Button {
+                if set.wrappedValue.isComplete {
+                    // Undo completion
                     set.wrappedValue.actualReps = 0
                     sendWatchContext()
                 } else {
+                    // Mark complete: use detected reps, or current target
                     let detected = detectedRepCounts[set.wrappedValue.id]
                     set.wrappedValue.actualReps = detected ?? set.wrappedValue.targetReps
                     detectedRepCounts.removeValue(forKey: set.wrappedValue.id)
@@ -914,9 +984,9 @@ struct TemplateWorkoutView: View {
                     }
                 }
             } label: {
-                Image(systemName: set.wrappedValue.isComplete ? "checkmark.circle.fill" : "plus.circle.fill")
+                Image(systemName: set.wrappedValue.isComplete ? "checkmark.circle.fill" : "checkmark.circle")
                     .font(.title2)
-                    .foregroundStyle(set.wrappedValue.isComplete ? .green : .accentColor)
+                    .foregroundStyle(set.wrappedValue.isComplete ? .green : Color.accentColor)
             }
             .buttonStyle(.borderless)
         }
@@ -951,21 +1021,6 @@ struct TemplateWorkoutView: View {
             }
         }
 
-        Button {
-            let prevSet = state.previousSets.count > state.sets.count
-                ? state.previousSets[state.sets.count]
-                : state.sets.last
-            let defaultTarget = state.isTimed ? 30 : 10
-            let newSet = CompletedSet(
-                weight: state.isTimed ? 0 : (prevSet?.weight ?? 0),
-                targetReps: prevSet?.actualReps ?? defaultTarget,
-                setType: .accessory
-            )
-            exerciseState.wrappedValue.sets.append(newSet)
-        } label: {
-            Label("Add Set", systemImage: "plus.circle")
-                .font(.subheadline)
-        }
     }
 
     private func accessorySetRow(setNumber: Int, set: Binding<CompletedSet>, previousSet: CompletedSet?, isBarbell: Bool = false, isTimed: Bool = false) -> some View {
@@ -1720,6 +1775,11 @@ struct ExerciseState: Identifiable {
 }
 
 // MARK: - Exercise Section Group
+
+struct SupersetSource: Identifiable {
+    let id = UUID()
+    let index: Int
+}
 
 struct ExerciseSectionGroup: Identifiable {
     var id: String {
