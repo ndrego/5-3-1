@@ -45,6 +45,7 @@
 		B515AC7C0CD0C80222830CBC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A355D24994B7E9A96EDE7096 /* Assets.xcassets */; };
 		BBA38C7EE05EC8664FF47217 /* RepCountingTuningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF015D31FA895B8919C7274 /* RepCountingTuningView.swift */; };
 		CDA494DD690C481E8A4B6DBD /* ProgramVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F5B0A48B730B51F34F609 /* ProgramVariant.swift */; };
+		CE817501D00DE6F4CC7EFFB8 /* ActiveWorkoutStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB7ACF42DAF3418AFE41730 /* ActiveWorkoutStore.swift */; };
 		D0E5048E00A903C81B8F2832 /* CompletedSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFA3CACFC1833116B49A3DE /* CompletedSet.swift */; };
 		D27D2A53670319676C0BDA70 /* TemplateEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452048773705C2BF75CC773C /* TemplateEditView.swift */; };
 		D3C15F1B5A6F483D609D28B8 /* WorkoutTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3393FE9AF129A9031A0F141 /* WorkoutTemplate.swift */; };
@@ -115,6 +116,7 @@
 		452048773705C2BF75CC773C /* TemplateEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditView.swift; sourceTree = "<group>"; };
 		4BE467A519D792ED441F742E /* PlateCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateCalculator.swift; sourceTree = "<group>"; };
 		4F86E2103F18680D17C60A28 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
+		5DB7ACF42DAF3418AFE41730 /* ActiveWorkoutStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkoutStore.swift; sourceTree = "<group>"; };
 		627679734B52F316E9A55257 /* WatchWorkoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutManager.swift; sourceTree = "<group>"; };
 		62ED226F8A02894A6E4C1835 /* FiveThreeOne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FiveThreeOne.entitlements; sourceTree = "<group>"; };
 		6DF015D31FA895B8919C7274 /* RepCountingTuningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCountingTuningView.swift; sourceTree = "<group>"; };
@@ -295,6 +297,7 @@
 		B9A3639238806E86D64C6CC3 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				5DB7ACF42DAF3418AFE41730 /* ActiveWorkoutStore.swift */,
 				3A52D1444397B119B709FC76 /* BackupManager.swift */,
 				8509E7A820AF565D128DAB36 /* CalibrationAnalyzer.swift */,
 				2173EE38B16F9B9F345C5575 /* DemoDataSeeder.swift */,
@@ -496,6 +499,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				970A3EACC5C7C53F01DD8839 /* AccessorySetRowView.swift in Sources */,
+				CE817501D00DE6F4CC7EFFB8 /* ActiveWorkoutStore.swift in Sources */,
 				E6E8F2A2331CDD52521F0423 /* BackupManager.swift in Sources */,
 				025945D4757D7CD0B5F4BF2B /* BackupRestoreView.swift in Sources */,
 				227FD27E1CE65EEA80E3A3AE /* CalibrationAnalyzer.swift in Sources */,

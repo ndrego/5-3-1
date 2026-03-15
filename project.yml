@@ -14,6 +14,24 @@ settings:
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "Apple Development"
 
+schemes:
+  FiveThreeOne:
+    build:
+      targets:
+        FiveThreeOne: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+  FiveThreeOneWatch:
+    build:
+      targets:
+        FiveThreeOneWatch: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
 targets:
   FiveThreeOne:
     type: application

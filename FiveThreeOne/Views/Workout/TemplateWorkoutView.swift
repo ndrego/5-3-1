@@ -10,6 +10,7 @@ struct TemplateWorkoutView: View {
     let template: WorkoutTemplate
     let cycle: Cycle?
     let week: Int
+    var recoverySnapshot: WorkoutSnapshot? = nil
 
     @State private var exerciseStates: [ExerciseState] = []
     @State private var workoutStartTime: Date?
@@ -40,115 +41,115 @@ struct TemplateWorkoutView: View {
     private var plates: [Double] { userSettings?.availablePlates ?? [45, 35, 25, 10, 5, 2.5] }
 
     var body: some View {
-        List {
-            if isReordering {
-                // Reorder mode: compact rows with drag handles
-                Section("Drag to Reorder") {
-                    ForEach($exerciseStates) { $state in
-                        HStack {
-                            if state.supersetGroup != nil {
-                                Image(systemName: "link")
-                                    .font(.caption2)
-                                    .foregroundStyle(.purple)
-                                Text("\(supersetLabel(offset: supersetGroupOffset(for: state)))")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(.purple)
-                            }
-                            VStack(alignment: .leading) {
-                                Text(state.exerciseName)
-                                    .font(.body)
-                                    .fontWeight(.medium)
-                                if state.isMainLift {
-                                    Text("5/3/1")
-                                        .font(.caption2)
-                                        .foregroundStyle(.blue)
+        workoutListView
+            .onAppear {
+                if workoutStarted {
+                    UIApplication.shared.isIdleTimerDisabled = true
+                }
+                guard !initialized else { return }
+                initialized = true
+                if let snapshot = recoverySnapshot {
+                    restoreFromSnapshot(snapshot)
+                } else {
+                    initializeExercises()
+                }
+            }
+            .task {
+                if heartRateManager.isAvailable {
+                    await heartRateManager.requestAuthorization()
+                }
+                #if DEBUG && targetEnvironment(simulator)
+                heartRateManager.isSimulating = true
+                heartRateManager.startMonitoring()
+                #else
+                if heartRateManager.isAuthorized {
+                    heartRateManager.startMonitoring()
+                }
+                #endif
+                heartRateManager.markSetStart()
+            }
+            .onChange(of: phoneConnectivity.watchHeartRateUpdateCount) {
+                let bpm = phoneConnectivity.watchHeartRate
+                if bpm > 0 { heartRateManager.recordBPM(bpm) }
+            }
+            .onChange(of: phoneConnectivity.isWatchReachable) { _, reachable in
+                if reachable && workoutStarted {
+                    phoneConnectivity.sendWorkoutStarted()
+                    sendWatchContext()
+                }
+            }
+            .onChange(of: restTimer.isRunning) { _, isRunning in
+                if !isRunning {
+                    if restTimer.completedNaturally {
+                        restTimer.completedNaturally = false
+                        phoneConnectivity.sendTimerCompleted()
+                    } else {
+                        phoneConnectivity.sendTimerStopped()
+                    }
+                    heartRateManager.ensureSetTracking()
+                }
+            }
+            .onChange(of: phoneConnectivity.watchRequestedStopTimer) {
+                guard phoneConnectivity.watchRequestedStopTimer else { return }
+                phoneConnectivity.watchRequestedStopTimer = false
+                restTimer.stop()
+            }
+            .onChange(of: phoneConnectivity.watchRequestedCompleteSet) {
+                guard let exerciseName = phoneConnectivity.watchRequestedCompleteSet else { return }
+                phoneConnectivity.watchRequestedCompleteSet = nil
+                completeNextSet(forExercise: exerciseName)
+            }
+            .onChange(of: phoneConnectivity.watchReportedRepCount) {
+                guard let count = phoneConnectivity.watchReportedRepCount else { return }
+                phoneConnectivity.watchReportedRepCount = nil
+                updateCurrentSetReps(count)
+            }
+            .onDisappear {
+                heartRateManager.stopMonitoring()
+                UIApplication.shared.isIdleTimerDisabled = false
+            }
+            .sheet(isPresented: Binding(
+                get: { selectedExerciseForDetail != nil },
+                set: { if !$0 { selectedExerciseForDetail = nil } }
+            )) {
+                if let name = selectedExerciseForDetail {
+                    NavigationStack {
+                        ExerciseDetailView(exerciseName: name)
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button("Done") { selectedExerciseForDetail = nil }
                                 }
                             }
-                            Spacer()
-                        }
-                    }
-                    .onMove { from, to in
-                        exerciseStates.move(fromOffsets: from, toOffset: to)
-                    }
-                }
-            } else {
-                // Header
-                Section {
-                    header
-                        .frame(maxWidth: .infinity)
-                }
-                .listRowBackground(Color.clear)
-
-                // Start button (before workout begins)
-                if !workoutStarted {
-                    Section {
-                        Button {
-                            workoutStartTime = .now
-                            workoutStarted = true
-                            UIApplication.shared.isIdleTimerDisabled = true
-                            phoneConnectivity.sendWorkoutStarted()
-                            heartRateManager.markSetStart()
-                            let repEnabled = userSettings?.repCountingEnabled ?? false
-                            phoneConnectivity.sendRepCountingEnabled(repEnabled)
-                            if repEnabled {
-                                phoneConnectivity.sendRepTuning(
-                                    sensitivity: userSettings?.repSensitivity ?? [:],
-                                    tempo: userSettings?.repTempo ?? [:]
-                                )
-                            }
-                            sendWatchContext()
-                        } label: {
-                            Label("Start Workout", systemImage: "play.fill")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.green)
-                        .listRowBackground(Color.clear)
-                    }
-                }
-
-                // Exercise sections (grouped by superset)
-                ForEach(exerciseSectionGroups, id: \.id) { group in
-                    if group.indices.count > 1 {
-                        supersetSection(for: group)
-                    } else if let idx = group.indices.first {
-                        exerciseSection(for: $exerciseStates[idx], index: idx)
-                    }
-                }
-
-                // Notes
-                Section("Notes") {
-                    TextField("Workout notes...", text: $notes, axis: .vertical)
-                        .lineLimit(3...6)
-                }
-
-                // Finish
-                if workoutStarted {
-                    Section {
-                        Button {
-                            saveWorkout()
-                        } label: {
-                            Label("Finish Workout", systemImage: "checkmark.circle.fill")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .listRowBackground(Color.clear)
-
-                        Button(role: .destructive) {
-                            showDiscardConfirmation = true
-                        } label: {
-                            Label("Cancel Workout", systemImage: "xmark.circle")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .listRowBackground(Color.clear)
                     }
                 }
             }
+            .sheet(isPresented: $showRepTuning) {
+                RepCountingTuningView { sensitivity, tempo in
+                    phoneConnectivity.sendRepTuning(sensitivity: sensitivity, tempo: tempo)
+                }
+            }
+            .sheet(item: $supersetSource) { source in
+                supersetPickerSheet(sourceIndex: source.index)
+                    .presentationDetents([.medium])
+            }
+            .sheet(isPresented: $showingSaveTemplateSheet) {
+                SaveTemplateChangesView(
+                    changes: templateChanges,
+                    onSave: { selections in
+                        applyTemplateChanges(selections)
+                        dismiss()
+                    },
+                    onSkip: {
+                        dismiss()
+                    }
+                )
+                .presentationDetents([.medium])
+            }
+    }
+
+    private var workoutListView: some View {
+        List {
+            listContent
         }
         .listStyle(.insetGrouped)
         .safeAreaInset(edge: .bottom) {
@@ -175,6 +176,7 @@ struct TemplateWorkoutView: View {
         }
         .confirmationDialog("Workout in Progress", isPresented: $showDiscardConfirmation) {
             Button("Discard Workout", role: .destructive) {
+                ActiveWorkoutStore.delete()
                 UIApplication.shared.isIdleTimerDisabled = false
                 phoneConnectivity.sendWorkoutFinished()
                 dismiss()
@@ -232,104 +234,113 @@ struct TemplateWorkoutView: View {
                 }
             }
         }
-        .onAppear {
-            // Re-assert screen-on after sheets dismiss (onDisappear fires for sheets)
-            if workoutStarted {
-                UIApplication.shared.isIdleTimerDisabled = true
-            }
-            guard !initialized else { return }
-            initialized = true
-            initializeExercises()
-        }
-        .task {
-            if heartRateManager.isAvailable {
-                await heartRateManager.requestAuthorization()
-            }
-            #if DEBUG && targetEnvironment(simulator)
-            heartRateManager.isSimulating = true
-            heartRateManager.startMonitoring()
-            #else
-            if heartRateManager.isAuthorized {
-                heartRateManager.startMonitoring()
-            }
-            #endif
-            // Start tracking HR samples immediately so the first set has data
-            heartRateManager.markSetStart()
-        }
-        .onChange(of: phoneConnectivity.watchHeartRateUpdateCount) {
-            let bpm = phoneConnectivity.watchHeartRate
-            if bpm > 0 {
-                heartRateManager.recordBPM(bpm)
-            }
-        }
-        .onChange(of: phoneConnectivity.isWatchReachable) { _, reachable in
-            if reachable && workoutStarted {
-                phoneConnectivity.sendWorkoutStarted()
-                sendWatchContext()
-            }
-        }
-        .onChange(of: restTimer.isRunning) { _, isRunning in
-            if !isRunning {
-                if restTimer.completedNaturally {
-                    restTimer.completedNaturally = false
-                    phoneConnectivity.sendTimerCompleted()
-                } else {
-                    phoneConnectivity.sendTimerStopped()
-                }
-                // Ensure HR tracking is active for the next set (without clearing existing samples)
-                heartRateManager.ensureSetTracking()
-            }
-        }
-        .onChange(of: phoneConnectivity.watchRequestedStopTimer) {
-            guard phoneConnectivity.watchRequestedStopTimer else { return }
-            phoneConnectivity.watchRequestedStopTimer = false
-            restTimer.stop()
-        }
-        .onChange(of: phoneConnectivity.watchRequestedCompleteSet) {
-            guard let exerciseName = phoneConnectivity.watchRequestedCompleteSet else { return }
-            phoneConnectivity.watchRequestedCompleteSet = nil
-            completeNextSet(forExercise: exerciseName)
-        }
-        .onChange(of: phoneConnectivity.watchReportedRepCount) {
-            guard let count = phoneConnectivity.watchReportedRepCount else { return }
-            phoneConnectivity.watchReportedRepCount = nil
-            updateCurrentSetReps(count)
-        }
-        .onDisappear {
-            heartRateManager.stopMonitoring()
-            UIApplication.shared.isIdleTimerDisabled = false
-        }
-        .sheet(item: $selectedExerciseForDetail) { name in
-            NavigationStack {
-                ExerciseDetailView(exerciseName: name)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Done") { selectedExerciseForDetail = nil }
+    }
+
+    // MARK: - List Content
+
+    @ViewBuilder
+    private var listContent: some View {
+        if isReordering {
+            Section("Drag to Reorder") {
+                ForEach($exerciseStates) { $state in
+                    HStack {
+                        if state.supersetGroup != nil {
+                            Image(systemName: "link")
+                                .font(.caption2)
+                                .foregroundStyle(.purple)
+                            Text("\(supersetLabel(offset: supersetGroupOffset(for: state)))")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.purple)
                         }
+                        VStack(alignment: .leading) {
+                            Text(state.exerciseName)
+                                .font(.body)
+                                .fontWeight(.medium)
+                            if state.isMainLift {
+                                Text("5/3/1")
+                                    .font(.caption2)
+                                    .foregroundStyle(.blue)
+                            }
+                        }
+                        Spacer()
                     }
-            }
-        }
-        .sheet(isPresented: $showRepTuning) {
-            RepCountingTuningView { sensitivity, tempo in
-                phoneConnectivity.sendRepTuning(sensitivity: sensitivity, tempo: tempo)
-            }
-        }
-        .sheet(item: $supersetSource) { source in
-            supersetPickerSheet(sourceIndex: source.index)
-                .presentationDetents([.medium])
-        }
-        .sheet(isPresented: $showingSaveTemplateSheet) {
-            SaveTemplateChangesView(
-                changes: templateChanges,
-                onSave: { selections in
-                    applyTemplateChanges(selections)
-                    dismiss()
-                },
-                onSkip: {
-                    dismiss()
                 }
-            )
-            .presentationDetents([.medium])
+                .onMove { from, to in
+                    exerciseStates.move(fromOffsets: from, toOffset: to)
+                }
+            }
+        } else {
+            Section {
+                header
+                    .frame(maxWidth: .infinity)
+            }
+            .listRowBackground(Color.clear)
+
+            if !workoutStarted {
+                Section {
+                    Button {
+                        workoutStartTime = .now
+                        workoutStarted = true
+                        UIApplication.shared.isIdleTimerDisabled = true
+                        phoneConnectivity.sendWorkoutStarted()
+                        heartRateManager.markSetStart()
+                        let repEnabled = userSettings?.repCountingEnabled ?? false
+                        phoneConnectivity.sendRepCountingEnabled(repEnabled)
+                        if repEnabled {
+                            phoneConnectivity.sendRepTuning(
+                                sensitivity: userSettings?.repSensitivity ?? [:],
+                                tempo: userSettings?.repTempo ?? [:]
+                            )
+                        }
+                        sendWatchContext()
+                    } label: {
+                        Label("Start Workout", systemImage: "play.fill")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    .listRowBackground(Color.clear)
+                }
+            }
+
+            ForEach(exerciseSectionGroups, id: \.id) { group in
+                if group.indices.count > 1 {
+                    supersetSection(for: group)
+                } else if let idx = group.indices.first {
+                    exerciseSection(for: $exerciseStates[idx], index: idx)
+                }
+            }
+
+            Section("Notes") {
+                TextField("Workout notes...", text: $notes, axis: .vertical)
+                    .lineLimit(3...6)
+            }
+
+            if workoutStarted {
+                Section {
+                    Button {
+                        saveWorkout()
+                    } label: {
+                        Label("Finish Workout", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .listRowBackground(Color.clear)
+
+                    Button(role: .destructive) {
+                        showDiscardConfirmation = true
+                    } label: {
+                        Label("Cancel Workout", systemImage: "xmark.circle")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .listRowBackground(Color.clear)
+                }
+            }
         }
     }
 
@@ -1329,6 +1340,9 @@ struct TemplateWorkoutView: View {
         // Send workout context to watch
         sendWatchContext()
 
+        // Auto-save for crash recovery
+        autoSaveWorkout()
+
         let recoveryHR = userSettings?.recoveryHR
 
         // Use per-set rest if set, otherwise fall back to global defaults
@@ -1472,6 +1486,60 @@ struct TemplateWorkoutView: View {
         }
     }
 
+    // MARK: - Crash Recovery
+
+    private func restoreFromSnapshot(_ snapshot: WorkoutSnapshot) {
+        workoutStartTime = snapshot.workoutStartTime
+        workoutStarted = true
+        notes = snapshot.notes
+        UIApplication.shared.isIdleTimerDisabled = true
+
+        exerciseStates = snapshot.exercises.map { ex in
+            ExerciseState(
+                id: UUID(uuidString: ex.id) ?? UUID(),
+                exerciseName: ex.exerciseName,
+                mainLift: ex.mainLift,
+                sets: ex.sets,
+                plannedSets: [],
+                previousSets: [],
+                supersetGroup: ex.supersetGroup,
+                isUnilateral: ex.isUnilateral,
+                equipmentType: ex.equipmentType,
+                isTimed: ex.isTimed,
+                supersetSubGroup: ex.supersetSubGroup
+            )
+        }
+
+        phoneConnectivity.sendWorkoutStarted()
+    }
+
+    private func autoSaveWorkout() {
+        guard workoutStarted, let startTime = workoutStartTime else { return }
+        let snapshot = WorkoutSnapshot(
+            templateName: template.name,
+            cycleNumber: cycle?.number ?? 0,
+            weekNumber: week,
+            variant: cycle?.programVariant.rawValue ?? "standard",
+            workoutStartTime: startTime,
+            notes: notes,
+            exercises: exerciseStates.map { state in
+                WorkoutSnapshot.ExerciseSnapshot(
+                    id: state.id.uuidString,
+                    exerciseName: state.exerciseName,
+                    mainLift: state.mainLift,
+                    sets: state.sets,
+                    supersetGroup: state.supersetGroup,
+                    isUnilateral: state.isUnilateral,
+                    equipmentType: state.equipmentType,
+                    isTimed: state.isTimed,
+                    supersetSubGroup: state.supersetSubGroup
+                )
+            },
+            savedAt: .now
+        )
+        ActiveWorkoutStore.save(snapshot)
+    }
+
     // MARK: - Initialize
 
     private func initializeExercises() {
@@ -1611,6 +1679,7 @@ struct TemplateWorkoutView: View {
             estimatedCalories: calories
         )
         modelContext.insert(workout)
+        ActiveWorkoutStore.delete()
         restTimer.stop()
         heartRateManager.stopMonitoring()
         UIApplication.shared.isIdleTimerDisabled = false

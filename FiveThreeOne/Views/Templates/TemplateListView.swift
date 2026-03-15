@@ -13,6 +13,8 @@ struct TemplateListView: View {
     @State private var showingNewTemplate = false
     @State private var selectedTemplate: WorkoutTemplate?
     @State private var editingTemplate: WorkoutTemplate?
+    @State private var recoverySnapshot: WorkoutSnapshot?
+    @State private var showRecoveryAlert = false
 
     private var currentCycle: Cycle? {
         cycles.first(where: { !$0.isComplete }) ?? cycles.first
@@ -96,10 +98,12 @@ struct TemplateListView: View {
             .listStyle(.plain)
             .navigationTitle("Workout")
             .navigationDestination(item: $selectedTemplate) { template in
+                let snapshot = recoverySnapshot?.templateName == template.name ? recoverySnapshot : nil
                 TemplateWorkoutView(
                     template: template,
                     cycle: currentCycle,
-                    week: selectedWeek
+                    week: snapshot?.weekNumber ?? selectedWeek,
+                    recoverySnapshot: snapshot
                 )
             }
             .toolbar {
@@ -128,6 +132,27 @@ struct TemplateListView: View {
                 if !weekInitialized {
                     selectedWeek = suggestedWeek
                     weekInitialized = true
+                }
+                if let snapshot = ActiveWorkoutStore.load() {
+                    recoverySnapshot = snapshot
+                    showRecoveryAlert = true
+                }
+            }
+            .alert("Resume Workout?", isPresented: $showRecoveryAlert) {
+                Button("Resume") {
+                    if let snapshot = recoverySnapshot,
+                       let match = templates.first(where: { $0.name == snapshot.templateName }) {
+                        selectedTemplate = match
+                    }
+                }
+                Button("Discard", role: .destructive) {
+                    ActiveWorkoutStore.delete()
+                    recoverySnapshot = nil
+                }
+            } message: {
+                if let snapshot = recoverySnapshot {
+                    let elapsed = Int(snapshot.savedAt.timeIntervalSince(snapshot.workoutStartTime)) / 60
+                    Text("\(snapshot.templateName) was interrupted \(elapsed) min in. Resume where you left off?")
                 }
             }
         }
