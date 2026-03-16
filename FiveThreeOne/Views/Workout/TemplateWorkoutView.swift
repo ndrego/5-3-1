@@ -850,6 +850,7 @@ struct TemplateWorkoutView: View {
             HStack {
                 HStack(spacing: 4) {
                     WeightField(value: set.weight, font: .title3)
+                        .accessibilityIdentifier("weight-\(set.wrappedValue.id)")
                     Text("lbs")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -1062,6 +1063,7 @@ struct TemplateWorkoutView: View {
                 if !isTimed {
                     // Weight — pre-filled from previous, editable
                     WeightField(value: set.weight)
+                        .accessibilityIdentifier("acc-weight-\(set.wrappedValue.id)")
                         .padding(4)
                         .background(Color(.tertiarySystemFill))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -1073,6 +1075,7 @@ struct TemplateWorkoutView: View {
 
                 // Reps or seconds
                 RepsField(value: set.targetReps)
+                    .accessibilityIdentifier("acc-reps-\(set.wrappedValue.id)")
                     .padding(4)
                     .background(Color(.tertiarySystemFill))
                     .clipShape(RoundedRectangle(cornerRadius: 6))

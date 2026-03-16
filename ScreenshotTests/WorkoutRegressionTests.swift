@@ -395,6 +395,240 @@ final class WorkoutRegressionTests: XCTestCase {
         cancelActiveWorkout()
     }
 
+    // MARK: - Weight/Reps Input Regressions
+
+    /// Regression: Weight field would reset to original value when the view
+    /// re-rendered (timer tick, HR update), because onChange(of: value) overwrote
+    /// the user's in-progress edit. The isEditing guard was added to fix this.
+    func testWeightField_TypingNotOverwrittenByRerender() {
+        navigateToWorkoutView()
+        startWorkout()
+
+        // Find a weight field — main lift weight fields
+        let weightField = app.textFields.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "weight-")
+        ).firstMatch
+
+        guard weightField.waitForExistence(timeout: 5) else {
+            cancelActiveWorkout()
+            return
+        }
+
+        // Tap to focus the field
+        weightField.tap()
+        sleep(1)
+
+        // Clear and type a new value
+        // Select all existing text first
+        weightField.press(forDuration: 1.0) // long press to select
+        let selectAll = app.menuItems["Select All"]
+        if selectAll.waitForExistence(timeout: 2) {
+            selectAll.tap()
+        }
+        weightField.typeText("999")
+
+        // Wait for a few seconds — timer ticks would cause re-renders
+        sleep(3)
+
+        // The field should still show "999" (not reset to original weight)
+        let fieldValue = weightField.value as? String ?? ""
+        XCTAssertTrue(fieldValue.contains("999"),
+            "Weight field should retain typed value '999' during re-renders, but got '\(fieldValue)'")
+
+        // Dismiss keyboard
+        let doneButton = app.toolbars.buttons["Done"]
+        if doneButton.exists { doneButton.tap() }
+
+        cancelActiveWorkout()
+    }
+
+    /// Regression: Accessory weight field lost value when scrolling away and back,
+    /// because the string-backed state wasn't properly synced with the binding.
+    func testAccessoryWeightField_SurvivesScrolling() {
+        navigateToWorkoutView()
+        startWorkout()
+
+        // Scroll to find accessory weight fields
+        app.swipeUp()
+
+        let accWeight = app.textFields.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "acc-weight-")
+        ).firstMatch
+
+        guard accWeight.waitForExistence(timeout: 5) else {
+            cancelActiveWorkout()
+            return
+        }
+
+        // Tap and type a distinctive value
+        accWeight.tap()
+        sleep(1)
+        accWeight.press(forDuration: 1.0)
+        let selectAll = app.menuItems["Select All"]
+        if selectAll.waitForExistence(timeout: 2) {
+            selectAll.tap()
+        }
+        accWeight.typeText("777")
+
+        // Dismiss keyboard to commit the value
+        let doneButton = app.toolbars.buttons["Done"]
+        if doneButton.exists { doneButton.tap() }
+        sleep(1)
+
+        // Scroll away and back
+        app.swipeDown()
+        app.swipeDown()
+        sleep(1)
+        app.swipeUp()
+        sleep(1)
+
+        // Re-find the field and verify value persisted
+        let accWeightAfter = app.textFields.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "acc-weight-")
+        ).firstMatch
+
+        if accWeightAfter.waitForExistence(timeout: 3) {
+            let fieldValue = accWeightAfter.value as? String ?? ""
+            XCTAssertTrue(fieldValue.contains("777"),
+                "Accessory weight should persist as '777' after scrolling, but got '\(fieldValue)'")
+        }
+
+        cancelActiveWorkout()
+    }
+
+    /// Regression: Reps field in accessory exercises would not accept input,
+    /// or would show stale values from previous workout.
+    func testAccessoryRepsField_AcceptsInput() {
+        navigateToWorkoutView()
+        startWorkout()
+
+        // Scroll to accessories
+        app.swipeUp()
+
+        let accReps = app.textFields.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "acc-reps-")
+        ).firstMatch
+
+        guard accReps.waitForExistence(timeout: 5) else {
+            cancelActiveWorkout()
+            return
+        }
+
+        // Tap and type
+        accReps.tap()
+        sleep(1)
+        accReps.press(forDuration: 1.0)
+        let selectAll = app.menuItems["Select All"]
+        if selectAll.waitForExistence(timeout: 2) {
+            selectAll.tap()
+        }
+        accReps.typeText("12")
+
+        // Dismiss keyboard
+        let doneButton = app.toolbars.buttons["Done"]
+        if doneButton.exists { doneButton.tap() }
+        sleep(1)
+
+        // Verify the value was accepted
+        let fieldValue = accReps.value as? String ?? ""
+        XCTAssertTrue(fieldValue.contains("12"),
+            "Reps field should accept input '12', but got '\(fieldValue)'")
+
+        cancelActiveWorkout()
+    }
+
+    /// Regression: Editing weight in workout detail (history) would lose the
+    /// value on focus change because TextField(value:format:.number) rejects
+    /// intermediate input states.
+    func testEditMode_WeightFieldAcceptsInput() {
+        guard navigateToWorkoutDetail() else { return }
+
+        // Enter edit mode
+        let editButton = app.navigationBars.buttons["Edit"]
+        guard editButton.waitForExistence(timeout: 5) else { return }
+        editButton.tap()
+        sleep(1)
+
+        // Find an edit weight field
+        let editWeight = app.textFields.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "edit-weight-")
+        ).firstMatch
+
+        guard editWeight.waitForExistence(timeout: 5) else {
+            // Exit edit mode
+            let doneBtn = app.navigationBars.buttons["Done"]
+            if doneBtn.exists { doneBtn.tap() }
+            return
+        }
+
+        // Read original value
+        let originalValue = editWeight.value as? String ?? ""
+
+        // Tap and modify
+        editWeight.tap()
+        sleep(1)
+        editWeight.press(forDuration: 1.0)
+        let selectAll = app.menuItems["Select All"]
+        if selectAll.waitForExistence(timeout: 2) {
+            selectAll.tap()
+        }
+        editWeight.typeText("315")
+
+        // Dismiss keyboard
+        let kbDone = app.toolbars.buttons["Done"]
+        if kbDone.exists { kbDone.tap() }
+        sleep(1)
+
+        // Verify the field shows the new value
+        let newValue = editWeight.value as? String ?? ""
+        XCTAssertTrue(newValue.contains("315"),
+            "Edit weight field should show '315' after typing, but got '\(newValue)'")
+
+        // Exit edit mode (Done button in nav bar)
+        let navDone = app.navigationBars.buttons["Done"]
+        if navDone.exists { navDone.tap() }
+    }
+
+    /// Regression: Editing reps in workout detail would lose the value.
+    func testEditMode_RepsFieldAcceptsInput() {
+        guard navigateToWorkoutDetail() else { return }
+
+        let editButton = app.navigationBars.buttons["Edit"]
+        guard editButton.waitForExistence(timeout: 5) else { return }
+        editButton.tap()
+        sleep(1)
+
+        let editReps = app.textFields.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "edit-reps-")
+        ).firstMatch
+
+        guard editReps.waitForExistence(timeout: 5) else {
+            let doneBtn = app.navigationBars.buttons["Done"]
+            if doneBtn.exists { doneBtn.tap() }
+            return
+        }
+
+        editReps.tap()
+        sleep(1)
+        editReps.press(forDuration: 1.0)
+        let selectAll = app.menuItems["Select All"]
+        if selectAll.waitForExistence(timeout: 2) {
+            selectAll.tap()
+        }
+        editReps.typeText("8")
+
+        let kbDone = app.toolbars.buttons["Done"]
+        if kbDone.exists { kbDone.tap() }
+        sleep(1)
+
+        let newValue = editReps.value as? String ?? ""
+        XCTAssertTrue(newValue.contains("8"),
+            "Edit reps field should show '8' after typing, but got '\(newValue)'")
+
+        let navDone = app.navigationBars.buttons["Done"]
+        if navDone.exists { navDone.tap() }
+    }
+
     // MARK: - Helpers
 
     private func dismissSystemAlerts() {
@@ -459,6 +693,39 @@ final class WorkoutRegressionTests: XCTestCase {
                 discardBtn.tap()
             }
         }
+    }
+
+    @discardableResult
+    private func navigateToWorkoutDetail() -> Bool {
+        app.tabBars.buttons["History"].tap()
+        sleep(1)
+
+        let firstCell = app.cells.firstMatch
+        if firstCell.waitForExistence(timeout: 5) {
+            firstCell.tap()
+            sleep(2)
+
+            let editButton = app.navigationBars.buttons["Edit"]
+            if editButton.waitForExistence(timeout: 5) {
+                return true
+            }
+        }
+
+        // Fallback: try tapping workout name text
+        for name in ["Squat + OHP", "Deadlift + Bench"] {
+            let text = app.staticTexts.matching(
+                NSPredicate(format: "label CONTAINS %@", name)
+            ).firstMatch
+            if text.waitForExistence(timeout: 2) {
+                text.tap()
+                sleep(2)
+                if app.navigationBars.buttons["Edit"].waitForExistence(timeout: 3) {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     /// Read exercise count from the hidden accessibility element or exercise name buttons
