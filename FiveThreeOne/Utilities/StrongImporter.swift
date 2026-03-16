@@ -81,7 +81,7 @@ struct StrongImporter {
     }
 
     /// Parse a CSV line respecting quoted fields
-    private static func parseCSVLine(_ line: String) -> [String] {
+    static func parseCSVLine(_ line: String) -> [String] {
         var fields: [String] = []
         var current = ""
         var inQuotes = false
@@ -112,7 +112,7 @@ struct StrongImporter {
     }
 
     /// Parse Strong duration string like "1h 23m", "45m 30s", "1h 23m 45s"
-    private static func parseDuration(_ string: String) -> Int {
+    static func parseDuration(_ string: String) -> Int {
         let lower = string.lowercased().trimmingCharacters(in: .whitespaces)
         var totalSeconds = 0
 
@@ -136,7 +136,7 @@ struct StrongImporter {
     }
 
     /// Known unilateral exercise patterns
-    private static func isLikelyUnilateral(_ name: String) -> Bool {
+    static func isLikelyUnilateral(_ name: String) -> Bool {
         let lower = name.lowercased()
         let patterns = [
             "single arm", "single leg", "single-arm", "single-leg",
@@ -153,7 +153,7 @@ struct StrongImporter {
 
     /// Normalize a Strong exercise name to match our exercise library.
     /// e.g. "Romanian Deadlift (Barbell)" → "Romanian Deadlift" if that exists in our library.
-    private static func normalizeExerciseName(_ strongName: String, knownNames: Set<String>) -> String {
+    static func normalizeExerciseName(_ strongName: String, knownNames: Set<String>) -> String {
         // Direct match
         if knownNames.contains(strongName) { return strongName }
 
@@ -328,7 +328,7 @@ struct StrongImporter {
         return added
     }
 
-    private static func guessCategory(for name: String) -> ExerciseCategory {
+    static func guessCategory(for name: String) -> ExerciseCategory {
         let lower = name.lowercased()
         if lower.contains("curl") || lower.contains("row") || lower.contains("pull") ||
            lower.contains("lat") || lower.contains("chin") || lower.contains("face") ||
@@ -344,7 +344,7 @@ struct StrongImporter {
         return .push
     }
 
-    private static func guessEquipment(for name: String) -> String {
+    static func guessEquipment(for name: String) -> String {
         let lower = name.lowercased()
         if lower.contains("barbell") { return "barbell" }
         if lower.contains("dumbbell") { return "dumbbell" }

@@ -10,6 +10,7 @@
 		025945D4757D7CD0B5F4BF2B /* BackupRestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3789B8ABF127D1C712F258 /* BackupRestoreView.swift */; };
 		052886316DE040C84A086EF3 /* SetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342892DF7BB145BC5C61A846 /* SetRowView.swift */; };
 		0944D13075B328CCB1AEC8B6 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD8C62BDC16C419182B22F8 /* ScreenshotTests.swift */; };
+		0EDDABF24F40D7D0E8597A9A /* HeartRateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7974A13CE79659BD6641EA45 /* HeartRateTests.swift */; };
 		1148E4B7B5F324C440605842 /* ExerciseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E9858407A7B51A5D75ACEF /* ExerciseDetailView.swift */; };
 		124A2D3D7686280E9FFDB46E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA08E42318BE8236610E842 /* SettingsView.swift */; };
 		1364187D2F741593678B9593 /* TemplateWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */; };
@@ -30,6 +31,7 @@
 		5BC12CDBFFD67BDA353D9E2E /* PreviousPerformanceLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B16D82D7CF0F5A99A88CAB /* PreviousPerformanceLookup.swift */; };
 		612FE433F6370ABF0BBD2DFF /* ExercisePerformance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C50280FC64462F470CE51B2 /* ExercisePerformance.swift */; };
 		6F2CCEC4D5F32C887FDDC8C8 /* FiveThreeOneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE577FD8B1B84EDB075AAB8C /* FiveThreeOneApp.swift */; };
+		7AB777F4E8CFAD87E7A1ECFB /* StrongImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A31DEC411CA5C39A679562 /* StrongImporterTests.swift */; };
 		7B9B49987EA31CDF85E034E2 /* PhoneConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08369B15D0D20319E0EACBFC /* PhoneConnectivityManager.swift */; };
 		7DF41D7559FBD0BE6D967BB8 /* CompletedWorkout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DED8FCDBE3E01F5CAC0F6B0F /* CompletedWorkout.swift */; };
 		7F649B0E7AC26560F7E4EB37 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F86E2103F18680D17C60A28 /* WorkoutDetailView.swift */; };
@@ -55,6 +57,7 @@
 		D3C15F1B5A6F483D609D28B8 /* WorkoutTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3393FE9AF129A9031A0F141 /* WorkoutTemplate.swift */; };
 		D45075E0FA1E1EF30A772030 /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EA6814D61250E9F23592DD /* Lift.swift */; };
 		E10352AA8E055B194DC6D6AB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 9150FB2613AAB2AEF582064B /* PrivacyInfo.xcprivacy */; };
+		E1947AFE20FF257A786667AD /* RestTimerStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB091E550EC4CC901CF04855 /* RestTimerStateTests.swift */; };
 		E6E8F2A2331CDD52521F0423 /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A52D1444397B119B709FC76 /* BackupManager.swift */; };
 		E74EED874D95E9E6EA5A24AA /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B54678A56D15CD4243E9B7 /* HistoryListView.swift */; };
 		F1AB479CFDBCE4176BA21B40 /* WatchWorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 627679734B52F316E9A55257 /* WatchWorkoutManager.swift */; };
@@ -132,6 +135,7 @@
 		627679734B52F316E9A55257 /* WatchWorkoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutManager.swift; sourceTree = "<group>"; };
 		62ED226F8A02894A6E4C1835 /* FiveThreeOne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FiveThreeOne.entitlements; sourceTree = "<group>"; };
 		6DF015D31FA895B8919C7274 /* RepCountingTuningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCountingTuningView.swift; sourceTree = "<group>"; };
+		7974A13CE79659BD6641EA45 /* HeartRateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateTests.swift; sourceTree = "<group>"; };
 		7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiveThreeOneWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B9F5B0A48B730B51F34F609 /* ProgramVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramVariant.swift; sourceTree = "<group>"; };
 		7EC8F1B0D58A83BE9D0837FD /* PlateCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateCalculatorTests.swift; sourceTree = "<group>"; };
@@ -152,11 +156,13 @@
 		ACC5CD132C6798CD7DB3097F /* TrainingMaxSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingMaxSetupView.swift; sourceTree = "<group>"; };
 		AF3789B8ABF127D1C712F258 /* BackupRestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift; sourceTree = "<group>"; };
 		B1EA6814D61250E9F23592DD /* Lift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lift.swift; sourceTree = "<group>"; };
+		B5A31DEC411CA5C39A679562 /* StrongImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongImporterTests.swift; sourceTree = "<group>"; };
 		B94AF72042394A17E3FC3361 /* RestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerView.swift; sourceTree = "<group>"; };
 		BEFA3CACFC1833116B49A3DE /* CompletedSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedSet.swift; sourceTree = "<group>"; };
 		C7CF49725EDCFA52F8B30B6D /* TemplateListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateListView.swift; sourceTree = "<group>"; };
 		C9B54678A56D15CD4243E9B7 /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
 		D4D3DF9894D7652D28F05926 /* RepCountingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCountingManager.swift; sourceTree = "<group>"; };
+		DB091E550EC4CC901CF04855 /* RestTimerStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerStateTests.swift; sourceTree = "<group>"; };
 		DDD8C62BDC16C419182B22F8 /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		DE577FD8B1B84EDB075AAB8C /* FiveThreeOneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveThreeOneApp.swift; sourceTree = "<group>"; };
 		DED8FCDBE3E01F5CAC0F6B0F /* CompletedWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedWorkout.swift; sourceTree = "<group>"; };
@@ -180,9 +186,12 @@
 			isa = PBXGroup;
 			children = (
 				9036BE2DA7C5A221BD090430 /* ActiveWorkoutStoreTests.swift */,
+				7974A13CE79659BD6641EA45 /* HeartRateTests.swift */,
 				3E63F342D887D128AD7BAC76 /* ModelTests.swift */,
 				7EC8F1B0D58A83BE9D0837FD /* PlateCalculatorTests.swift */,
 				810DDFCD0FAC14BD2A4D1B1E /* ProgramEngineTests.swift */,
+				DB091E550EC4CC901CF04855 /* RestTimerStateTests.swift */,
+				B5A31DEC411CA5C39A679562 /* StrongImporterTests.swift */,
 			);
 			path = FiveThreeOneTests;
 			sourceTree = "<group>";
@@ -551,9 +560,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				B20A602EADD8A77C3211A44E /* ActiveWorkoutStoreTests.swift in Sources */,
+				0EDDABF24F40D7D0E8597A9A /* HeartRateTests.swift in Sources */,
 				8EF7BFB02FF9A1A99C60D46F /* ModelTests.swift in Sources */,
 				14AB025B40E12F9C82A88F8D /* PlateCalculatorTests.swift in Sources */,
 				48BDBA5AC83282EB019B791D /* ProgramEngineTests.swift in Sources */,
+				E1947AFE20FF257A786667AD /* RestTimerStateTests.swift in Sources */,
+				7AB777F4E8CFAD87E7A1ECFB /* StrongImporterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
