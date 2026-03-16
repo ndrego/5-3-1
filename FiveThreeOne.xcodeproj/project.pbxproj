@@ -58,6 +58,7 @@
 		D45075E0FA1E1EF30A772030 /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EA6814D61250E9F23592DD /* Lift.swift */; };
 		E10352AA8E055B194DC6D6AB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 9150FB2613AAB2AEF582064B /* PrivacyInfo.xcprivacy */; };
 		E1947AFE20FF257A786667AD /* RestTimerStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB091E550EC4CC901CF04855 /* RestTimerStateTests.swift */; };
+		E6DE8A1C5F83EBA22F1D4136 /* UIRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCAAC74C86F9F7DE1501D1D7 /* UIRegressionTests.swift */; };
 		E6E8F2A2331CDD52521F0423 /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A52D1444397B119B709FC76 /* BackupManager.swift */; };
 		E74EED874D95E9E6EA5A24AA /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B54678A56D15CD4243E9B7 /* HistoryListView.swift */; };
 		F1AB479CFDBCE4176BA21B40 /* WatchWorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 627679734B52F316E9A55257 /* WatchWorkoutManager.swift */; };
@@ -158,6 +159,7 @@
 		B1EA6814D61250E9F23592DD /* Lift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lift.swift; sourceTree = "<group>"; };
 		B5A31DEC411CA5C39A679562 /* StrongImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongImporterTests.swift; sourceTree = "<group>"; };
 		B94AF72042394A17E3FC3361 /* RestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerView.swift; sourceTree = "<group>"; };
+		BCAAC74C86F9F7DE1501D1D7 /* UIRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIRegressionTests.swift; sourceTree = "<group>"; };
 		BEFA3CACFC1833116B49A3DE /* CompletedSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedSet.swift; sourceTree = "<group>"; };
 		C7CF49725EDCFA52F8B30B6D /* TemplateListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateListView.swift; sourceTree = "<group>"; };
 		C9B54678A56D15CD4243E9B7 /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
@@ -290,6 +292,7 @@
 			children = (
 				91672F7F96A97ED53145FF6F /* Info.plist */,
 				DDD8C62BDC16C419182B22F8 /* ScreenshotTests.swift */,
+				BCAAC74C86F9F7DE1501D1D7 /* UIRegressionTests.swift */,
 			);
 			path = ScreenshotTests;
 			sourceTree = "<group>";
@@ -633,6 +636,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0944D13075B328CCB1AEC8B6 /* ScreenshotTests.swift in Sources */,
+				E6DE8A1C5F83EBA22F1D4136 /* UIRegressionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

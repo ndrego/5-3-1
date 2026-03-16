@@ -32,6 +32,15 @@ schemes:
       config: Debug
       targets:
         - FiveThreeOneTests
+  ScreenshotTests:
+    build:
+      targets:
+        ScreenshotTests: [test]
+        FiveThreeOne: [test]
+    test:
+      config: Debug
+      targets:
+        - ScreenshotTests
   FiveThreeOneWatch:
     build:
       targets:
