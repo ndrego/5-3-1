@@ -13,6 +13,7 @@
 		1148E4B7B5F324C440605842 /* ExerciseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E9858407A7B51A5D75ACEF /* ExerciseDetailView.swift */; };
 		124A2D3D7686280E9FFDB46E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA08E42318BE8236610E842 /* SettingsView.swift */; };
 		1364187D2F741593678B9593 /* TemplateWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */; };
+		14AB025B40E12F9C82A88F8D /* PlateCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC8F1B0D58A83BE9D0837FD /* PlateCalculatorTests.swift */; };
 		20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB2E2E170599DCA54721387 /* PreviewData.swift */; };
 		21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE467A519D792ED441F742E /* PlateCalculator.swift */; };
 		227FD27E1CE65EEA80E3A3AE /* CalibrationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8509E7A820AF565D128DAB36 /* CalibrationAnalyzer.swift */; };
@@ -21,6 +22,7 @@
 		2C8579C905B99A76D513AE9E /* TemplateListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CF49725EDCFA52F8B30B6D /* TemplateListView.swift */; };
 		3A49BC7591A92ACE6AB9128D /* LiftSparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C8617DEC3D016FB142EDC14 /* LiftSparklineView.swift */; };
 		43FC0A74596CFFC120F0EB4D /* FiveThreeOneWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		48BDBA5AC83282EB019B791D /* ProgramEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810DDFCD0FAC14BD2A4D1B1E /* ProgramEngineTests.swift */; };
 		49C4EAFFB2A489D84C16661C /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7695B5AD6606F0A852EB2 /* UserSettings.swift */; };
 		4BE90F7735ED5DCE1A60B616 /* Cycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0247C0C120E576E7E0290C60 /* Cycle.swift */; };
 		54015AAAD061F5F3D5D2FB6B /* DemoDataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2173EE38B16F9B9F345C5575 /* DemoDataSeeder.swift */; };
@@ -35,6 +37,7 @@
 		83A527D457330749031696F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 284CAB02879259FE36883AAD /* Assets.xcassets */; };
 		83BB9CDE8E9F150D3B8F6CA5 /* RestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94AF72042394A17E3FC3361 /* RestTimerView.swift */; };
 		8DCF4F72CDB53A0A6CCD429C /* RestTimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3520A61ACEA04BE124C43E37 /* RestTimerState.swift */; };
+		8EF7BFB02FF9A1A99C60D46F /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E63F342D887D128AD7BAC76 /* ModelTests.swift */; };
 		9182240799F61B1D374BAA8D /* TrainingMaxSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC5CD132C6798CD7DB3097F /* TrainingMaxSetupView.swift */; };
 		970A3EACC5C7C53F01DD8839 /* AccessorySetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CC7B6053AFB7ECE8CF22EA /* AccessorySetRowView.swift */; };
 		A2953E28823A445160A6A649 /* WorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC9B438F744231E2C9D1B5A /* WorkoutView.swift */; };
@@ -42,6 +45,7 @@
 		A6A18F21D138AE4FEDFFF4D8 /* HeartRateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5B09F98212E7C06D938D93 /* HeartRateManager.swift */; };
 		ACE6C40306B66AC18980B72C /* StrongImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8FE052FB06BDAED95A37379 /* StrongImporter.swift */; };
 		AF77BCED810D2D390F60CFCD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEAC4BA8FB0B58A0D6A0BCC3 /* ContentView.swift */; };
+		B20A602EADD8A77C3211A44E /* ActiveWorkoutStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9036BE2DA7C5A221BD090430 /* ActiveWorkoutStoreTests.swift */; };
 		B515AC7C0CD0C80222830CBC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A355D24994B7E9A96EDE7096 /* Assets.xcassets */; };
 		BBA38C7EE05EC8664FF47217 /* RepCountingTuningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF015D31FA895B8919C7274 /* RepCountingTuningView.swift */; };
 		CDA494DD690C481E8A4B6DBD /* ProgramVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F5B0A48B730B51F34F609 /* ProgramVariant.swift */; };
@@ -74,6 +78,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4553201F6F8826AF2EA50545;
 			remoteInfo = FiveThreeOneWatch;
+		};
+		CEBBA0D8C27E609EFB8D9D0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D40AE766716C699F67766868 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4A50F5911B8B726A73F83F4E;
+			remoteInfo = FiveThreeOne;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -113,6 +124,7 @@
 		3A52D1444397B119B709FC76 /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
 		3BA08E42318BE8236610E842 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3CEC1276ADADB11C4B07AEED /* FiveThreeOne.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FiveThreeOne.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3E63F342D887D128AD7BAC76 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
 		452048773705C2BF75CC773C /* TemplateEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditView.swift; sourceTree = "<group>"; };
 		4BE467A519D792ED441F742E /* PlateCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateCalculator.swift; sourceTree = "<group>"; };
 		4F86E2103F18680D17C60A28 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
@@ -122,12 +134,16 @@
 		6DF015D31FA895B8919C7274 /* RepCountingTuningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCountingTuningView.swift; sourceTree = "<group>"; };
 		7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiveThreeOneWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B9F5B0A48B730B51F34F609 /* ProgramVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramVariant.swift; sourceTree = "<group>"; };
+		7EC8F1B0D58A83BE9D0837FD /* PlateCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateCalculatorTests.swift; sourceTree = "<group>"; };
 		7EF430C5547890FEBB16A3B4 /* ProgramEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramEngine.swift; sourceTree = "<group>"; };
+		810DDFCD0FAC14BD2A4D1B1E /* ProgramEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramEngineTests.swift; sourceTree = "<group>"; };
 		82F0A1C31E0BDF2E0528B288 /* StrongImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongImportView.swift; sourceTree = "<group>"; };
 		84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateWorkoutView.swift; sourceTree = "<group>"; };
 		8509E7A820AF565D128DAB36 /* CalibrationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationAnalyzer.swift; sourceTree = "<group>"; };
 		8AB28C01FBAFE98AAC30FACB /* ScreenshotTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ScreenshotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DC1E3EC63CDD55DAE6212E7 /* FiveThreeOneTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FiveThreeOneTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8EE430402E11A12C53BCB6D2 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		9036BE2DA7C5A221BD090430 /* ActiveWorkoutStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkoutStoreTests.swift; sourceTree = "<group>"; };
 		9150FB2613AAB2AEF582064B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		91672F7F96A97ED53145FF6F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9CB2E2E170599DCA54721387 /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
@@ -158,6 +174,17 @@
 				2A24EB0B7C4C3A70DA0FF949 /* WatchHomeView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		259F729795C41C60997EDFFF /* FiveThreeOneTests */ = {
+			isa = PBXGroup;
+			children = (
+				9036BE2DA7C5A221BD090430 /* ActiveWorkoutStoreTests.swift */,
+				3E63F342D887D128AD7BAC76 /* ModelTests.swift */,
+				7EC8F1B0D58A83BE9D0837FD /* PlateCalculatorTests.swift */,
+				810DDFCD0FAC14BD2A4D1B1E /* ProgramEngineTests.swift */,
+			);
+			path = FiveThreeOneTests;
 			sourceTree = "<group>";
 		};
 		43F93C07C9CC8F6CE508CB33 /* Models */ = {
@@ -203,6 +230,7 @@
 			isa = PBXGroup;
 			children = (
 				AE13EB05FCF739C84CD4F00A /* FiveThreeOne */,
+				259F729795C41C60997EDFFF /* FiveThreeOneTests */,
 				D3915B5066797DD7ADA3E01E /* FiveThreeOneWatch */,
 				85A8EBB082014B8DB5499D43 /* Preview Content */,
 				87D7CFA0A66FC6569234926A /* ScreenshotTests */,
@@ -214,6 +242,7 @@
 			isa = PBXGroup;
 			children = (
 				3CEC1276ADADB11C4B07AEED /* FiveThreeOne.app */,
+				8DC1E3EC63CDD55DAE6212E7 /* FiveThreeOneTests.xctest */,
 				7A653AE9EF84C01A0206343E /* FiveThreeOneWatch.app */,
 				8AB28C01FBAFE98AAC30FACB /* ScreenshotTests.xctest */,
 			);
@@ -409,6 +438,24 @@
 			productReference = 3CEC1276ADADB11C4B07AEED /* FiveThreeOne.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A628C3C20A91B01F4089A146 /* FiveThreeOneTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4523B0D0B4560E1F08F4671C /* Build configuration list for PBXNativeTarget "FiveThreeOneTests" */;
+			buildPhases = (
+				35C72D6D9B379E088FA666F9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5174560CD022C52D369D663B /* PBXTargetDependency */,
+			);
+			name = FiveThreeOneTests;
+			packageProductDependencies = (
+			);
+			productName = FiveThreeOneTests;
+			productReference = 8DC1E3EC63CDD55DAE6212E7 /* FiveThreeOneTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		F1D066E9517640271E270214 /* ScreenshotTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B1E9239EE3798EDF5175FADE /* Build configuration list for PBXNativeTarget "ScreenshotTests" */;
@@ -444,6 +491,10 @@
 						DevelopmentTeam = 788PV93CSX;
 						ProvisioningStyle = Automatic;
 					};
+					A628C3C20A91B01F4089A146 = {
+						DevelopmentTeam = 788PV93CSX;
+						ProvisioningStyle = Automatic;
+					};
 					F1D066E9517640271E270214 = {
 						DevelopmentTeam = 788PV93CSX;
 						ProvisioningStyle = Automatic;
@@ -466,6 +517,7 @@
 			projectRoot = "";
 			targets = (
 				4A50F5911B8B726A73F83F4E /* FiveThreeOne */,
+				A628C3C20A91B01F4089A146 /* FiveThreeOneTests */,
 				4553201F6F8826AF2EA50545 /* FiveThreeOneWatch */,
 				F1D066E9517640271E270214 /* ScreenshotTests */,
 			);
@@ -494,6 +546,17 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		35C72D6D9B379E088FA666F9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B20A602EADD8A77C3211A44E /* ActiveWorkoutStoreTests.swift in Sources */,
+				8EF7BFB02FF9A1A99C60D46F /* ModelTests.swift in Sources */,
+				14AB025B40E12F9C82A88F8D /* PlateCalculatorTests.swift in Sources */,
+				48BDBA5AC83282EB019B791D /* ProgramEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6831EBC20EE79085BBB78FB1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -564,6 +627,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		5174560CD022C52D369D663B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4A50F5911B8B726A73F83F4E /* FiveThreeOne */;
+			targetProxy = CEBBA0D8C27E609EFB8D9D0F /* PBXContainerItemProxy */;
+		};
 		59A8D2C09DC4C358D3A1C3B3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4553201F6F8826AF2EA50545 /* FiveThreeOneWatch */;
@@ -577,6 +645,24 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		3E30045542A6F1A05856EB19 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ndrego.FiveThreeOne.Tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FiveThreeOne.app/FiveThreeOne";
+			};
+			name = Release;
+		};
 		4BC21943A827C1273ECB2ABF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -798,6 +884,24 @@
 			};
 			name = Release;
 		};
+		CCAE78D79DA6C99B57132C23 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ndrego.FiveThreeOne.Tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FiveThreeOne.app/FiveThreeOne";
+			};
+			name = Debug;
+		};
 		EF04E3B44D50F06D08382E02 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -862,6 +966,15 @@
 			buildConfigurations = (
 				5559DBC2C12DD016EA4DF4F5 /* Debug */,
 				EF04E3B44D50F06D08382E02 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4523B0D0B4560E1F08F4671C /* Build configuration list for PBXNativeTarget "FiveThreeOneTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CCAE78D79DA6C99B57132C23 /* Debug */,
+				3E30045542A6F1A05856EB19 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

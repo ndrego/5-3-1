@@ -23,6 +23,15 @@ schemes:
       config: Debug
     archive:
       config: Release
+  FiveThreeOneTests:
+    build:
+      targets:
+        FiveThreeOneTests: [test]
+        FiveThreeOne: [test]
+    test:
+      config: Debug
+      targets:
+        - FiveThreeOneTests
   FiveThreeOneWatch:
     build:
       targets:
@@ -71,6 +80,19 @@ targets:
     dependencies:
       - target: FiveThreeOneWatch
         embed: true
+
+  FiveThreeOneTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - FiveThreeOneTests
+    dependencies:
+      - target: FiveThreeOne
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ndrego.FiveThreeOne.Tests
+        GENERATE_INFOPLIST_FILE: true
+        SWIFT_VERSION: "6.0"
 
   ScreenshotTests:
     type: bundle.ui-testing
