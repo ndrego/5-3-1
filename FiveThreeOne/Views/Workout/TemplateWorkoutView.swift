@@ -277,6 +277,13 @@ struct TemplateWorkoutView: View {
             }
             .listRowBackground(Color.clear)
 
+            // Hidden element for UI test verification
+            Text("")
+                .frame(height: 0)
+                .listRowBackground(Color.clear)
+                .accessibilityIdentifier("exercise-count-\(exerciseStates.count)")
+                .accessibilityHidden(false)
+
             if !workoutStarted {
                 Section {
                     Button {
@@ -309,8 +316,10 @@ struct TemplateWorkoutView: View {
             ForEach(exerciseSectionGroups, id: \.id) { group in
                 if group.indices.count > 1 {
                     supersetSection(for: group)
+                        .accessibilityIdentifier("superset-group-\(group.supersetGroup ?? 0)")
                 } else if let idx = group.indices.first {
                     exerciseSection(for: $exerciseStates[idx], index: idx)
+                        .accessibilityIdentifier("exercise-section-\(idx)")
                 }
             }
 
@@ -415,6 +424,7 @@ struct TemplateWorkoutView: View {
                     Label("Add Set", systemImage: "plus.circle")
                 }
                 .buttonStyle(.borderless)
+                .accessibilityIdentifier("add-set-\(index)")
 
                 Spacer()
 
@@ -425,6 +435,7 @@ struct TemplateWorkoutView: View {
                         .foregroundStyle(.purple)
                 }
                 .buttonStyle(.borderless)
+                .accessibilityIdentifier("superset-btn-\(index)")
 
                 if !state.isMainLift {
                     Button {
@@ -435,6 +446,7 @@ struct TemplateWorkoutView: View {
                             .foregroundStyle(.red)
                     }
                     .buttonStyle(.borderless)
+                    .accessibilityIdentifier("remove-exercise-\(index)")
                 }
             }
             .font(.caption)
@@ -581,6 +593,7 @@ struct TemplateWorkoutView: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
+                .accessibilityIdentifier("unlink-superset-\(group.supersetGroup ?? 0)")
             }
         } header: {
             let firstIdx = group.indices.first!
@@ -655,6 +668,8 @@ struct TemplateWorkoutView: View {
                 selectedExerciseForDetail = state.exerciseName
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("exercise-name-\(state.exerciseName)")
+            .accessibilityValue("sets:\(state.sets.count)")
             if state.isMainLift {
                 Text("5/3/1")
                     .font(.caption2)
@@ -1000,6 +1015,7 @@ struct TemplateWorkoutView: View {
                     .foregroundStyle(set.wrappedValue.isComplete ? .green : Color.accentColor)
             }
             .buttonStyle(.borderless)
+            .accessibilityIdentifier("complete-set-\(set.wrappedValue.id)")
         }
     }
 

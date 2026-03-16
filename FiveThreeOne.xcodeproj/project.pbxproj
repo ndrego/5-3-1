@@ -15,6 +15,7 @@
 		124A2D3D7686280E9FFDB46E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA08E42318BE8236610E842 /* SettingsView.swift */; };
 		1364187D2F741593678B9593 /* TemplateWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B7F9A62FFCF57FFB69585E /* TemplateWorkoutView.swift */; };
 		14AB025B40E12F9C82A88F8D /* PlateCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC8F1B0D58A83BE9D0837FD /* PlateCalculatorTests.swift */; };
+		1BC84B39E602BBF31554AF8B /* WorkoutRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6D936CA319A958A6E37604 /* WorkoutRegressionTests.swift */; };
 		20DF4150B0B1E7BBCD1C7565 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB2E2E170599DCA54721387 /* PreviewData.swift */; };
 		21B486FDE395F6820E214A98 /* PlateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE467A519D792ED441F742E /* PlateCalculator.swift */; };
 		227FD27E1CE65EEA80E3A3AE /* CalibrationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8509E7A820AF565D128DAB36 /* CalibrationAnalyzer.swift */; };
@@ -114,6 +115,7 @@
 		0C50280FC64462F470CE51B2 /* ExercisePerformance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePerformance.swift; sourceTree = "<group>"; };
 		127668896D621C1033626435 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		12E9858407A7B51A5D75ACEF /* ExerciseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseDetailView.swift; sourceTree = "<group>"; };
+		1B6D936CA319A958A6E37604 /* WorkoutRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutRegressionTests.swift; sourceTree = "<group>"; };
 		1EC9B438F744231E2C9D1B5A /* WorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutView.swift; sourceTree = "<group>"; };
 		2173EE38B16F9B9F345C5575 /* DemoDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoDataSeeder.swift; sourceTree = "<group>"; };
 		284CAB02879259FE36883AAD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -293,6 +295,7 @@
 				91672F7F96A97ED53145FF6F /* Info.plist */,
 				DDD8C62BDC16C419182B22F8 /* ScreenshotTests.swift */,
 				BCAAC74C86F9F7DE1501D1D7 /* UIRegressionTests.swift */,
+				1B6D936CA319A958A6E37604 /* WorkoutRegressionTests.swift */,
 			);
 			path = ScreenshotTests;
 			sourceTree = "<group>";
@@ -637,6 +640,7 @@
 			files = (
 				0944D13075B328CCB1AEC8B6 /* ScreenshotTests.swift in Sources */,
 				E6DE8A1C5F83EBA22F1D4136 /* UIRegressionTests.swift in Sources */,
+				1BC84B39E602BBF31554AF8B /* WorkoutRegressionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
