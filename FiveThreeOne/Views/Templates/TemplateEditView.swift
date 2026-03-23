@@ -312,14 +312,24 @@ struct TemplateEditView: View {
 // MARK: - Exercise Picker
 
 struct ExercisePickerView: View {
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Exercise.name) private var exercises: [Exercise]
     @Binding var entries: [TemplateExerciseEntry]
 
     @State private var searchText = ""
+    @State private var showingCreateExercise = false
 
     var body: some View {
         List {
+            Section {
+                Button {
+                    showingCreateExercise = true
+                } label: {
+                    Label("Create New Exercise", systemImage: "plus.circle.fill")
+                }
+            }
+
             Section("Main Lifts (5/3/1)") {
                 ForEach(Lift.allCases) { lift in
                     let alreadyAdded = entries.contains(where: { $0.mainLift == lift.rawValue })
@@ -359,9 +369,16 @@ struct ExercisePickerView: View {
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(exercise.name)
-                                Text(exercise.exerciseCategory.displayName)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                HStack(spacing: 8) {
+                                    Text(exercise.exerciseCategory.displayName)
+                                    if exercise.isCustom {
+                                        Text("Custom")
+                                            .fontWeight(.medium)
+                                            .foregroundStyle(.blue)
+                                    }
+                                }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                             }
                             Spacer()
                             if alreadyAdded {
@@ -382,10 +399,93 @@ struct ExercisePickerView: View {
                 Button("Done") { dismiss() }
             }
         }
+        .sheet(isPresented: $showingCreateExercise) {
+            NavigationStack {
+                CreateExerciseView { exercise in
+                    modelContext.insert(exercise)
+                    entries.append(TemplateExerciseEntry(
+                        exerciseName: exercise.name,
+                        sortOrder: entries.count
+                    ))
+                    dismiss()
+                }
+            }
+        }
     }
 
     private var filteredExercises: [Exercise] {
         if searchText.isEmpty { return exercises }
         return exercises.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
+}
+
+// MARK: - Create Exercise
+
+struct CreateExerciseView: View {
+    @Environment(\.dismiss) private var dismiss
+    var onCreate: (Exercise) -> Void
+
+    @State private var name = ""
+    @State private var category: ExerciseCategory = .push
+    @State private var equipment = "barbell"
+    @State private var isUnilateral = false
+    @State private var isTimed = false
+
+    private static let equipmentOptions = ["barbell", "dumbbell", "cable", "machine", "bodyweight", "band", "other"]
+
+    var body: some View {
+        Form {
+            Section {
+                TextField("Exercise Name", text: $name)
+                    .autocorrectionDisabled()
+            }
+
+            Section {
+                Picker("Category", selection: $category) {
+                    ForEach(ExerciseCategory.allCases) { cat in
+                        Text(cat.displayName).tag(cat)
+                    }
+                }
+
+                Picker("Equipment", selection: $equipment) {
+                    ForEach(Self.equipmentOptions, id: \.self) { eq in
+                        Text(eq.capitalized).tag(eq)
+                    }
+                }
+            }
+
+            Section {
+                Toggle("Unilateral (single arm/leg)", isOn: $isUnilateral)
+                Toggle("Timed (e.g. plank)", isOn: $isTimed)
+            } footer: {
+                if isUnilateral {
+                    Text("Volume will be doubled to account for both sides.")
+                }
+                if isTimed {
+                    Text("Reps field will show seconds instead.")
+                }
+            }
+        }
+        .navigationTitle("New Exercise")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Add") {
+                    let exercise = Exercise(
+                        name: name.trimmingCharacters(in: .whitespaces),
+                        category: category,
+                        equipmentType: equipment,
+                        isCustom: true,
+                        isUnilateral: isUnilateral,
+                        isTimed: isTimed
+                    )
+                    onCreate(exercise)
+                }
+                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+        }
     }
 }

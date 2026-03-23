@@ -88,6 +88,8 @@ extension Exercise {
         ("Leg Curl", .singleLegCore, "machine", false, false),
         ("Standing Calf Raise", .singleLegCore, "barbell", false, false),
         ("Ab Wheel", .singleLegCore, "bodyweight", false, false),
+        ("Ab Rollout (Stability Ball)", .singleLegCore, "other", false, false),
+        ("Plank Pull-Through (Kettlebell)", .singleLegCore, "other", false, false),
         ("Hanging Leg Raise", .singleLegCore, "bodyweight", false, false),
         ("Hanging Knee Raise", .singleLegCore, "bodyweight", false, false),
         ("Plank", .singleLegCore, "bodyweight", false, true),
