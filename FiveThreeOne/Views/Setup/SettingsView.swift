@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var showingBackup = false
     @State private var showingNewCycleSheet = false
     @State private var showRepTuning = false
+    @State private var soundPreview = RestTimerState()
 
     private var userSettings: UserSettings? { settings.first }
     private var currentCycle: Cycle? { cycles.first(where: { !$0.isComplete }) ?? cycles.first }
@@ -79,6 +80,21 @@ struct SettingsView: View {
                             Text("Off").tag(0)
                             ForEach(Self.recoveryHROptions, id: \.self) { hr in
                                 Text("\(hr) BPM").tag(hr)
+                            }
+                        }
+
+                        Picker("Timer Sound", selection: Binding(
+                            get: { s.timerSound ?? TimerSound.radar.rawValue },
+                            set: { newValue in
+                                s.timerSound = newValue
+                                // Preview the sound on selection
+                                if let sound = TimerSound(rawValue: newValue) {
+                                    soundPreview.previewSound(sound)
+                                }
+                            }
+                        )) {
+                            ForEach(TimerSound.allCases) { sound in
+                                Text(sound.rawValue).tag(sound.rawValue)
                             }
                         }
                     }

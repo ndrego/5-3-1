@@ -20,6 +20,7 @@ final class UserSettings {
     var repCountingEnabled: Bool?       // Watch accelerometer rep counting (nil = false)
     var repSensitivity: [String: Double]?  // Per-lift sensitivity multiplier (1.0 = default)
     var repTempo: [String: Double]?        // Per-lift min seconds between reps
+    var timerSound: String?               // Timer alert sound name (nil = "Tri-tone")
 
     static let defaultWarmupPercentages: [Double] = [0.40, 0.50, 0.60]
     static let defaultWarmupReps: [Int] = [5, 5, 3]

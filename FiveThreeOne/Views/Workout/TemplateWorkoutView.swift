@@ -46,6 +46,11 @@ struct TemplateWorkoutView: View {
                 if workoutStarted {
                     UIApplication.shared.isIdleTimerDisabled = true
                 }
+                // Sync timer sound from settings
+                if let soundName = userSettings?.timerSound,
+                   let sound = TimerSound(rawValue: soundName) {
+                    restTimer.selectedSound = sound
+                }
                 guard !initialized else { return }
                 initialized = true
                 if let snapshot = recoverySnapshot {
