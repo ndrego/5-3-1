@@ -2127,6 +2127,26 @@ struct WorkoutBottomBar: View {
                             totalSeconds: restTimer.totalSeconds
                         )
                     }
+            } else {
+                // Manual timer start button
+                Menu {
+                    ForEach([30, 60, 90, 120, 180, 240, 300], id: \.self) { secs in
+                        Button {
+                            restTimer.start(seconds: secs)
+                            PhoneConnectivityManager.shared.sendTimerStarted(
+                                totalSeconds: secs, recoveryHR: nil
+                            )
+                        } label: {
+                            Text(timerLabel(secs))
+                        }
+                    }
+                } label: {
+                    Label("Start Timer", systemImage: "timer")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+                .buttonStyle(.bordered)
+                .tint(.secondary)
             }
         }
         .padding(.horizontal)
@@ -2145,6 +2165,15 @@ struct WorkoutBottomBar: View {
             return String(format: "%d:%02d:%02d", hours, minutes, seconds)
         }
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    private func timerLabel(_ seconds: Int) -> String {
+        if seconds >= 60 {
+            let m = seconds / 60
+            let s = seconds % 60
+            return s > 0 ? "\(m)m \(s)s" : "\(m) min"
+        }
+        return "\(seconds)s"
     }
 
     private func startElapsedTimer() {
