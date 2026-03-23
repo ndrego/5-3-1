@@ -1634,14 +1634,14 @@ struct TemplateWorkoutView: View {
                         let prev = i < (previous?.sets.count ?? 0) ? previous?.sets[i] : nil
                         let target: Int
                         if timed {
-                            // Use previous targetReps if it looks like seconds (>=15), otherwise default
                             let prevTarget = prev?.targetReps ?? 0
-                            target = prevTarget >= 15 ? prevTarget : defaultTarget
+                            target = prevTarget >= 15 ? prevTarget : (entry.defaultReps ?? defaultTarget)
                         } else {
-                            target = prev?.actualReps ?? defaultTarget
+                            target = prev?.actualReps ?? entry.defaultReps ?? defaultTarget
                         }
+                        let weight = timed ? 0 : (prev?.weight ?? entry.defaultWeight ?? 0)
                         var set = CompletedSet(
-                            weight: timed ? 0 : (prev?.weight ?? 0),
+                            weight: weight,
                             targetReps: target,
                             setType: .accessory
                         )

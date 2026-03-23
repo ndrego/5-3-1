@@ -94,16 +94,20 @@ struct TemplateExerciseEntry: Codable, Identifiable, Hashable {
     var sortOrder: Int
     var supersetGroup: Int?     // Exercises with same non-nil value are supersetted
     var defaultSets: Int?        // nil = use previous history or 3
+    var defaultWeight: Double?   // nil = use previous history
+    var defaultReps: Int?        // nil = use previous history
     var supersetSubGroup: Int?   // nil = every round, 1/2/... = alternating sub-group
     var defaultRestSeconds: Int? // nil = use global default from UserSettings
 
-    init(exerciseName: String, mainLift: String? = nil, sortOrder: Int = 0, supersetGroup: Int? = nil, defaultSets: Int? = nil, supersetSubGroup: Int? = nil, defaultRestSeconds: Int? = nil) {
+    init(exerciseName: String, mainLift: String? = nil, sortOrder: Int = 0, supersetGroup: Int? = nil, defaultSets: Int? = nil, defaultWeight: Double? = nil, defaultReps: Int? = nil, supersetSubGroup: Int? = nil, defaultRestSeconds: Int? = nil) {
         self.id = UUID()
         self.exerciseName = exerciseName
         self.mainLift = mainLift
         self.sortOrder = sortOrder
         self.supersetGroup = supersetGroup
         self.defaultSets = defaultSets
+        self.defaultWeight = defaultWeight
+        self.defaultReps = defaultReps
         self.supersetSubGroup = supersetSubGroup
         self.defaultRestSeconds = defaultRestSeconds
     }

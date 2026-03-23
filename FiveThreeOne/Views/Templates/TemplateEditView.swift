@@ -111,7 +111,7 @@ struct TemplateEditView: View {
                             }
                             .buttonStyle(.plain)
 
-                            VStack(alignment: .leading) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(entries[index].exerciseName)
                                     .font(.body)
                                 HStack(spacing: 4) {
@@ -128,6 +128,32 @@ struct TemplateEditView: View {
                                         if supersetHasMixedSets(group: group) {
                                             subGroupPicker(for: index)
                                         }
+                                    }
+                                }
+                                // Default weight/reps for accessories
+                                if !entries[index].isMainLift {
+                                    HStack(spacing: 6) {
+                                        TextField("Wt", value: $entries[index].defaultWeight, format: .number)
+                                            .keyboardType(.decimalPad)
+                                            .frame(width: 50)
+                                            .textFieldStyle(.roundedBorder)
+                                            .font(.caption)
+                                        Text("lbs")
+                                            .font(.caption2)
+                                            .foregroundStyle(.tertiary)
+
+                                        Text("×")
+                                            .font(.caption)
+                                            .foregroundStyle(.tertiary)
+
+                                        TextField("Reps", value: $entries[index].defaultReps, format: .number)
+                                            .keyboardType(.numberPad)
+                                            .frame(width: 40)
+                                            .textFieldStyle(.roundedBorder)
+                                            .font(.caption)
+                                        Text("reps")
+                                            .font(.caption2)
+                                            .foregroundStyle(.tertiary)
                                     }
                                 }
                             }

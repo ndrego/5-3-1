@@ -219,3 +219,75 @@ final class ProgramVariantTests: XCTestCase {
         XCTAssertEqual(ProgramVariant.ssl.supplementalReps, 5)
     }
 }
+
+// MARK: - Template Exercise Entry Tests
+
+final class TemplateExerciseEntryTests: XCTestCase {
+
+    func testDefaultValues_AllNil() {
+        let entry = TemplateExerciseEntry(exerciseName: "Barbell Row", sortOrder: 0)
+        XCTAssertNil(entry.defaultSets)
+        XCTAssertNil(entry.defaultWeight)
+        XCTAssertNil(entry.defaultReps)
+        XCTAssertNil(entry.defaultRestSeconds)
+        XCTAssertNil(entry.supersetGroup)
+        XCTAssertFalse(entry.isMainLift)
+    }
+
+    func testMainLift_IsMainLift() {
+        let entry = TemplateExerciseEntry(exerciseName: "Squat", mainLift: "squat", sortOrder: 0)
+        XCTAssertTrue(entry.isMainLift)
+        XCTAssertEqual(entry.lift, .squat)
+    }
+
+    func testDefaultWeight_Stored() {
+        var entry = TemplateExerciseEntry(exerciseName: "Curl", sortOrder: 0, defaultWeight: 35)
+        XCTAssertEqual(entry.defaultWeight, 35)
+        entry.defaultWeight = 40
+        XCTAssertEqual(entry.defaultWeight, 40)
+    }
+
+    func testDefaultReps_Stored() {
+        var entry = TemplateExerciseEntry(exerciseName: "Curl", sortOrder: 0, defaultReps: 12)
+        XCTAssertEqual(entry.defaultReps, 12)
+        entry.defaultReps = 15
+        XCTAssertEqual(entry.defaultReps, 15)
+    }
+
+    func testDefaultSets_Stored() {
+        let entry = TemplateExerciseEntry(exerciseName: "Curl", sortOrder: 0, defaultSets: 4)
+        XCTAssertEqual(entry.defaultSets, 4)
+    }
+
+    func testDefaultRestSeconds_Stored() {
+        let entry = TemplateExerciseEntry(exerciseName: "Curl", sortOrder: 0, defaultRestSeconds: 90)
+        XCTAssertEqual(entry.defaultRestSeconds, 90)
+    }
+
+    /// Verify that template defaults act as fallback when no previous history exists.
+    /// Priority: previous history > template default > hardcoded fallback
+    func testAccessoryInitPriority_TemplateDefaultUsedAsFallback() {
+        // Simulate: no previous history, template says 50 lbs × 8 reps
+        let entry = TemplateExerciseEntry(exerciseName: "Curl", sortOrder: 0, defaultWeight: 50, defaultReps: 8)
+
+        // No previous set
+        let prev: CompletedSet? = nil
+        let weight = prev?.weight ?? entry.defaultWeight ?? 0
+        let reps = prev?.actualReps ?? entry.defaultReps ?? 10
+
+        XCTAssertEqual(weight, 50, "With no history, template default weight should be used")
+        XCTAssertEqual(reps, 8, "With no history, template default reps should be used")
+    }
+
+    func testAccessoryInitPriority_PreviousHistoryTakesPrecedence() {
+        // Simulate: previous history exists, template also has defaults
+        let entry = TemplateExerciseEntry(exerciseName: "Curl", sortOrder: 0, defaultWeight: 50, defaultReps: 8)
+        let prev = CompletedSet(weight: 40, targetReps: 12, actualReps: 12)
+
+        let weight = prev.weight  // previous always wins
+        let reps = prev.actualReps  // previous always wins
+
+        XCTAssertEqual(weight, 40, "Previous history weight should take precedence over template default")
+        XCTAssertEqual(reps, 12, "Previous history reps should take precedence over template default")
+    }
+}

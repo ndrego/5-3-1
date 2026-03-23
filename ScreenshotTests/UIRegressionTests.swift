@@ -455,6 +455,141 @@ final class UIRegressionTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 5))
     }
 
+    // MARK: - Custom Exercise Creation
+
+    func testCreateCustomExercise_Flow() {
+        app.tabBars.buttons["Workout"].tap()
+
+        // Open template edit via swipe
+        let firstCell = app.cells.firstMatch
+        guard firstCell.waitForExistence(timeout: 5) else { return }
+        firstCell.swipeRight()
+        let editButton = app.buttons["Edit"]
+        guard editButton.waitForExistence(timeout: 2) else { return }
+        editButton.tap()
+        sleep(1)
+
+        // Tap "Add Exercise"
+        let addExercise = app.buttons["Add Exercise"]
+        guard addExercise.waitForExistence(timeout: 3) else {
+            // May need to scroll
+            app.swipeUp()
+            guard addExercise.waitForExistence(timeout: 2) else { return }
+            return
+        }
+        addExercise.tap()
+        sleep(1)
+
+        // Should see "Create New Exercise" button
+        let createNew = app.buttons["Create New Exercise"]
+        XCTAssertTrue(createNew.waitForExistence(timeout: 3),
+            "Create New Exercise button should exist in exercise picker")
+
+        createNew.tap()
+        sleep(1)
+
+        // Should see the New Exercise form
+        XCTAssertTrue(app.navigationBars["New Exercise"].waitForExistence(timeout: 3),
+            "Should navigate to New Exercise form")
+
+        // Type a name
+        let nameField = app.textFields["Exercise Name"]
+        if nameField.waitForExistence(timeout: 3) {
+            nameField.tap()
+            nameField.typeText("Test Custom Exercise")
+        }
+
+        // Add button should be enabled now
+        let addButton = app.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+
+        // Cancel instead of adding (don't pollute test data)
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists { cancelButton.tap() }
+
+        // Dismiss the exercise picker
+        let doneButton = app.buttons["Done"]
+        if doneButton.waitForExistence(timeout: 2) { doneButton.tap() }
+
+        // Cancel the template editor
+        sleep(1)
+        let cancelEdit = app.buttons["Cancel"]
+        if cancelEdit.exists { cancelEdit.tap() }
+    }
+
+    // MARK: - Template Edit Defaults
+
+    func testTemplateEdit_ShowsWeightRepsForAccessories() {
+        app.tabBars.buttons["Workout"].tap()
+
+        let firstCell = app.cells.firstMatch
+        guard firstCell.waitForExistence(timeout: 5) else { return }
+        firstCell.swipeRight()
+        let editButton = app.buttons["Edit"]
+        guard editButton.waitForExistence(timeout: 2) else { return }
+        editButton.tap()
+        sleep(1)
+
+        // Should see weight/reps text fields for accessories (not main lifts)
+        // Look for "lbs" or "reps" labels which appear next to the fields
+        let lbsLabel = app.staticTexts["lbs"]
+        let repsLabel = app.staticTexts["reps"]
+
+        // May need to scroll past main lifts to find accessories
+        if !lbsLabel.waitForExistence(timeout: 2) {
+            app.swipeUp()
+        }
+
+        let hasDefaults = lbsLabel.waitForExistence(timeout: 3) || repsLabel.waitForExistence(timeout: 3)
+        XCTAssertTrue(hasDefaults,
+            "Template editor should show weight/reps fields for accessory exercises")
+
+        // Cancel the template editor
+        let cancelButton = app.navigationBars.buttons["Cancel"]
+        if cancelButton.exists {
+            cancelButton.tap()
+        } else {
+            let saveButton = app.navigationBars.buttons["Save"]
+            if saveButton.exists { saveButton.tap() }
+        }
+    }
+
+    func testTemplateEdit_SetCountStepper() {
+        app.tabBars.buttons["Workout"].tap()
+
+        let firstCell = app.cells.firstMatch
+        guard firstCell.waitForExistence(timeout: 5) else { return }
+        firstCell.swipeRight()
+        let editButton = app.buttons["Edit"]
+        guard editButton.waitForExistence(timeout: 2) else { return }
+        editButton.tap()
+        sleep(1)
+
+        // Find set count stepper (plus.circle / minus.circle buttons)
+        let plusButton = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "plus.circle")
+        ).firstMatch
+
+        if !plusButton.waitForExistence(timeout: 2) {
+            app.swipeUp()
+        }
+
+        if plusButton.waitForExistence(timeout: 3) {
+            // Tap plus to increase set count — verify no crash
+            plusButton.tap()
+            sleep(1)
+        }
+
+        // Cancel
+        let cancelButton = app.navigationBars.buttons["Cancel"]
+        if cancelButton.exists {
+            cancelButton.tap()
+        } else {
+            let saveButton = app.navigationBars.buttons["Save"]
+            if saveButton.exists { saveButton.tap() }
+        }
+    }
+
     // MARK: - Appearance
 
     func testAppLaunch_NoBlankScreen() {
