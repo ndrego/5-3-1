@@ -95,8 +95,9 @@ struct TemplateExerciseEntry: Codable, Identifiable, Hashable {
     var supersetGroup: Int?     // Exercises with same non-nil value are supersetted
     var defaultSets: Int?        // nil = use previous history or 3
     var supersetSubGroup: Int?   // nil = every round, 1/2/... = alternating sub-group
+    var defaultRestSeconds: Int? // nil = use global default from UserSettings
 
-    init(exerciseName: String, mainLift: String? = nil, sortOrder: Int = 0, supersetGroup: Int? = nil, defaultSets: Int? = nil, supersetSubGroup: Int? = nil) {
+    init(exerciseName: String, mainLift: String? = nil, sortOrder: Int = 0, supersetGroup: Int? = nil, defaultSets: Int? = nil, supersetSubGroup: Int? = nil, defaultRestSeconds: Int? = nil) {
         self.id = UUID()
         self.exerciseName = exerciseName
         self.mainLift = mainLift
@@ -104,6 +105,7 @@ struct TemplateExerciseEntry: Codable, Identifiable, Hashable {
         self.supersetGroup = supersetGroup
         self.defaultSets = defaultSets
         self.supersetSubGroup = supersetSubGroup
+        self.defaultRestSeconds = defaultRestSeconds
     }
 
     var isMainLift: Bool { mainLift != nil }

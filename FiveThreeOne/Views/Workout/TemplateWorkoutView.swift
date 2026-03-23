@@ -1611,13 +1611,15 @@ struct TemplateWorkoutView: View {
                     let allPlanned = warmupPlanned + mainPlanned + suppPlanned
                     state.plannedSets = allPlanned
                     state.sets = allPlanned.map { planned in
-                        CompletedSet(
+                        var set = CompletedSet(
                             weight: planned.weight,
                             targetReps: planned.reps,
                             actualReps: 0,
                             isAMRAP: planned.isAMRAP,
                             setType: planned.setType
                         )
+                        set.restSeconds = entry.defaultRestSeconds
+                        return set
                     }
                 } else {
                     let defaultTarget = timed ? 30 : 10
@@ -1633,11 +1635,13 @@ struct TemplateWorkoutView: View {
                         } else {
                             target = prev?.actualReps ?? defaultTarget
                         }
-                        return CompletedSet(
+                        var set = CompletedSet(
                             weight: timed ? 0 : (prev?.weight ?? 0),
                             targetReps: target,
                             setType: .accessory
                         )
+                        set.restSeconds = entry.defaultRestSeconds
+                        return set
                     }
                 }
 
@@ -1761,24 +1765,54 @@ struct TemplateWorkoutView: View {
             }
         }
 
-        // Check accessory weight/rep changes
+        // Check accessory weight/rep changes — compare actual values, not just completion
         for state in exerciseStates where !state.isMainLift {
-            if let originalEntry = originalEntries.first(where: { $0.exerciseName == state.exerciseName }) {
-                // Compare completed sets against previous sets
-                let completedSets = state.sets.filter { $0.isComplete }
-                if !completedSets.isEmpty {
-                    changes.exercisesWithNewValues.append(state.exerciseName)
+            guard originalEntries.contains(where: { $0.exerciseName == state.exerciseName }) else { continue }
+            let completedSets = state.sets.filter { $0.isComplete }
+            guard !completedSets.isEmpty else { continue }
+
+            // Compare against previous sets (from last workout)
+            var hasWeightOrRepChange = false
+            for (i, set) in completedSets.enumerated() {
+                if i < state.previousSets.count {
+                    let prev = state.previousSets[i]
+                    if set.weight != prev.weight || set.actualReps != prev.targetReps {
+                        hasWeightOrRepChange = true
+                        break
+                    }
+                } else {
+                    // More completed sets than previous — that's a change
+                    hasWeightOrRepChange = true
+                    break
                 }
+            }
+            if hasWeightOrRepChange {
+                changes.exercisesWithNewValues.append(state.exerciseName)
             }
         }
 
         // Check set count changes for accessories
         for state in exerciseStates where !state.isMainLift {
-            let originalPrev = state.previousSets.count
+            guard originalEntries.contains(where: { $0.exerciseName == state.exerciseName }) else { continue }
+            let originalEntry = originalEntries.first(where: { $0.exerciseName == state.exerciseName })!
+            let originalCount = originalEntry.defaultSets ?? state.previousSets.count
             let current = state.sets.count
-            if current != originalPrev && current != 3 { // 3 is the default
+            if current != originalCount && (originalCount > 0 || current != 3) {
                 changes.setCountChanged = true
             }
+        }
+
+        // Check per-set rest timer customizations — compare against template defaults
+        for state in exerciseStates {
+            let templateEntry = originalEntries.first(where: { $0.exerciseName == state.exerciseName })
+            let templateRest = templateEntry?.defaultRestSeconds
+            for set in state.sets {
+                if set.restSeconds != templateRest {
+                    changes.restTimersCustomized = true
+                    break
+                }
+            }
+            if changes.restTimersCustomized { break }
         }
 
         // Check superset changes
@@ -1836,6 +1870,26 @@ struct TemplateWorkoutView: View {
             }
         }
 
+        if selections.saveSetCounts {
+            for i in updatedEntries.indices where !updatedEntries[i].isMainLift {
+                if let state = exerciseStates.first(where: { $0.exerciseName == updatedEntries[i].exerciseName }) {
+                    updatedEntries[i].defaultSets = state.sets.count
+                }
+            }
+        }
+
+        if selections.saveRestTimers {
+            for i in updatedEntries.indices {
+                if let state = exerciseStates.first(where: { $0.exerciseName == updatedEntries[i].exerciseName }) {
+                    // Use the last non-nil rest override from this exercise's sets
+                    let customRest = state.sets.compactMap { $0.restSeconds }.last
+                    if let rest = customRest {
+                        updatedEntries[i].defaultRestSeconds = rest
+                    }
+                }
+            }
+        }
+
         template.exerciseEntries = updatedEntries
     }
 }
@@ -1888,9 +1942,12 @@ struct TemplateChanges {
     var exercisesWithNewValues: [String] = []
     var setCountChanged = false
     var supersetsChanged = false
+    var restTimersCustomized = false
 
     var hasChanges: Bool {
         orderChanged || !newExercises.isEmpty || supersetsChanged
+        || setCountChanged || !exercisesWithNewValues.isEmpty
+        || restTimersCustomized
     }
 }
 
@@ -1898,6 +1955,8 @@ struct TemplateChangeSelections {
     var saveOrder = true
     var saveNewExercises = true
     var saveSupersets = true
+    var saveSetCounts = true
+    var saveRestTimers = true
 }
 
 // MARK: - Save Template Changes Sheet
@@ -1953,6 +2012,43 @@ struct SaveTemplateChangesView: View {
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
+                        }
+                    }
+
+                    if changes.setCountChanged {
+                        Toggle(isOn: $selections.saveSetCounts) {
+                            VStack(alignment: .leading) {
+                                Text("Set counts")
+                                    .font(.body)
+                                Text("Update the number of sets per exercise")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+
+                    if changes.restTimersCustomized {
+                        Toggle(isOn: $selections.saveRestTimers) {
+                            VStack(alignment: .leading) {
+                                Text("Rest timers")
+                                    .font(.body)
+                                Text("Save per-exercise rest time overrides")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+
+                    if !changes.exercisesWithNewValues.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Weight / rep changes")
+                                .font(.body)
+                            Text(changes.exercisesWithNewValues.joined(separator: ", "))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("These will be remembered as your history for next time")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
                         }
                     }
                 }
