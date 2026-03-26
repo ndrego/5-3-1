@@ -132,8 +132,11 @@ final class RestTimerState {
         playSound(selectedSound)
     }
 
+    private let audioDelegate = AudioSessionRestorer()
+
     private func playSound(_ sound: TimerSound) {
         // .playback plays through speaker even when silent switch is on
+        // .duckOthers lowers music volume during playback
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: .duckOthers)
             try AVAudioSession.sharedInstance().setActive(true)
@@ -143,10 +146,27 @@ final class RestTimerState {
         guard let player = try? AVAudioPlayer(contentsOf: url) else {
             // Fallback for simulator or missing file
             AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
+            deactivateAudioSession()
             return
         }
         player.volume = 1.0
+        player.delegate = audioDelegate
         player.play()
         audioPlayer = player
+    }
+
+    private func deactivateAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {}
+    }
+}
+
+/// Deactivates the audio session when playback finishes so ducked music restores volume.
+private class AudioSessionRestorer: NSObject, AVAudioPlayerDelegate {
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {}
     }
 }
