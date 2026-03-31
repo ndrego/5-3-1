@@ -92,6 +92,9 @@ struct TrainingMaxSetupView: View {
                 Text("Enter TM directly").tag(false)
             }
             .pickerStyle(.segmented)
+            .onChange(of: useOneRepMax) { _, entering1RM in
+                convertInputValues(to1RM: entering1RM)
+            }
         } header: {
             Text(useOneRepMax ? "Enter your 1 Rep Max" : "Enter your Training Max")
         }
@@ -247,6 +250,26 @@ struct TrainingMaxSetupView: View {
         }
 
         dismiss()
+    }
+
+    /// Convert field values when toggling between 1RM and TM modes.
+    /// To 1RM: divide current TM by TM%, so user sees estimated 1RM.
+    /// To TM: multiply current 1RM by TM%, so user sees the TM directly.
+    private func convertInputValues(to1RM: Bool) {
+        for lift in Lift.allCases {
+            guard let current = Double(liftInputs[lift] ?? ""), current > 0 else { continue }
+            let pct = (liftTMPercents[lift] ?? 90) / 100.0
+            guard pct > 0 else { continue }
+            let converted: Double
+            if to1RM {
+                // TM → 1RM: back-calculate
+                converted = (current / pct).rounded()
+            } else {
+                // 1RM → TM
+                converted = roundToFive(current * pct)
+            }
+            liftInputs[lift] = "\(Int(converted))"
+        }
     }
 
     private func roundToFive(_ value: Double) -> Double {
